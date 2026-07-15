@@ -1,5 +1,19 @@
 import Link from "next/link";
-import { Logo } from "@/components/ui/logo";
+import Image from "next/image";
+import {
+  Bug,
+  Columns,
+  IterationCcw,
+  Route,
+  Bot,
+  RefreshCw,
+  BarChart3,
+  MessageSquareMore,
+  Sparkles,
+  ListChecks,
+  Shield,
+  Zap,
+} from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -7,8 +21,10 @@ export default function HomePage() {
       <Header />
       <main className="flex-1">
         <HeroSection />
+        <ProductPreviewSection />
         <FeaturesSection />
         <AIBenefitsSection />
+        <PricingSection />
         <CTASection />
       </main>
       <FooterSection />
@@ -21,7 +37,7 @@ function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#F8F9FF]/80 backdrop-blur-[12px] border-b border-[#C3C6D7]/20">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg font-black text-[#004AC6]">Vireo</span>
+          <Image src="/vireo-logo.svg" alt="Vireo" width={100} height={30} className="h-7 w-auto" />
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           <Link
@@ -105,47 +121,153 @@ function HeroSection() {
   );
 }
 
+function ProductPreviewSection() {
+  return (
+    <section className="bg-white py-20 md:py-28">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="overflow-hidden rounded-2xl bg-[#F8F9FF] shadow-[0_25px_50px_rgba(0,74,198,0.05)]">
+          <div className="grid lg:grid-cols-3">
+            <div className="border-r border-[#C3C6D7]/20 bg-[#EEF4FF] p-6">
+              <div className="mb-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#004AC6]">
+                <ListChecks className="h-3.5 w-3.5" />
+                Project Velocity
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-[#121C28]">+12%</span>
+                <span className="text-sm font-medium text-[#10B981]">
+                  this sprint
+                </span>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-white">
+                <div className="h-2 w-3/4 rounded-full bg-[#004AC6]" />
+              </div>
+              <div className="mt-8 space-y-3">
+                <div className="rounded-xl bg-white p-4 shadow-sm">
+                  <div className="text-xs font-semibold text-[#434655]">
+                    AI INSIGHTS READY
+                  </div>
+                  <p className="mt-1 text-sm text-[#121C28]">
+                    3 bottlenecks detected in the upcoming sprint cycle.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-r border-[#C3C6D7]/20 bg-[#2563EB] p-6 text-white lg:col-span-1">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Sparkles className="h-4 w-4" />
+                AI Insights Ready
+              </div>
+              <p className="mt-2 text-sm text-white/80">
+                3 bottlenecks detected in the upcoming sprint cycle. The Core
+                Team is at 110% capacity.
+              </p>
+              <button className="mt-4 text-sm font-semibold text-white underline underline-offset-2">
+                View Report &rarr;
+              </button>
+            </div>
+
+            <div className="bg-white p-6 lg:col-span-1">
+              <div className="flex items-center justify-between border-b border-[#C3C6D7]/20 pb-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[#434655]">
+                  <Columns className="h-3.5 w-3.5" />
+                  IN PROGRESS
+                  <span className="ml-1 rounded-full bg-[#EEF4FF] px-1.5 py-0.5 text-[10px] text-[#004AC6]">
+                    3
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                {[
+                  {
+                    id: "VIR-102",
+                    title: "Refactor API Authentication Layer",
+                    tag: "AI Complexity: 8/10",
+                  },
+                  {
+                    id: "VIR-105",
+                    title: "AI Sprint Planning",
+                    tag: "Feature",
+                  },
+                  {
+                    id: "VIR-108",
+                    title: "Implement Webhooks for Slack",
+                    tag: "Integrations",
+                  },
+                ].map((issue) => (
+                  <div
+                    key={issue.id}
+                    className="rounded-lg border border-[#C3C6D7]/20 bg-[#FCF9F7] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+                  >
+                    <div className="text-[11px] font-mono font-medium text-[#5C6274]">
+                      {issue.id}
+                    </div>
+                    <div className="mt-0.5 text-sm font-medium text-[#121C28]">
+                      {issue.title}
+                    </div>
+                    <span className="mt-1.5 inline-block rounded-full bg-[#EEF4FF] px-2 py-0.5 text-[10px] font-medium text-[#004AC6]">
+                      {issue.tag}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function FeaturesSection() {
   const features = [
     {
       title: "Issue tracking",
       description:
         "Rapid issue creation with custom fields, dependencies, and markdown support.",
+      icon: Bug,
     },
     {
       title: "Kanban",
       description:
         "Visualise your flow. Fully customizable swimlanes and automation triggers.",
+      icon: Columns,
     },
     {
       title: "Scrum sprints",
       description:
         "Iterative planning with velocity tracking and capacity management.",
+      icon: IterationCcw,
     },
     {
       title: "Roadmaps",
       description:
         "Strategic alignment across teams with multi-project timeline views.",
+      icon: Route,
     },
     {
       title: "AI ticket writing",
       description:
         "Generate detailed technical specs and ACs from a single prompt.",
+      icon: Sparkles,
     },
     {
       title: "Real-time sync",
       description:
         "Instant updates across all users. No refreshing, just building.",
+      icon: RefreshCw,
     },
     {
       title: "Reports",
       description:
         "DORA metrics, burndown charts, and custom data exports.",
+      icon: BarChart3,
     },
     {
       title: "Team chat",
       description:
         "Threaded discussions integrated directly into every issue card.",
+      icon: MessageSquareMore,
     },
   ];
 
@@ -162,19 +284,25 @@ function FeaturesSection() {
           </p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="rounded-xl bg-[#EEF4FF] p-6 transition-shadow hover:shadow-md"
-            >
-              <h3 className="text-lg font-semibold text-[#121C28]">
-                {feature.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#434655]">
-                {feature.description}
-              </p>
-            </div>
-          ))}
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <div
+                key={feature.title}
+                className="rounded-xl bg-[#EEF4FF] p-6 transition-shadow hover:shadow-md"
+              >
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#121C28]">
+                  {feature.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#434655]">
+                  {feature.description}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -256,6 +384,42 @@ function AIBenefitsSection() {
   );
 }
 
+function PricingSection() {
+  return (
+    <section className="bg-white py-20 md:py-28">
+      <div className="mx-auto max-w-7xl px-6 text-center">
+        <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
+          Start your 14-day free trial today
+        </h2>
+        <p className="mx-auto mt-4 max-w-xl text-[#434655]">
+          No credit card required. Invite your team and start building with
+          AI-powered clarity in minutes.
+        </p>
+        <div className="mx-auto mt-10 max-w-sm rounded-2xl bg-[#F8F9FF] p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+          <div className="text-xs font-bold tracking-[0.8px] text-[#004AC6] uppercase">
+            Standard Plan
+          </div>
+          <div className="mt-4 text-4xl font-bold text-[#121C28]">
+            $12
+            <span className="text-lg font-medium text-[#434655]">
+              / user / mo
+            </span>
+          </div>
+          <p className="mt-3 text-sm text-[#434655]">
+            Unlimited projects, AI features included.
+          </p>
+          <Link
+            href="/register"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-[#004AC6] px-8 py-3.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
+          >
+            Get Started Now
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CTASection() {
   return (
     <section className="bg-[#005DA7] py-20 md:py-28">
@@ -290,12 +454,10 @@ function FooterSection() {
   return (
     <footer className="border-t border-[#C3C6D7]/20 bg-white py-12">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2">
-            <span className="text-lg font-black text-[#004AC6]">
-              Vireo AI
-            </span>
-            <p className="mt-2 text-sm text-[#434655]">
+            <Image src="/vireo-logo.svg" alt="Vireo" width={120} height={35} className="h-8 w-auto" />
+            <p className="mt-3 text-sm text-[#434655]">
               Professional-grade project management for modern software teams.
             </p>
           </div>
@@ -316,6 +478,10 @@ function FooterSection() {
             {
               title: "Company",
               links: ["About Us", "Blog", "Careers", "Contact"],
+            },
+            {
+              title: "Legal",
+              links: ["Privacy Policy", "Terms of Service", "GDPR"],
             },
           ].map((column) => (
             <div key={column.title}>
