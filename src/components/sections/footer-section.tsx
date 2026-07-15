@@ -41,7 +41,7 @@ export function FooterSection() {
     <motion.footer
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
+      viewport={{ once: false, margin: "-80px" }}
       variants={containerVariants}
       className="border-t border-[#C3C6D7]/20 bg-white py-12"
     >

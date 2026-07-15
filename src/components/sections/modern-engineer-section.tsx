@@ -41,7 +41,7 @@ export function ModernEngineerSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           className="mb-12 text-center"
         >
           <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
@@ -55,7 +55,7 @@ export function ModernEngineerSection() {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           variants={containerVariants}
           className="grid gap-8 md:grid-cols-3"
         >

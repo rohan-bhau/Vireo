@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, Plus, Columns } from "lucide-react";
+import { Search, Plus, Columns, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 type CardWithTag = {
   id: string;
@@ -84,31 +85,54 @@ const itemVariants = {
 
 export function ProductPreviewSection() {
   return (
-    <section className="bg-white py-20 md:py-28">
-      <div className="mx-auto max-w-7xl px-6">
+    <section className="relative overflow-hidden bg-white py-20 md:py-28">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_#EEF4FF_0%,_transparent_60%)]" />
+      <div className="relative mx-auto max-w-7xl px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, margin: "-80px" }}
+          className="mb-14 text-center"
+        >
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white px-4 py-1.5 text-sm font-medium text-[#005DA7] shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#005DA7]" />
+            Visual project management
+          </div>
+          <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
+            Boards your team will love
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-[#434655]">
+            Drag-and-drop kanban boards with AI-powered insights. See the big
+            picture without losing the details.
+          </p>
+        </motion.div>
+
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           variants={containerVariants}
-          className="overflow-hidden rounded-2xl bg-[#F6F3F1] shadow-[0_25px_50px_rgba(0,74,198,0.05)]"
+          className="overflow-hidden rounded-2xl border border-[#C3C6D7]/20 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]"
         >
-          <div className="p-6 pb-4">
+          <div className="border-b border-[#C3C6D7]/10 px-6 py-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <motion.div variants={itemVariants} className="flex items-center gap-3">
-                <h2 className="text-2xl font-semibold text-[#1B1C1B]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
+                  <Columns className="h-4 w-4" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#121C28]">
                   Vireo Boards
-                </h2>
-                <span className="rounded-md bg-[#1B1C1B]/10 px-2 py-0.5 text-xs font-medium text-[#1B1C1B]">
+                </h3>
+                <span className="rounded-md bg-[#004A9E]/10 px-2.5 py-0.5 text-xs font-semibold text-[#004A9E]">
                   SPRINT-04
                 </span>
               </motion.div>
               <motion.div variants={itemVariants} className="flex items-center gap-3">
-                <div className="flex items-center gap-2 rounded-md border border-[#C3C6D7]/40 bg-white px-3 py-1.5 text-sm text-[#6B7280]">
+                <div className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/30 bg-[#F8F9FF] px-3 py-2 text-sm text-[#6B7280] transition-colors hover:border-[#C3C6D7]/50">
                   <Search className="h-4 w-4" />
                   <span>Search issues...</span>
                 </div>
-                <button className="flex items-center gap-1.5 rounded-md bg-[#005DA7] px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#004d8e]">
+                <button className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#004AC6] to-[#005DA7] px-4 py-2 text-xs font-bold text-white shadow-[0_2px_8px_rgba(0,74,198,0.25)] transition-all hover:shadow-[0_4px_12px_rgba(0,74,198,0.35)] hover:brightness-110">
                   <Plus className="h-3.5 w-3.5" />
                   Create
                 </button>
@@ -116,17 +140,25 @@ export function ProductPreviewSection() {
             </div>
           </div>
 
-          <div className="grid gap-4 p-6 pt-2 lg:grid-cols-3">
+          <div className="grid gap-4 p-6 lg:grid-cols-3">
             {columns.map((column, colIdx) => (
               <motion.div
                 key={column.title}
                 variants={itemVariants}
-                className="rounded-xl bg-white/50 p-4"
+                className="rounded-xl bg-[#F8F9FF] p-4"
               >
                 <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#414752]">
-                  <Columns className="h-3 w-3" />
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      column.title === "TO DO"
+                        ? "bg-[#6B7280]"
+                        : column.title === "IN PROGRESS"
+                          ? "bg-[#005DA7]"
+                          : "bg-[#10B981]"
+                    }`}
+                  />
                   {column.title}
-                  <span className="ml-auto rounded-full bg-[#414752]/10 px-1.5 py-0.5 text-[10px] font-medium">
+                  <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-[#414752]/10 text-[10px] font-semibold text-[#414752]">
                     {column.count}
                   </span>
                 </div>
@@ -136,24 +168,38 @@ export function ProductPreviewSection() {
                       key={card.id}
                       initial={{ opacity: 0, x: -10 }}
                       whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: false }}
                       transition={{ delay: cardIdx * 0.1 + colIdx * 0.15 }}
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      className={`rounded-lg border border-[#C3C6D7]/20 p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-md ${
-                        card.done ? "bg-[#EAE8E6]" : "bg-[#FCF9F7]"
+                      whileHover={{ y: -2 }}
+                      className={`rounded-lg border p-3.5 shadow-sm transition-all ${
+                        card.done
+                          ? "border-[#10B981]/20 bg-[#F0FDF4]"
+                          : "border-[#C3C6D7]/20 bg-white hover:border-[#C3C6D7]/40 hover:shadow-md"
                       }`}
                     >
-                      <div className="font-mono text-[11px] font-medium text-[#615E59]">
-                        {card.id}
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`font-mono text-[11px] font-semibold ${
+                            card.done ? "text-[#10B981]" : "text-[#6B7280]"
+                          }`}
+                        >
+                          {card.id}
+                        </span>
+                        {card.done && (
+                          <span className="rounded-full bg-[#10B981]/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#10B981]">
+                            Done
+                          </span>
+                        )}
                       </div>
-                      <div className="mt-0.5 text-sm font-bold text-[#1B1C1B]">
+                      <div className="mt-1 text-sm font-semibold text-[#121C28]">
                         {card.title}
                       </div>
+
                       {"tag" in card && card.tag && (
                         <span
-                          className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
                             card.done
-                              ? "bg-[#414752]/10 text-[#414752]"
+                              ? "bg-[#10B981]/10 text-[#10B981]"
                               : "bg-[#EEF4FF] text-[#004AC6]"
                           }`}
                         >
@@ -161,18 +207,22 @@ export function ProductPreviewSection() {
                         </span>
                       )}
                       {"tags" in card && card.tags && (
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
                           {card.tags.map((tag) => (
                             <span
                               key={tag.label}
-                              className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
                                 tag.highlight
-                                  ? "bg-[#EEF4FF] text-[#005DA7] font-bold"
-                                  : "bg-[#414752]/10 text-[#414752]"
+                                  ? "bg-[#EEF4FF] text-[#004AC6]"
+                                  : "bg-[#F3F4F6] text-[#6B7280]"
                               }`}
                             >
                               {tag.label}
-                              {tag.value && ` ${tag.value}`}
+                              {tag.value && (
+                                <span className="ml-0.5 font-bold">
+                                  {tag.value}
+                                </span>
+                              )}
                             </span>
                           ))}
                         </div>
@@ -183,6 +233,22 @@ export function ProductPreviewSection() {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: false }}
+          transition={{ delay: 0.4 }}
+          className="mt-10 text-center"
+        >
+          <Link
+            href="/w"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#004AC6] transition-colors hover:text-[#003da8]"
+          >
+            Explore all board features
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </motion.div>
       </div>
     </section>

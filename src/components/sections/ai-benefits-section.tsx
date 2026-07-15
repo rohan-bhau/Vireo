@@ -41,7 +41,7 @@ export function AIBenefitsSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           className="mb-16 text-center"
         >
           <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
@@ -52,7 +52,7 @@ export function AIBenefitsSection() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: false, margin: "-80px" }}
             variants={containerVariants}
             className="space-y-8"
           >
@@ -74,7 +74,7 @@ export function AIBenefitsSection() {
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: false, margin: "-80px" }}
             transition={{ duration: 0.6 }}
             className="flex items-center"
           >
@@ -86,7 +86,7 @@ export function AIBenefitsSection() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: false }}
                   transition={{ delay: 0.2 }}
                   className="rounded-xl bg-[#F8F9FF] p-4 text-sm text-[#434655]"
                 >
@@ -97,7 +97,7 @@ export function AIBenefitsSection() {
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: false }}
                   transition={{ delay: 0.4 }}
                   className="rounded-xl bg-[#004AC6] p-4 text-sm text-white"
                 >
@@ -107,7 +107,7 @@ export function AIBenefitsSection() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: false }}
                   transition={{ delay: 0.6 }}
                   className="rounded-xl bg-[#EEF4FF] p-4 text-sm"
                 >

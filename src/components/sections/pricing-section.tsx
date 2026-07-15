@@ -10,7 +10,7 @@ export function PricingSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
         >
           <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
             Start your 14-day free trial today
@@ -23,7 +23,7 @@ export function PricingSection() {
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           transition={{ delay: 0.2 }}
           className="mx-auto mt-10 max-w-sm rounded-2xl bg-[#F8F9FF] p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
         >

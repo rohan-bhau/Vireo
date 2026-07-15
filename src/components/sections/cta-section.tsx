@@ -8,14 +8,14 @@ export function CTASection() {
     <motion.section
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
-      viewport={{ once: true, margin: "-80px" }}
+      viewport={{ once: false, margin: "-80px" }}
       className="bg-[#005DA7] py-20 md:py-28"
     >
       <div className="mx-auto max-w-3xl px-6 text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ delay: 0.1 }}
           className="text-3xl font-bold tracking-tight text-white md:text-5xl"
         >
@@ -24,7 +24,7 @@ export function CTASection() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ delay: 0.2 }}
           className="mt-4 text-base text-[#D3E3FF] md:text-lg"
         >
@@ -34,7 +34,7 @@ export function CTASection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ delay: 0.3 }}
           className="mt-10 flex items-center justify-center gap-4"
         >
