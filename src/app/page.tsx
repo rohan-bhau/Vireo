@@ -11,8 +11,7 @@ import {
   MessageSquareMore,
   Sparkles,
   ListChecks,
-  Shield,
-  Zap,
+
 } from "lucide-react";
 
 export default function HomePage() {
@@ -23,6 +22,7 @@ export default function HomePage() {
         <HeroSection />
         <ProductPreviewSection />
         <FeaturesSection />
+        <ModernEngineerSection />
         <AIBenefitsSection />
         <PricingSection />
         <CTASection />
@@ -378,6 +378,61 @@ function AIBenefitsSection() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ModernEngineerSection() {
+  return (
+    <section className="bg-[#FCF9F7] py-20 md:py-28">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mb-12 text-center">
+          <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
+            Built for the Modern Engineer
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-[#434655]">
+            Stop wasting hours on administrative overhead. Let AI handle the
+            documentation while you write the code.
+          </p>
+        </div>
+        <div className="grid gap-8 md:grid-cols-3">
+          {[
+            {
+              title: "Real-time Collaboration",
+              desc: "Work together seamlessly with live updates and integrated team chat so everyone stays aligned, no matter where they are.",
+              icon: MessageSquareMore,
+            },
+            {
+              title: "AI-Assisted Tickets",
+              desc: "Draft high-quality issues and bug reports in seconds with our contextual AI assistant that learns your project structure.",
+              icon: Sparkles,
+            },
+            {
+              title: "Agile Sprint Planning",
+              desc: "Optimize your capacity with data-driven sprint recommendations and velocity tracking for consistent delivery.",
+              icon: IterationCcw,
+            },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.title}
+                className="rounded-xl bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+              >
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#D3E3FF] text-[#004AC6]">
+                  <Icon className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#1B1C1B]">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#434655]">
+                  {item.desc}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
