@@ -33,7 +33,6 @@ interface SidebarProps {
 
 const mainNav = [
   { label: "Dashboard", href: "", icon: LayoutDashboard },
-  { label: "Projects", href: "#", icon: FolderKanban },
   { label: "Backlog", href: "#", icon: ListTodo },
   { label: "Board", href: "#", icon: Columns3 },
   { label: "Roadmap", href: "#", icon: Map },
