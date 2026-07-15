@@ -1,22 +1,146 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { Bell, LogOut, ChevronDown } from "lucide-react";
+import { Bell, LogOut, ChevronDown, Check, ArrowRight } from "lucide-react";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
+import { productCategories, type ProductCategory } from "@/lib/product-data";
 
-const navItems = [
-  { label: "Product", href: "/product" },
+const otherNavItems = [
   { label: "Solutions", href: "/solutions" },
   { label: "Pricing", href: "/pricing" },
   { label: "Docs", href: "/docs" },
 ];
+
+function ProductMenu() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<ProductCategory>(productCategories[0]);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleMouseEnter() {
+    clearTimeout(timeoutRef.current);
+    setOpen(true);
+  }
+
+  function handleMouseLeave() {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150);
+  }
+
+  function handleCategoryEnter(category: ProductCategory) {
+    setActiveCategory(category);
+  }
+
+  const isActive = pathname.startsWith("/product");
+
+  return (
+    <div
+      className="relative"
+      ref={menuRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Link
+        href="/product/features"
+        className={`text-sm font-semibold transition-colors hover:text-[#004AC6] flex items-center gap-1 ${
+          isActive ? "text-[#004AC6]" : "text-[#434655]"
+        }`}
+      >
+        Product
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </Link>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.97 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[640px] overflow-hidden rounded-2xl border border-[#C3C6D7]/20 bg-white shadow-xl"
+          >
+            <div className="flex">
+              <div className="w-[200px] shrink-0 border-r border-[#C3C6D7]/10 bg-[#F8F9FF] p-2">
+                {productCategories.map((cat) => {
+                  const isSelected = activeCategory.id === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onMouseEnter={() => handleCategoryEnter(cat)}
+                      onClick={() => handleCategoryEnter(cat)}
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                        isSelected
+                          ? "bg-white text-[#004AC6] shadow-sm"
+                          : "text-[#434655] hover:bg-white/60 hover:text-[#121C28]"
+                      }`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                          isSelected ? "bg-[#004AC6]" : "bg-transparent"
+                        }`}
+                      />
+                      {cat.title}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex-1 p-3">
+                <Link
+                  href={`/product/${activeCategory.id}`}
+                  className="mb-2 block rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#737686] transition-colors hover:text-[#004AC6]"
+                >
+                  {activeCategory.title}
+                  <ArrowRight className="ml-1 inline h-3 w-3" />
+                </Link>
+                <div className="space-y-0.5">
+                  {activeCategory.items.map((item) => {
+                    const isItemActive = pathname === `/product/${item.slug}`;
+                    return (
+                      <Link
+                        key={item.slug}
+                        href={`/product/${item.slug}`}
+                        onClick={() => setOpen(false)}
+                        className={`flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors ${
+                          isItemActive
+                            ? "bg-[#EEF4FF] text-[#004AC6]"
+                            : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
+                        }`}
+                      >
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#10B981]" />
+                        <div>
+                          <p className="text-sm font-semibold">{item.title}</p>
+                          <p className="mt-0.5 text-xs text-[#737686] line-clamp-1">
+                            {item.description}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export function Header() {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -71,7 +195,8 @@ export function Header() {
           />
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
-          {navItems.map((item) => {
+          <ProductMenu />
+          {otherNavItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
