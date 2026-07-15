@@ -101,5 +101,6 @@ export const {
   useRefreshMutation,
   useLogoutMutation,
   useGetProfileQuery,
+  useLazyGetProfileQuery,
   useUpdateProfileMutation,
 } = authApi;

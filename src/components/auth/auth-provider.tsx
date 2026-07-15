@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store";
 import { setCredentials, setLoading, logout } from "@/store/authSlice";
-import { api } from "@/store/api";
-import { getAccessToken, setTokens, clearTokens } from "@/lib/auth";
+import { authApi } from "@/store/authApi";
+import { getAccessToken, clearTokens } from "@/lib/auth";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -22,11 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     dispatch(setLoading(true));
 
-    dispatch(
-      api.endpoints.getProfile.initiate(undefined, { forceRefetch: true })
-    )
+    dispatch(authApi.endpoints.getProfile.initiate(undefined))
       .unwrap()
-      .then((data) => {
+      .then((data: any) => {
         const accessToken = getAccessToken();
         dispatch(
           setCredentials({
