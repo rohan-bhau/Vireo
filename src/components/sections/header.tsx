@@ -146,16 +146,9 @@ function ProductMenu() {
 function MobileMenu({ close }: { close: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  const initials = user?.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "U";
 
   function handleLogout() {
     dispatch(logout());
@@ -174,31 +167,20 @@ function MobileMenu({ close }: { close: () => void }) {
   function renderAuthButtons() {
     if (isAuthenticated) {
       return (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#004AC6] text-xs font-bold text-white">
-              {initials}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-[#121C28]">{user?.name || "User"}</p>
-              <p className="text-xs text-[#737686]">{user?.email || ""}</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleNavigate("/dashboard")}
-              className="flex-1 rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#003da8]"
-            >
-              Workspaces
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/20 px-4 py-2.5 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign out
-            </button>
-          </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleNavigate("/dashboard")}
+            className="flex-1 rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#003da8]"
+          >
+            Workspaces
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/20 px-4 py-2.5 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </button>
         </div>
       );
     }
@@ -350,12 +332,17 @@ export function Header() {
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileAvatarOpen, setMobileAvatarOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileAvatarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (mobileAvatarRef.current && !mobileAvatarRef.current.contains(e.target as Node)) {
+        setMobileAvatarOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -488,9 +475,51 @@ export function Header() {
               </div>
             )}
 
+            {isAuthenticated && (
+              <div className="flex items-center gap-2 md:hidden">
+                <Link
+                  href="/dashboard"
+                  className="rounded-lg bg-[#004AC6] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#003da8]"
+                >
+                  Workspaces
+                </Link>
+                <div className="relative" ref={mobileAvatarRef}>
+                  <button
+                    onClick={() => setMobileAvatarOpen(!mobileAvatarOpen)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[#004AC6] text-[10px] font-bold text-white transition-colors hover:bg-[#003da8]"
+                  >
+                    {initials}
+                  </button>
+                  {mobileAvatarOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-44 overflow-hidden rounded-xl border border-[#C3C6D7]/20 bg-white shadow-lg"
+                    >
+                      <div className="border-b border-[#C3C6D7]/10 px-4 py-3">
+                        <p className="text-sm font-semibold text-[#121C28]">{user?.name || "User"}</p>
+                        <p className="mt-0.5 text-xs text-[#737686]">{user?.email || ""}</p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Log out
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:hidden"
+              className={`flex h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] ${
+                isAuthenticated ? "" : "md:hidden"
+              }`}
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
