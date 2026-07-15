@@ -5,13 +5,12 @@ import {
   Columns,
   IterationCcw,
   Route,
-  Bot,
   RefreshCw,
   BarChart3,
   MessageSquareMore,
   Sparkles,
   ListChecks,
-
+  Shield,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -91,7 +90,7 @@ function HeroSection() {
       <div className="relative mx-auto max-w-7xl px-6 text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white px-4 py-1.5 text-sm text-[#5C6274]">
           <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
-          Vireo v2.4: Now with Automated Sprint Triaging
+          New: AI-Sprint Intelligence is live
         </div>
         <h1 className="mx-auto max-w-4xl text-4xl font-semibold leading-tight tracking-tight text-[#121C28] md:text-5xl lg:text-6xl">
           Plan, track, and ship software with{" "}
@@ -115,6 +114,10 @@ function HeroSection() {
           >
             View demo
           </Link>
+        </div>
+        <div className="mt-10 flex items-center justify-center gap-2 text-xs font-medium text-[#414752]">
+          <Shield className="h-3 w-3 text-[#10B981]" />
+          Trusted by 2,500+ engineering leaders
         </div>
       </div>
     </section>
