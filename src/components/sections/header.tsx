@@ -17,13 +17,22 @@ export function Header() {
       className="fixed top-0 left-0 right-0 z-50 bg-[#F8F9FF]/80 backdrop-blur-[12px] border-b border-[#C3C6D7]/20"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2">
-          <Image src="/vireo-logo.svg" alt="Vireo" width={100} height={30} className="h-7 w-auto" />
+        <Link
+          href={isAuthenticated ? "/dashboard" : "/"}
+          className="flex items-center gap-2"
+        >
+          <Image
+            src="/vireo-logo.svg"
+            alt="Vireo"
+            width={100}
+            height={30}
+            className="h-7 w-auto"
+          />
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           <Link
-            href="/login"
-            className="text-sm font-semibold text-[#434655] transition-colors hover:text-[#004AC6]"
+            href="/product"
+            className="text-sm font-semibold text-[#434655] transition-colors hover:text-[#003da8]"
           >
             Product
           </Link>
