@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { Bell, LogOut, ChevronDown, Check, ArrowRight } from "lucide-react";
+import { Bell, LogOut, ChevronDown, Check, ArrowRight, Menu, X, ChevronRight } from "lucide-react";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
@@ -104,6 +104,7 @@ function ProductMenu() {
                 <Link
                   href={`/product/${activeCategory.id}`}
                   className="mb-2 block rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#737686] transition-colors hover:text-[#004AC6]"
+                  onClick={() => setOpen(false)}
                 >
                   {activeCategory.title}
                   <ArrowRight className="ml-1 inline h-3 w-3" />
@@ -142,12 +143,219 @@ function ProductMenu() {
   );
 }
 
+function MobileMenu({ close }: { close: () => void }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const [productExpanded, setProductExpanded] = useState(false);
+  const [mobileCategory, setMobileCategory] = useState<string | null>(null);
+
+  const initials = user?.name
+    ?.split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "U";
+
+  function handleLogout() {
+    dispatch(logout());
+    clearTokens();
+    close();
+    router.push("/");
+  }
+
+  function handleNavigate(href: string) {
+    close();
+    router.push(href);
+  }
+
+  const selectedCategory = productCategories.find((c) => c.id === mobileCategory);
+  const showProductItems = productExpanded && mobileCategory;
+
+  return (
+    <motion.div
+      initial={{ x: "100%" }}
+      animate={{ x: 0 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      className="fixed inset-0 top-16 z-40 bg-white md:hidden"
+    >
+      <div className="flex h-full flex-col overflow-y-auto">
+        <div className="flex-1 px-4 py-4">
+          {showProductItems ? (
+            <div>
+              <button
+                onClick={() => setMobileCategory(null)}
+                className="mb-3 flex items-center gap-1.5 text-sm font-medium text-[#737686] transition-colors hover:text-[#004AC6]"
+              >
+                <ChevronDown className="h-4 w-4 rotate-90" />
+                Back
+              </button>
+              <div className="mb-3 border-b border-[#C3C6D7]/10 pb-3">
+                <Link
+                  href={`/product/${selectedCategory!.id}`}
+                  onClick={close}
+                  className="flex items-center justify-between rounded-lg px-3 py-2.5 text-base font-semibold text-[#004AC6] transition-colors hover:bg-[#EEF4FF]"
+                >
+                  {selectedCategory!.title}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="space-y-0.5">
+                {selectedCategory!.items.map((item) => {
+                  const isItemActive = pathname === `/product/${item.slug}`;
+                  return (
+                    <button
+                      key={item.slug}
+                      onClick={() => handleNavigate(`/product/${item.slug}`)}
+                      className={`flex w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors ${
+                        isItemActive
+                          ? "bg-[#EEF4FF] text-[#004AC6]"
+                          : "text-[#434655] hover:bg-[#F8F9FF]"
+                      }`}
+                    >
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#10B981]" />
+                      <div>
+                        <p className="text-sm font-semibold">{item.title}</p>
+                        <p className="mt-0.5 text-xs text-[#737686]">{item.description}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <nav className="space-y-1">
+              <div>
+                <button
+                  onClick={() => setProductExpanded(!productExpanded)}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
+                    pathname.startsWith("/product")
+                      ? "text-[#004AC6] bg-[#EEF4FF]"
+                      : "text-[#121C28] hover:bg-[#F8F9FF]"
+                  }`}
+                >
+                  Product
+                  <ChevronDown
+                    className={`h-4 w-4 text-[#737686] transition-transform ${
+                      productExpanded ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <AnimatePresence>
+                  {productExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="ml-2 mt-1 space-y-0.5 border-l-2 border-[#C3C6D7]/20 pl-3">
+                        {productCategories.map((cat) => {
+                          const isCatActive = pathname === `/product/${cat.id}`;
+                          return (
+                            <button
+                              key={cat.id}
+                              onClick={() => setMobileCategory(cat.id)}
+                              className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                                isCatActive
+                                  ? "text-[#004AC6] bg-[#EEF4FF]"
+                                  : "text-[#434655] hover:bg-[#F8F9FF]"
+                              }`}
+                            >
+                              {cat.title}
+                              <ChevronRight className="h-4 w-4 text-[#737686]" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {[
+                { label: "Solutions", href: "/solutions" },
+                { label: "Pricing", href: "/pricing" },
+                { label: "Docs", href: "/docs" },
+              ].map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <button
+                    key={item.href}
+                    onClick={() => handleNavigate(item.href)}
+                    className={`flex w-full items-center rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
+                      isActive
+                        ? "text-[#004AC6] bg-[#EEF4FF]"
+                        : "text-[#121C28] hover:bg-[#F8F9FF]"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+        </div>
+
+        <div className="border-t border-[#C3C6D7]/10 px-4 py-4">
+          {isAuthenticated ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 px-1">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#004AC6] text-xs font-bold text-white">
+                  {initials}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#121C28]">{user?.name || "User"}</p>
+                  <p className="text-xs text-[#737686]">{user?.email || ""}</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleNavigate("/dashboard")}
+                  className="flex-1 rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#003da8]"
+                >
+                  Workspaces
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/20 px-4 py-2.5 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => handleNavigate("/login")}
+                className="w-full rounded-lg border border-[#C3C6D7]/20 py-2.5 text-sm font-semibold text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+              >
+                Sign in
+              </button>
+              <button
+                onClick={() => handleNavigate("/register")}
+                className="w-full rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10)] transition-colors hover:bg-[#003da8]"
+              >
+                Start free trial
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export function Header() {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -159,6 +367,10 @@ export function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   function handleLogout() {
     dispatch(logout());
@@ -181,7 +393,7 @@ export function Header() {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="fixed top-0 left-0 right-0 z-50 bg-[#F8F9FF]/80 backdrop-blur-[12px] border-b border-[#C3C6D7]/20"
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
         <Link
           href={isAuthenticated ? "/dashboard" : "/"}
           className="flex items-center gap-2"
@@ -194,6 +406,7 @@ export function Header() {
             className="h-7 w-auto"
           />
         </Link>
+
         <nav className="hidden items-center gap-8 md:flex">
           <ProductMenu />
           {otherNavItems.map((item) => {
@@ -211,77 +424,99 @@ export function Header() {
             );
           })}
         </nav>
-        {isAuthenticated ? (
-          <div className="flex items-center gap-4">
-            <Link
-              href="/notifications"
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6]"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#004AC6] text-[8px] font-bold text-white">
-                3
-              </span>
-            </Link>
-            <Link
-              href="/dashboard"
-              className="rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
-            >
-              Workspaces
-            </Link>
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/20 bg-white px-3 py-2 transition-colors hover:border-[#C3C6D7]/40"
+
+        <div className="flex items-center gap-2 md:gap-4">
+          {isAuthenticated ? (
+            <>
+              <Link
+                href="/notifications"
+                className="relative hidden h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:flex"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#004AC6] text-[11px] font-bold text-white">
-                  {initials}
-                </div>
-                <ChevronDown className={`h-4 w-4 text-[#737686] transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              {dropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.96 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-[#C3C6D7]/20 bg-white shadow-lg"
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#004AC6] text-[8px] font-bold text-white">
+                  3
+                </span>
+              </Link>
+              <Link
+                href="/dashboard"
+                className="hidden rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8] md:block"
+              >
+                Workspaces
+              </Link>
+              <div className="relative hidden md:block" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/20 bg-white px-3 py-2 transition-colors hover:border-[#C3C6D7]/40"
                 >
-                  <div className="border-b border-[#C3C6D7]/10 px-4 py-3">
-                    <p className="text-sm font-semibold text-[#121C28]">
-                      {user?.name || "User"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-[#737686]">
-                      {user?.email || ""}
-                    </p>
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#004AC6] text-[11px] font-bold text-white">
+                    {initials}
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
+                  <ChevronDown className={`h-4 w-4 text-[#737686] transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                {dropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-[#C3C6D7]/20 bg-white shadow-lg"
                   >
-                    <LogOut className="h-4 w-4" />
-                    Log out
-                  </button>
-                </motion.div>
-              )}
+                    <div className="border-b border-[#C3C6D7]/10 px-4 py-3">
+                      <p className="text-sm font-semibold text-[#121C28]">{user?.name || "User"}</p>
+                      <p className="mt-0.5 text-xs text-[#737686]">{user?.email || ""}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Log out
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="hidden items-center gap-4 md:flex">
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-[#434655] transition-colors hover:text-[#004AC6]"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
+              >
+                Start free trial
+              </Link>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-[#434655] transition-colors hover:text-[#004AC6]"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
-            >
-              Start free trial
-            </Link>
-          </div>
-        )}
+          )}
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:hidden"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 top-16 z-30 bg-black/20 md:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <MobileMenu close={() => setMobileMenuOpen(false)} />
+          </>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 }
