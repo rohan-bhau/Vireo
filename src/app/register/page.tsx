@@ -33,7 +33,7 @@ export default function RegisterPage() {
       const result = await register({ name, email, password }).unwrap();
       setTokens(result.data.accessToken, result.data.refreshToken);
       dispatch(setCredentials(result.data));
-      router.replace("/workspaces");
+      router.replace("/dashboard");
     } catch (err: any) {
       setError(err?.data?.message || "Registration failed");
     }

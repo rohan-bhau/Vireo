@@ -28,7 +28,7 @@ export default function WorkspaceHomePage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#F8F9FF]">
         <p className="text-[#737686]">Workspace not found</p>
-        <Link href="/workspaces"><Button variant="outline">Back to workspaces</Button></Link>
+        <Link href="/dashboard"><Button variant="outline">Back to workspaces</Button></Link>
       </div>
     );
   }

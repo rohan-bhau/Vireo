@@ -13,7 +13,7 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace("/workspaces");
+      router.replace("/dashboard");
     }
   }, [isAuthenticated, isLoading, router]);
 

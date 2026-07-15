@@ -9,7 +9,7 @@ import { setUser, logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AuthGuard } from "@/components/auth/auth-guard";
+import { AppLayout } from "@/components/layout/app-layout";
 
 export default function ProfilePage() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -51,22 +51,14 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-[#F8F9FF]">
-        <header className="border-b border-[#C3C6D7]/20 bg-white">
-          <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
-            <h1 className="text-lg font-semibold text-[#121C28]">Profile</h1>
-            <button
-              onClick={handleLogout}
-              className="text-sm font-medium text-[#434655] transition-colors hover:text-red-600"
-            >
-              Sign out
-            </button>
-          </div>
-        </header>
+    <AppLayout>
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold text-[#121C28]">Profile</h1>
+          <p className="mt-1 text-sm text-[#737686]">Manage your account settings</p>
+        </div>
 
-        <main className="mx-auto max-w-3xl px-6 py-10">
-          <div className="rounded-xl bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+        <div className="rounded-xl bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
             <div className="mb-6 flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2563EB] text-xl font-bold text-white">
                 {user.name
@@ -127,8 +119,7 @@ export default function ProfilePage() {
               </Button>
             </form>
           </div>
-        </main>
       </div>
-    </AuthGuard>
+    </AppLayout>
   );
 }

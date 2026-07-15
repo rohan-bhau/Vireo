@@ -27,7 +27,7 @@ export default function LoginPage() {
       const result = await login({ email, password }).unwrap();
       setTokens(result.data.accessToken, result.data.refreshToken);
       dispatch(setCredentials(result.data));
-      router.replace("/workspaces");
+      router.replace("/dashboard");
     } catch (err: any) {
       setError(err?.data?.message || "Invalid email or password");
     }
