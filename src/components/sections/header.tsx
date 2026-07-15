@@ -59,7 +59,7 @@ function ProductMenu() {
     >
       <Link
         href="/product/features"
-        className={`text-sm font-semibold transition-colors hover:text-[#004AC6] flex items-center gap-1 ${
+        className={`cursor-pointer text-sm font-semibold transition-colors hover:text-[#004AC6] flex items-center gap-1 ${
           isActive ? "text-[#004AC6]" : "text-[#434655]"
         }`}
       >
@@ -77,19 +77,19 @@ function ProductMenu() {
           >
             <div className="flex">
               <div className="w-[200px] shrink-0 border-r border-[#C3C6D7]/10 bg-[#F8F9FF] p-2">
-                {productCategories.map((cat) => {
-                  const isSelected = activeCategory.id === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      onMouseEnter={() => handleCategoryEnter(cat)}
-                      onClick={() => handleCategoryEnter(cat)}
-                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
-                        isSelected
-                          ? "bg-white text-[#004AC6] shadow-sm"
-                          : "text-[#434655] hover:bg-white/60 hover:text-[#121C28]"
-                      }`}
-                    >
+                    {productCategories.map((cat) => {
+                      const isSelected = activeCategory.id === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          onMouseEnter={() => handleCategoryEnter(cat)}
+                          onClick={() => handleCategoryEnter(cat)}
+                          className={`flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                            isSelected
+                              ? "bg-white text-[#004AC6] shadow-sm"
+                              : "text-[#434655] hover:bg-white/60 hover:text-[#121C28]"
+                          }`}
+                        >
                       <span
                         className={`h-1.5 w-1.5 rounded-full transition-colors ${
                           isSelected ? "bg-[#004AC6]" : "bg-transparent"
@@ -103,7 +103,7 @@ function ProductMenu() {
               <div className="flex-1 p-3">
                 <Link
                   href={`/product/${activeCategory.id}`}
-                  className="mb-2 block rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#737686] transition-colors hover:text-[#004AC6]"
+                  className="mb-2 block cursor-pointer rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#737686] transition-colors hover:text-[#004AC6]"
                   onClick={() => setOpen(false)}
                 >
                   {activeCategory.title}
@@ -117,7 +117,7 @@ function ProductMenu() {
                         key={item.slug}
                         href={`/product/${item.slug}`}
                         onClick={() => setOpen(false)}
-                        className={`flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors ${
+                        className={`flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 transition-colors ${
                           isItemActive
                             ? "bg-[#EEF4FF] text-[#004AC6]"
                             : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
@@ -170,13 +170,13 @@ function MobileMenu({ close }: { close: () => void }) {
         <div className="flex gap-3">
           <button
             onClick={() => handleNavigate("/dashboard")}
-            className="flex-1 rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#003da8]"
+            className="flex-1 cursor-pointer rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#003da8]"
           >
             Workspaces
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/20 px-4 py-2.5 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+            className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#C3C6D7]/20 px-4 py-2.5 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
           >
             <LogOut className="h-4 w-4" />
             Sign out
@@ -188,13 +188,13 @@ function MobileMenu({ close }: { close: () => void }) {
       <div className="flex flex-col gap-3">
         <button
           onClick={() => handleNavigate("/login")}
-          className="w-full rounded-lg border border-[#C3C6D7]/20 py-2.5 text-sm font-semibold text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+          className="w-full cursor-pointer rounded-lg border border-[#C3C6D7]/20 py-2.5 text-sm font-semibold text-[#434655] transition-colors hover:bg-[#F8F9FF]"
         >
           Sign in
         </button>
         <button
           onClick={() => handleNavigate("/register")}
-          className="w-full rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10)] transition-colors hover:bg-[#003da8]"
+          className="w-full cursor-pointer rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10)] transition-colors hover:bg-[#003da8]"
         >
           Start free trial
         </button>
@@ -224,7 +224,7 @@ function MobileMenu({ close }: { close: () => void }) {
               <div className="flex-1 px-4 py-4">
                 <button
                   onClick={() => setSelectedCategory(null)}
-                  className="mb-3 flex items-center gap-1.5 text-sm font-medium text-[#737686] transition-colors hover:text-[#004AC6]"
+                  className="mb-3 flex cursor-pointer items-center gap-1.5 text-sm font-medium text-[#737686] transition-colors hover:text-[#004AC6]"
                 >
                   <ChevronDown className="h-4 w-4 rotate-90" />
                   All Products
@@ -233,7 +233,7 @@ function MobileMenu({ close }: { close: () => void }) {
                   <Link
                     href={`/product/${activeCategory.id}`}
                     onClick={close}
-                    className="flex items-center justify-between rounded-lg px-3 py-2.5 text-base font-semibold text-[#004AC6] transition-colors hover:bg-[#EEF4FF]"
+                    className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-base font-semibold text-[#004AC6] transition-colors hover:bg-[#EEF4FF]"
                   >
                     {activeCategory.title}
                     <ArrowRight className="h-4 w-4" />
@@ -246,7 +246,7 @@ function MobileMenu({ close }: { close: () => void }) {
                       <button
                         key={item.slug}
                         onClick={() => handleNavigate(`/product/${item.slug}`)}
-                        className={`flex w-full items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors ${
+                        className={`flex w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors ${
                           isItemActive
                             ? "bg-[#EEF4FF] text-[#004AC6]"
                             : "text-[#434655] hover:bg-[#F8F9FF]"
@@ -273,12 +273,12 @@ function MobileMenu({ close }: { close: () => void }) {
                 </div>
                 <nav className="space-y-0.5">
                   {productCategories.map((cat) => {
-                    const isCatActive = pathname === `/product/${cat.id}`;
+                    const isCatActive = pathname === `/product/${cat.id}` || cat.items.some(item => pathname === `/product/${item.slug}`);
                     return (
                       <button
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
+                        className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
                           isCatActive
                             ? "text-[#004AC6] bg-[#EEF4FF]"
                             : "text-[#121C28] hover:bg-[#F8F9FF]"
@@ -302,7 +302,7 @@ function MobileMenu({ close }: { close: () => void }) {
                       <button
                         key={item.href}
                         onClick={() => handleNavigate(item.href)}
-                        className={`flex w-full items-center rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
+                        className={`flex w-full cursor-pointer items-center rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
                           isActive
                             ? "text-[#004AC6] bg-[#EEF4FF]"
                             : "text-[#121C28] hover:bg-[#F8F9FF]"
@@ -397,7 +397,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`text-sm font-semibold transition-colors hover:text-[#004AC6] ${
+                  className={`cursor-pointer text-sm font-semibold transition-colors hover:text-[#004AC6] ${
                     isActive ? "text-[#004AC6]" : "text-[#434655]"
                   }`}
                 >
@@ -412,7 +412,7 @@ export function Header() {
               <>
                 <Link
                   href="/notifications"
-                  className="relative hidden h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:flex"
+                  className="relative hidden h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:flex"
                 >
                   <Bell className="h-5 w-5" />
                   <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#004AC6] text-[8px] font-bold text-white">
@@ -421,14 +421,14 @@ export function Header() {
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="hidden rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8] md:block"
+                  className="hidden cursor-pointer rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8] md:block"
                 >
                   Workspaces
                 </Link>
                 <div className="relative hidden md:block" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/20 bg-white px-3 py-2 transition-colors hover:border-[#C3C6D7]/40"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#C3C6D7]/20 bg-white px-3 py-2 transition-colors hover:border-[#C3C6D7]/40"
                   >
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#004AC6] text-[11px] font-bold text-white">
                       {initials}
@@ -449,7 +449,7 @@ export function Header() {
                       </div>
                       <button
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
+                        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
                       >
                         <LogOut className="h-4 w-4" />
                         Log out
@@ -462,13 +462,13 @@ export function Header() {
               <div className="hidden items-center gap-4 md:flex">
                 <Link
                   href="/login"
-                  className="text-sm font-semibold text-[#434655] transition-colors hover:text-[#004AC6]"
+                  className="cursor-pointer text-sm font-semibold text-[#434655] transition-colors hover:text-[#004AC6]"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
+                  className="cursor-pointer rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
                 >
                   Start free trial
                 </Link>
@@ -479,7 +479,7 @@ export function Header() {
               <div className="relative md:hidden" ref={mobileAvatarRef}>
                 <button
                   onClick={() => setMobileAvatarOpen(!mobileAvatarOpen)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#004AC6] text-[10px] font-bold text-white transition-colors hover:bg-[#003da8]"
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#004AC6] text-[10px] font-bold text-white transition-colors hover:bg-[#003da8]"
                 >
                   {initials}
                 </button>
@@ -498,14 +498,14 @@ export function Header() {
                     <Link
                       href="/dashboard"
                       onClick={() => setMobileAvatarOpen(false)}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#004AC6]"
+                      className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#004AC6]"
                     >
                       <LayoutDashboard className="h-4 w-4" />
                       Workspaces
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
+                      className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
                     >
                       <LogOut className="h-4 w-4" />
                       Log out
@@ -517,7 +517,7 @@ export function Header() {
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:hidden"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:hidden"
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
