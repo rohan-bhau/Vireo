@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { Bell, LogOut, ChevronDown, Check, ArrowRight, Menu, X, ChevronRight } from "lucide-react";
+import { Bell, LogOut, ChevronDown, Check, ArrowRight, Menu, X, ChevronRight, LayoutDashboard } from "lucide-react";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
@@ -476,42 +476,42 @@ export function Header() {
             )}
 
             {isAuthenticated && (
-              <div className="flex items-center gap-2 md:hidden">
-                <Link
-                  href="/dashboard"
-                  className="rounded-lg bg-[#004AC6] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#003da8]"
+              <div className="relative md:hidden" ref={mobileAvatarRef}>
+                <button
+                  onClick={() => setMobileAvatarOpen(!mobileAvatarOpen)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#004AC6] text-[10px] font-bold text-white transition-colors hover:bg-[#003da8]"
                 >
-                  Workspaces
-                </Link>
-                <div className="relative" ref={mobileAvatarRef}>
-                  <button
-                    onClick={() => setMobileAvatarOpen(!mobileAvatarOpen)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[#004AC6] text-[10px] font-bold text-white transition-colors hover:bg-[#003da8]"
+                  {initials}
+                </button>
+                {mobileAvatarOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-[#C3C6D7]/20 bg-white shadow-lg"
                   >
-                    {initials}
-                  </button>
-                  {mobileAvatarOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -4, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -4, scale: 0.96 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-44 overflow-hidden rounded-xl border border-[#C3C6D7]/20 bg-white shadow-lg"
+                    <div className="border-b border-[#C3C6D7]/10 px-4 py-3">
+                      <p className="text-sm font-semibold text-[#121C28]">{user?.name || "User"}</p>
+                      <p className="mt-0.5 text-xs text-[#737686]">{user?.email || ""}</p>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setMobileAvatarOpen(false)}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#004AC6]"
                     >
-                      <div className="border-b border-[#C3C6D7]/10 px-4 py-3">
-                        <p className="text-sm font-semibold text-[#121C28]">{user?.name || "User"}</p>
-                        <p className="mt-0.5 text-xs text-[#737686]">{user?.email || ""}</p>
-                      </div>
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Log out
-                      </button>
-                    </motion.div>
-                  )}
-                </div>
+                      <LayoutDashboard className="h-4 w-4" />
+                      Workspaces
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF] hover:text-[#DC2626]"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Log out
+                    </button>
+                  </motion.div>
+                )}
               </div>
             )}
 
