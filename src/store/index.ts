@@ -26,6 +26,7 @@ store.subscribe(() => {
         starredWorkspaces: state.starredWorkspaces,
         visibleSections: state.visibleSections,
         visibleMenuItems: state.visibleMenuItems,
+        tabsByWorkspace: state.tabsByWorkspace,
       })
     );
   } catch {}

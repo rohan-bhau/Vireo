@@ -2,6 +2,17 @@
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+interface WorkspaceTab {
+  id: string;
+  label: string;
+  type: "builtin" | "custom";
+}
+
+interface WorkspaceTabsConfig {
+  tabs: WorkspaceTab[];
+  activeTab: string;
+}
+
 interface WorkspaceState {
   activeWorkspaceId: string | null;
   recentWorkspaces: string[];
@@ -20,9 +31,18 @@ interface WorkspaceState {
     teamChat: boolean;
     automation: boolean;
   };
+  tabsByWorkspace: Record<string, WorkspaceTabsConfig>;
 }
 
 const WORKSPACE_STORAGE_KEY = "vireo_workspace_state";
+
+const DEFAULT_TABS: WorkspaceTab[] = [
+  { id: "board", label: "Board", type: "builtin" },
+  { id: "list", label: "List", type: "builtin" },
+  { id: "summary", label: "Summary", type: "builtin" },
+  { id: "roadmap", label: "Roadmap", type: "builtin" },
+  { id: "reports", label: "Reports", type: "builtin" },
+];
 
 function loadState(): WorkspaceState {
   if (typeof window === "undefined") return defaultState;
@@ -53,6 +73,7 @@ function loadState(): WorkspaceState {
           teamChat: parsed.visibleMenuItems?.teamChat ?? false,
           automation: parsed.visibleMenuItems?.automation ?? false,
         },
+        tabsByWorkspace: parsed.tabsByWorkspace || {},
       };
     }
   } catch {}
@@ -77,6 +98,7 @@ const defaultState: WorkspaceState = {
     teamChat: false,
     automation: false,
   },
+  tabsByWorkspace: {},
 };
 
 const initialState: WorkspaceState = loadState();
@@ -117,6 +139,40 @@ const workspaceSlice = createSlice({
         ...action.payload,
       };
     },
+    setActiveTab(state, action: PayloadAction<{ workspaceId: string; tabId: string }>) {
+      const { workspaceId, tabId } = action.payload;
+      const config = state.tabsByWorkspace[workspaceId];
+      if (config) {
+        config.activeTab = tabId;
+      }
+    },
+    initWorkspaceTabs(state, action: PayloadAction<string>) {
+      const workspaceId = action.payload;
+      if (!state.tabsByWorkspace[workspaceId]) {
+        state.tabsByWorkspace[workspaceId] = {
+          tabs: DEFAULT_TABS.map((t) => ({ ...t })),
+          activeTab: "board",
+        };
+      }
+    },
+    addCustomTab(state, action: PayloadAction<{ workspaceId: string; label: string }>) {
+      const { workspaceId, label } = action.payload;
+      const config = state.tabsByWorkspace[workspaceId];
+      if (config) {
+        const id = `custom-${Date.now()}`;
+        config.tabs.push({ id, label, type: "custom" });
+      }
+    },
+    removeCustomTab(state, action: PayloadAction<{ workspaceId: string; tabId: string }>) {
+      const { workspaceId, tabId } = action.payload;
+      const config = state.tabsByWorkspace[workspaceId];
+      if (config) {
+        config.tabs = config.tabs.filter((t) => t.id !== tabId);
+        if (config.activeTab === tabId) {
+          config.activeTab = "board";
+        }
+      }
+    },
     clearWorkspaceState() {
       return { ...defaultState };
     },
@@ -129,8 +185,12 @@ export const {
   toggleStarredWorkspace,
   setVisibleSections,
   setVisibleMenuItems,
+  setActiveTab,
+  initWorkspaceTabs,
+  addCustomTab,
+  removeCustomTab,
   clearWorkspaceState,
 } = workspaceSlice.actions;
 
-export type { WorkspaceState };
+export type { WorkspaceState, WorkspaceTab };
 export default workspaceSlice.reducer;
