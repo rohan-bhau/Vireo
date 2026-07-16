@@ -104,7 +104,7 @@ function WorkspaceMenuItem({
         href={`/w/${workspaceId}`}
         onClick={onNavigate}
         className={clsx(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px]",
           isActive
             ? "bg-[#EEF4FF] text-[#004AC6]"
             : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
@@ -418,7 +418,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
           {!collapsed && (
             <button
               onClick={() => setShowCustomize(true)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#737686] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#737686] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[44px]"
             >
               <Settings2 className="h-4 w-4 shrink-0" />
               <span>Customize</span>
@@ -428,7 +428,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
           <button
             onClick={() => setShowCreate(true)}
             className={clsx(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#2563EB] hover:bg-[#EEF4FF]",
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#2563EB] hover:bg-[#EEF4FF] min-h-[44px]",
               collapsed && "justify-center"
             )}
             title={collapsed ? "Create workspace" : undefined}
@@ -575,7 +575,7 @@ function NavItem({
       href={href}
       onClick={onNavigate}
       className={clsx(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px]",
         active
           ? "bg-[#EEF4FF] text-[#004AC6]"
           : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"

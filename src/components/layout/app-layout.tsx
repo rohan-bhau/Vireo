@@ -5,7 +5,7 @@ import { Sidebar } from "./sidebar";
 import { AppNavbar } from "./app-navbar";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { X } from "lucide-react";
 
 interface AppLayoutProps {
@@ -27,6 +27,8 @@ function MobileSidebarDrawer({
   workspaceId?: string;
   workspaceName?: string;
 }) {
+  const drawerX = useMotionValue(0);
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -37,6 +39,12 @@ function MobileSidebarDrawer({
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  function handleDragEnd(_: any, info: any) {
+    if (info.offset.x < -80) {
+      onClose();
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -55,13 +63,19 @@ function MobileSidebarDrawer({
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={handleDragEnd}
+            style={{ x: drawerX }}
             className="fixed left-0 top-0 z-50 flex h-full w-64 flex-col bg-white shadow-xl md:hidden"
           >
             <div className="flex h-14 items-center justify-between border-b border-[#C3C6D7]/20 px-4">
               <span className="text-sm font-bold text-[#121C28]">Vireo</span>
               <button
                 onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#737686] hover:bg-[#F8F9FF] transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#737686] hover:bg-[#F8F9FF] transition-colors"
+                aria-label="Close sidebar"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -103,7 +117,7 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
         </div>
         <div className="flex flex-1 flex-col min-w-0 pb-16 md:pb-0">
           <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} />
-          <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
+          <main className="flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-8">
             {children}
           </main>
         </div>

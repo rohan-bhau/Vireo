@@ -47,16 +47,17 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
     >
       <div
         className={clsx(
-          "w-full max-w-md rounded-xl bg-white shadow-xl",
+          "w-full max-w-md rounded-xl bg-white shadow-xl max-sm:fixed max-sm:inset-0 max-sm:max-w-none max-sm:rounded-none max-sm:flex max-sm:flex-col",
           className
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-[#C3C6D7]/20 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-[#C3C6D7]/20 px-6 py-4 max-sm:min-h-[56px]">
             <h2 className="text-lg font-semibold text-[#121C28]">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-lg p-1 text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28]"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28]"
+              aria-label="Close"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -68,7 +69,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
             </button>
           </div>
         )}
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-6 py-4 max-sm:flex-1 max-sm:overflow-y-auto">{children}</div>
       </div>
     </div>
   );

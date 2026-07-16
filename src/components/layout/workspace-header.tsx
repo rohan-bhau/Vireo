@@ -82,7 +82,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between border-b border-[#C3C6D7]/20 bg-white px-4 py-3 md:px-6 md:py-4">
+      <div className="flex items-center justify-between gap-2 border-b border-[#C3C6D7]/20 bg-white px-4 py-3 md:px-6 md:py-4 max-sm:flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF4FF] text-sm font-bold text-[#004AC6]">
             {workspace.name.charAt(0).toUpperCase()}
@@ -94,10 +94,10 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0 max-sm:ml-auto">
           <button
             onClick={() => setShowInvite(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+            className="flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1d4ed8] min-h-[36px] sm:min-h-[32px]"
           >
             <UserPlus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Add member</span>
@@ -106,7 +106,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
           <div ref={menuRef} className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28]"
+              className="flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28]"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>

@@ -132,7 +132,7 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
         </div>
       </div>
 
-      <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
+      <div className="flex flex-1 gap-4 overflow-x-auto pb-4 max-sm:px-1 max-sm:gap-3">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -159,7 +159,7 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
           </DragOverlay>
         </DndContext>
 
-        <div className="flex-shrink-0 w-72">
+        <div className="flex-shrink-0 w-72 max-sm:w-64">
           {showAddColumn ? (
             <div className="rounded-xl bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#C3C6D7]/20">
               <input
@@ -236,12 +236,12 @@ function BoardColumn({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex w-72 flex-shrink-0 flex-col rounded-xl bg-[#F1F2F6]"
+      className="flex w-72 max-sm:w-64 flex-shrink-0 flex-col rounded-xl bg-[#F1F2F6]"
     >
       <div
         {...attributes}
         {...listeners}
-        className="flex items-center justify-between rounded-t-xl px-4 py-3 cursor-grab active:cursor-grabbing"
+        className="flex items-center justify-between rounded-t-xl px-4 py-3 cursor-grab active:cursor-grabbing min-h-[44px]"
       >
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-[#C3C6D7]" />

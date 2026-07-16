@@ -52,7 +52,7 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
 
         <button
           onClick={onMobileMenuToggle}
-          className="flex md:hidden h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+          className="flex md:hidden h-11 w-11 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#F8F9FF]"
           title="Open sidebar"
         >
           <Menu className="h-5 w-5" />

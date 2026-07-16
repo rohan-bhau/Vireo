@@ -50,7 +50,7 @@ export default function WorkspaceHomePage() {
   return (
     <div className="flex flex-1 flex-col">
       <WorkspaceTabs workspaceId={workspaceId} />
-      <div className="flex-1 mt-4">
+      <div className="flex-1 mt-4 max-sm:mt-3 max-sm:mb-2">
         <TabContent workspaceId={workspaceId} tabId={activeTab} />
       </div>
     </div>
