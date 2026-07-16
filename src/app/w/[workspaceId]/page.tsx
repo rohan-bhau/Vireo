@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useGetWorkspaceQuery, useGetMembersQuery } from "@/store/workspaceApi";
+import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
 import { Button } from "@/components/ui/button";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 
 export default function WorkspaceHomePage() {
   const params = useParams();
@@ -12,6 +15,9 @@ export default function WorkspaceHomePage() {
 
   const { data: workspace, isLoading, error } = useGetWorkspaceQuery(workspaceId);
   const { data: members = [] } = useGetMembersQuery(workspaceId);
+  const { data: projects = [] } = useGetWorkspaceProjectsQuery(workspaceId);
+
+  const [showCreateProject, setShowCreateProject] = useState(false);
 
   if (isLoading) {
     return (
@@ -45,7 +51,7 @@ export default function WorkspaceHomePage() {
       <div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <p className="text-xs font-medium uppercase tracking-wider text-[#737686]">Active Sprints</p>
-          <p className="mt-2 text-3xl font-bold text-[#121C28]">{members.length > 0 ? "1" : "0"}</p>
+          <p className="mt-2 text-3xl font-bold text-[#121C28]">{projects.length > 0 ? "1" : "0"}</p>
           <p className="mt-1 text-xs text-green-600">Ready to start</p>
         </div>
         <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
@@ -55,12 +61,63 @@ export default function WorkspaceHomePage() {
         </div>
         <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <p className="text-xs font-medium uppercase tracking-wider text-[#737686]">Projects</p>
-          <p className="mt-2 text-3xl font-bold text-[#121C28]">0</p>
-          <p className="mt-1 text-xs text-[#737686]">Coming in Phase 1.5</p>
+          <p className="mt-2 text-3xl font-bold text-[#121C28]">{projects.length}</p>
+          <p className="mt-1 text-xs text-[#737686]">{projects.length} active project{projects.length !== 1 ? "s" : ""}</p>
         </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-[#121C28]">Projects</h2>
+        <Button onClick={() => setShowCreateProject(true)} size="sm">
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          New project
+        </Button>
+      </div>
+
+      {projects.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl bg-white py-16 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+          <svg className="mb-4 h-12 w-12 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          <p className="text-sm font-medium text-[#737686]">No projects yet</p>
+          <p className="mt-1 text-xs text-[#C3C6D7]">Create your first project to get started</p>
+          <Button className="mt-4" onClick={() => setShowCreateProject(true)} size="sm">
+            Create project
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.map((project) => (
+            <Link
+              key={project.id}
+              href={`/p/${project.id}/board`}
+              className="group rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+            >
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEF4FF] text-sm font-bold text-[#004AC6]">
+                  {project.key}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-[#121C28] group-hover:text-[#2563EB] transition-colors">
+                    {project.name}
+                  </p>
+                  <p className="text-xs text-[#737686]">{project.key}</p>
+                </div>
+              </div>
+              {project.description && (
+                <p className="mb-3 line-clamp-2 text-xs text-[#737686]">{project.description}</p>
+              )}
+              <div className="flex items-center gap-3 text-xs text-[#C3C6D7]">
+                <span>{project.boards.length} board{project.boards.length !== 1 ? "s" : ""}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-8 grid gap-5 md:grid-cols-2">
         <div className="rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <h2 className="mb-3 text-sm font-semibold text-[#121C28]">Recent Activity</h2>
           <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -83,6 +140,15 @@ export default function WorkspaceHomePage() {
               </svg>
               Invite team members
             </Link>
+            <button
+              onClick={() => setShowCreateProject(true)}
+              className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Create project
+            </button>
             <Link
               href={`/w/${workspaceId}/settings`}
               className="flex items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
@@ -95,6 +161,8 @@ export default function WorkspaceHomePage() {
           </div>
         </div>
       </div>
+
+      <CreateProjectDialog open={showCreateProject} onClose={() => setShowCreateProject(false)} />
     </DashboardShell>
   );
 }

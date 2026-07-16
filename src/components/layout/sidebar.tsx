@@ -56,7 +56,7 @@ export function Sidebar({ workspaceId, workspaceName }: SidebarProps) {
   const [newDescription, setNewDescription] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
 
-  const isInWorkspace = pathname.startsWith("/w/") && workspaceId;
+  const isInWorkspace = pathname.startsWith("/w/") && !!workspaceId;
 
   function isActive(href: string) {
     if (!isInWorkspace) return false;
