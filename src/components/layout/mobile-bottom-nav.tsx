@@ -55,7 +55,9 @@ export function MobileBottomNav() {
     (state: RootState) => state.workspace.tabsByWorkspace[workspaceId ?? ""]
   );
   const activeTab = tabConfig?.activeTab;
-  const tabs = tabConfig?.tabs ?? [];
+
+  const rawTabs = tabConfig?.tabs;
+  const tabs = useMemo(() => rawTabs ?? [], [rawTabs]);
 
   const [showMore, setShowMore] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -66,16 +68,26 @@ export function MobileBottomNav() {
 
   const allTabIds = useMemo(() => tabs.map((t) => t.id), [tabs]);
 
-  const [visibleTabIds, setVisibleTabIds] = useState<string[]>(() =>
-    allTabIds.slice(0, MAX_VISIBLE - 1)
-  );
+  const [visibleTabIds, setVisibleTabIds] = useState<string[]>(() => []);
 
   useEffect(() => {
     setVisibleTabIds((prev) => {
-      if (allTabIds.length === 0) return [];
+      if (allTabIds.length === 0) {
+        if (prev.length === 0) return prev;
+        return [];
+      }
       const existing = prev.filter((id) => allTabIds.includes(id));
-      if (existing.length > 0) return existing;
-      return allTabIds.slice(0, MAX_VISIBLE - 1);
+      if (existing.length > 0) {
+        if (existing.length === prev.length && existing.every((id, i) => id === prev[i])) {
+          return prev;
+        }
+        return existing;
+      }
+      const next = allTabIds.slice(0, MAX_VISIBLE - 1);
+      if (next.length === prev.length && next.every((id, i) => id === prev[i])) {
+        return prev;
+      }
+      return next;
     });
   }, [allTabIds]);
 

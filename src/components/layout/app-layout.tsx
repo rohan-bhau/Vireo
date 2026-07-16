@@ -108,16 +108,16 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
 
   return (
     <AuthGuard>
-      <div className="flex min-h-screen bg-[#F8F9FF]">
-        <div className="hidden md:flex">
-          <Sidebar
-            workspaceId={sidebarProps?.workspaceId}
-            workspaceName={sidebarProps?.workspaceName}
-          />
-        </div>
-        <div className="flex flex-1 flex-col min-w-0 pb-16 md:pb-0">
-          <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} />
-          <main className="flex-1 overflow-y-auto px-3 py-4 md:px-8 md:py-8">
+      <div className="flex min-h-screen flex-col bg-[#F8F9FF]">
+        <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} />
+        <div className="flex flex-1 min-h-0">
+          <div className="hidden md:flex">
+            <Sidebar
+              workspaceId={sidebarProps?.workspaceId}
+              workspaceName={sidebarProps?.workspaceName}
+            />
+          </div>
+          <main className="flex-1 overflow-y-auto min-w-0 pb-16 md:pb-0 px-3 py-4 md:px-8 md:py-8">
             {children}
           </main>
         </div>

@@ -18,8 +18,6 @@ import {
   ChevronDown,
   ChevronRight,
   MoreHorizontal,
-  PanelLeftClose,
-  PanelLeft,
   Settings2,
   Columns3,
   Map,
@@ -30,11 +28,9 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toggleSidebar } from "@/store/sidebarSlice";
 import {
   addRecentWorkspace,
   toggleStarredWorkspace,
@@ -104,7 +100,7 @@ function WorkspaceMenuItem({
         href={`/w/${workspaceId}`}
         onClick={onNavigate}
         className={clsx(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px]",
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
           isActive
             ? "bg-[#EEF4FF] text-[#004AC6]"
             : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
@@ -122,7 +118,7 @@ function WorkspaceMenuItem({
               e.stopPropagation();
               setShowMenu(!showMenu);
             }}
-            className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-[#737686] hover:text-[#121C28] transition-opacity"
+            className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-[#737686] hover:text-[#121C28] transition-opacity cursor-pointer"
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </button>
@@ -154,30 +150,6 @@ function WorkspaceMenuItem({
   );
 }
 
-function Section({
-  title,
-  collapsed,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  collapsed: boolean;
-  icon: React.ComponentType<{ className?: string }>;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      {!collapsed && (
-        <p className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686]">
-          <Icon className="h-3 w-3" />
-          {title}
-        </p>
-      )}
-      {children}
-    </div>
-  );
-}
-
 export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   const pathname = usePathname();
   const dispatch = useDispatch<AppDispatch>();
@@ -198,6 +170,9 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   const [newDescription, setNewDescription] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
   const [allExpanded, setAllExpanded] = useState(true);
+  const [starredExpanded, setStarredExpanded] = useState(true);
+  const [recentExpanded, setRecentExpanded] = useState(false);
+  const [forYouMessage, setForYouMessage] = useState<string | null>(null);
 
   const isInWorkspace = pathname.startsWith("/w/") && !!workspaceId;
 
@@ -254,89 +229,110 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
       <motion.aside
         animate={embedded ? undefined : { width: collapsed ? 64 : 256 }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
-        className={embedded ? "flex flex-col bg-white" : "flex flex-col border-r border-[#C3C6D7]/20 bg-white shrink-0 overflow-hidden"}
+        className={embedded ? "flex flex-col bg-white" : "flex h-full flex-col border-r border-[#C3C6D7]/20 bg-white shrink-0 overflow-hidden"}
       >
-        {!embedded && (
-          <div className="flex h-16 items-center border-b border-[#C3C6D7]/20 px-4">
-            <Link href="/dashboard" className="flex items-center gap-3">
-              <Image
-                src="/vireo-icon.svg"
-                alt="Vireo"
-                width={28}
-                height={28}
-                className="shrink-0"
-              />
-              {!collapsed && (
-                <span className="text-sm font-bold text-[#121C28]">Vireo</span>
-              )}
-            </Link>
-            <button
-              onClick={() => dispatch(toggleSidebar())}
-              className={clsx(
-                "h-7 w-7 flex items-center justify-center rounded-lg text-[#737686] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors",
-                collapsed ? "ml-0" : "ml-auto"
-              )}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {collapsed ? (
-                <PanelLeft className="h-4 w-4" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" />
-              )}
-            </button>
-          </div>
-        )}
-
         <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-2 py-3">
-          {visibleSections.forYou && forYouList.length > 0 && (
-            <Section title="For You" collapsed={collapsed} icon={Sparkles}>
-              {forYouList.map((ws) => (
-                <WorkspaceMenuItem
-                  key={ws.id}
-                  workspaceId={ws.id}
-                  name={ws.name}
-                  collapsed={collapsed}
-                  isStarred={!!starredWorkspaces[ws.id]}
-                  isActive={pathname === `/w/${ws.id}`}
-                  onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
-                  onNavigate={() => handleNavigate(ws.id)}
-                />
-              ))}
-            </Section>
+          {visibleSections.forYou && (
+            <div>
+              {!collapsed ? (
+                <button
+                  onClick={() => {
+                    setForYouMessage("Coming soon!");
+                    setTimeout(() => setForYouMessage(null), 2000);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  For You
+                  {forYouMessage && (
+                    <span className="ml-auto text-[10px] text-[#2563EB] font-medium animate-pulse">
+                      {forYouMessage}
+                    </span>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setForYouMessage("Coming soon!");
+                    setTimeout(() => setForYouMessage(null), 2000);
+                  }}
+                  className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
+                  title="For You"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           )}
 
-          {visibleSections.starred && starredList.length > 0 && (
-            <Section title="Starred" collapsed={collapsed} icon={Star}>
-              {starredList.map((ws) => (
-                <WorkspaceMenuItem
-                  key={ws.id}
-                  workspaceId={ws.id}
-                  name={ws.name}
-                  collapsed={collapsed}
-                  isStarred={true}
-                  isActive={pathname === `/w/${ws.id}`}
-                  onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
-                  onNavigate={() => handleNavigate(ws.id)}
-                />
-              ))}
-            </Section>
+          {visibleSections.starred && (
+            <div>
+              {!collapsed && (
+                <button
+                  onClick={() => setStarredExpanded(!starredExpanded)}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
+                >
+                  {starredExpanded ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                  <Star className="h-3 w-3" />
+                  Starred
+                </button>
+              )}
+              {starredExpanded && starredList.length > 0 && (
+                <div className="space-y-0.5 mt-0.5">
+                  {starredList.map((ws) => (
+                    <WorkspaceMenuItem
+                      key={ws.id}
+                      workspaceId={ws.id}
+                      name={ws.name}
+                      collapsed={collapsed}
+                      isStarred={true}
+                      isActive={pathname === `/w/${ws.id}`}
+                      onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
+                      onNavigate={() => handleNavigate(ws.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {visibleSections.recent && recentList.length > 0 && (
-            <Section title="Recent" collapsed={collapsed} icon={History}>
-              {recentList.map((ws) => (
-                <WorkspaceMenuItem
-                  key={ws.id}
-                  workspaceId={ws.id}
-                  name={ws.name}
-                  collapsed={collapsed}
-                  isStarred={!!starredWorkspaces[ws.id]}
-                  isActive={pathname === `/w/${ws.id}`}
-                  onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
-                  onNavigate={() => handleNavigate(ws.id)}
-                />
-              ))}
-            </Section>
+            <div>
+              {!collapsed && (
+                <button
+                  onClick={() => setRecentExpanded(!recentExpanded)}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
+                >
+                  {recentExpanded ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                  <History className="h-3 w-3" />
+                  Recent
+                </button>
+              )}
+              {recentExpanded && (
+                <div className="space-y-0.5 mt-0.5">
+                  {recentList.map((ws) => (
+                    <WorkspaceMenuItem
+                      key={ws.id}
+                      workspaceId={ws.id}
+                      name={ws.name}
+                      collapsed={collapsed}
+                      isStarred={!!starredWorkspaces[ws.id]}
+                      isActive={pathname === `/w/${ws.id}`}
+                      onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
+                      onNavigate={() => handleNavigate(ws.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           <NavItem
@@ -378,7 +374,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
               {!collapsed && (
                 <button
                   onClick={() => setAllExpanded(!allExpanded)}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
                 >
                   {allExpanded ? (
                     <ChevronDown className="h-3 w-3" />
@@ -418,7 +414,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
           {!collapsed && (
             <button
               onClick={() => setShowCustomize(true)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#737686] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[44px]"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#737686] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[44px] cursor-pointer"
             >
               <Settings2 className="h-4 w-4 shrink-0" />
               <span>Customize</span>
@@ -428,7 +424,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
           <button
             onClick={() => setShowCreate(true)}
             className={clsx(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#2563EB] hover:bg-[#EEF4FF] min-h-[44px]",
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#2563EB] hover:bg-[#EEF4FF] min-h-[44px] cursor-pointer",
               collapsed && "justify-center"
             )}
             title={collapsed ? "Create workspace" : undefined}
@@ -575,7 +571,7 @@ function NavItem({
       href={href}
       onClick={onNavigate}
       className={clsx(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px]",
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
         active
           ? "bg-[#EEF4FF] text-[#004AC6]"
           : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
