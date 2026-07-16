@@ -9,13 +9,18 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useSelector(
     (state: RootState) => state.auth
   );
+  const activeWorkspaceId = useSelector(
+    (state: RootState) => state.workspace.activeWorkspaceId
+  );
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace("/dashboard");
+      router.replace(
+        activeWorkspaceId ? `/w/${activeWorkspaceId}` : "/dashboard"
+      );
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, activeWorkspaceId, router]);
 
   if (isLoading) {
     return (

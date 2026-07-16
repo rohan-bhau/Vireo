@@ -10,9 +10,13 @@ import { useLogoutMutation } from "@/store/authApi";
 import { logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
 import { toggleSidebar } from "@/store/sidebarSlice";
-import { PanelLeftClose, PanelLeft, Sparkles } from "lucide-react";
+import { PanelLeftClose, PanelLeft, Menu, Sparkles } from "lucide-react";
 
-export function AppNavbar() {
+interface AppNavbarProps {
+  onMobileMenuToggle?: () => void;
+}
+
+export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
   const { user } = useSelector((state: RootState) => state.auth);
   const { collapsed } = useSelector((state: RootState) => state.sidebar);
   const pathname = usePathname();
@@ -44,6 +48,14 @@ export function AppNavbar() {
           ) : (
             <PanelLeftClose className="h-5 w-5" />
           )}
+        </button>
+
+        <button
+          onClick={onMobileMenuToggle}
+          className="flex md:hidden h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+          title="Open sidebar"
+        >
+          <Menu className="h-5 w-5" />
         </button>
 
         <Link href="/dashboard" className="flex items-center gap-2">

@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
 
 type SettingsTab = "general" | "members";
 
@@ -76,7 +75,7 @@ export default function WorkspaceSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8F9FF]">
+      <div className="flex items-center justify-center py-16">
         <svg className="h-6 w-6 animate-spin text-[#2563EB]" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -87,7 +86,7 @@ export default function WorkspaceSettingsPage() {
 
   if (!workspace) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#F8F9FF]">
+      <div className="flex flex-col items-center justify-center gap-4 py-16">
         <p className="text-[#737686]">Workspace not found</p>
         <Link href="/dashboard"><Button variant="outline">Back to workspaces</Button></Link>
       </div>
@@ -95,14 +94,14 @@ export default function WorkspaceSettingsPage() {
   }
 
   return (
-    <DashboardShell
-      workspaceId={workspaceId}
-      workspaceName={workspace.name}
-      breadcrumb={[
-        { label: workspace.name, href: `/w/${workspaceId}` },
-        { label: "Settings" },
-      ]}
-    >
+    <>
+      <div className="mb-4 flex items-center gap-2 text-sm">
+        <Link href={`/w/${workspaceId}`} className="font-medium text-[#737686] hover:text-[#121C28] transition-colors">
+          {workspace.name}
+        </Link>
+        <span className="text-[#C3C6D7]">/</span>
+        <span className="font-semibold text-[#121C28]">Settings</span>
+      </div>
       <div className="flex gap-2 mb-6 border-b border-[#C3C6D7]/20 pb-4">
         {(["general", "members"] as const).map((tab) => (
           <button
@@ -247,6 +246,6 @@ export default function WorkspaceSettingsPage() {
           </div>
         </div>
       </Dialog>
-    </DashboardShell>
+    </>
   );
 }

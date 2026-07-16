@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRegisterMutation } from "@/store/authApi";
@@ -17,6 +18,9 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [register, { isLoading }] = useRegisterMutation();
+  const activeWorkspaceId = useSelector(
+    (state: RootState) => state.workspace.activeWorkspaceId
+  );
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -33,9 +37,14 @@ export default function RegisterPage() {
       const result = await register({ name, email, password }).unwrap();
       setTokens(result.data.accessToken, result.data.refreshToken);
       dispatch(setCredentials(result.data));
-      router.replace("/dashboard");
-    } catch (err: any) {
-      setError(err?.data?.message || "Registration failed");
+      router.replace(
+        activeWorkspaceId ? `/w/${activeWorkspaceId}` : "/dashboard"
+      );
+    } catch (err: unknown) {
+      setError(
+        (err as { data?: { message?: string } })?.data?.message ||
+          "Registration failed"
+      );
     }
   }
 

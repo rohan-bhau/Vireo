@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
+import Link from "next/link";
 
 export default function MembersPage() {
   const params = useParams();
@@ -73,14 +73,14 @@ export default function MembersPage() {
   }
 
   return (
-    <DashboardShell
-      workspaceId={workspaceId}
-      workspaceName={workspace?.name || "Workspace"}
-      breadcrumb={[
-        { label: workspace?.name || "Workspace", href: `/w/${workspaceId}` },
-        { label: "Members" },
-      ]}
-    >
+    <>
+      <div className="mb-4 flex items-center gap-2 text-sm">
+        <Link href={`/w/${workspaceId}`} className="font-medium text-[#737686] hover:text-[#121C28] transition-colors">
+          {workspace?.name || "Workspace"}
+        </Link>
+        <span className="text-[#C3C6D7]">/</span>
+        <span className="font-semibold text-[#121C28]">Members</span>
+      </div>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-[#121C28]">Team Members</h2>
@@ -254,6 +254,6 @@ export default function MembersPage() {
           </div>
         </form>
       </Dialog>
-    </DashboardShell>
+    </>
   );
 }

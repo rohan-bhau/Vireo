@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLoginMutation } from "@/store/authApi";
@@ -16,6 +17,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [login, { isLoading }] = useLoginMutation();
+  const activeWorkspaceId = useSelector(
+    (state: RootState) => state.workspace.activeWorkspaceId
+  );
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -27,9 +31,14 @@ export default function LoginPage() {
       const result = await login({ email, password }).unwrap();
       setTokens(result.data.accessToken, result.data.refreshToken);
       dispatch(setCredentials(result.data));
-      router.replace("/dashboard");
-    } catch (err: any) {
-      setError(err?.data?.message || "Invalid email or password");
+      router.replace(
+        activeWorkspaceId ? `/w/${activeWorkspaceId}` : "/dashboard"
+      );
+    } catch (err: unknown) {
+      setError(
+        (err as { data?: { message?: string } })?.data?.message ||
+          "Invalid email or password"
+      );
     }
   }
 

@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { useGetWorkspaceQuery, useGetMembersQuery } from "@/store/workspaceApi";
 import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
 import { Button } from "@/components/ui/button";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 
 export default function WorkspaceHomePage() {
@@ -21,7 +20,7 @@ export default function WorkspaceHomePage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8F9FF]">
+      <div className="flex items-center justify-center py-16">
         <svg className="h-6 w-6 animate-spin text-[#2563EB]" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -32,7 +31,7 @@ export default function WorkspaceHomePage() {
 
   if (error || !workspace) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#F8F9FF]">
+      <div className="flex flex-col items-center justify-center gap-4 py-16">
         <p className="text-[#737686]">Workspace not found</p>
         <Link href="/dashboard"><Button variant="outline">Back to workspaces</Button></Link>
       </div>
@@ -40,7 +39,7 @@ export default function WorkspaceHomePage() {
   }
 
   return (
-    <DashboardShell workspaceId={workspaceId} workspaceName={workspace.name}>
+    <>
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[#121C28]">Dashboard</h1>
@@ -163,6 +162,6 @@ export default function WorkspaceHomePage() {
       </div>
 
       <CreateProjectDialog open={showCreateProject} onClose={() => setShowCreateProject(false)} />
-    </DashboardShell>
+    </>
   );
 }
