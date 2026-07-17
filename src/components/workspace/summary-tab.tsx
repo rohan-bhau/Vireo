@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useGetWorkspaceQuery, useGetMembersQuery } from "@/store/workspaceApi";
 import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
+import { useGetWorkspaceTasksQuery } from "@/store/taskApi";
+import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 
 interface SummaryTabProps {
   workspaceId: string;
@@ -12,6 +15,13 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
   useGetWorkspaceQuery(workspaceId);
   const { data: members = [] } = useGetMembersQuery(workspaceId);
   const { data: projects = [] } = useGetWorkspaceProjectsQuery(workspaceId);
+  const { data: tasks = [] } = useGetWorkspaceTasksQuery(workspaceId);
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  const openTasks = tasks.filter(
+    (t) => t.status === "todo" || t.status === "in_progress" || t.status === "in_review"
+  ).length;
 
   return (
     <div>
@@ -23,8 +33,12 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
         </div>
         <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <p className="text-xs font-medium uppercase tracking-wider text-[#737686]">Open Tasks</p>
-          <p className="mt-2 text-3xl font-bold text-[#121C28]">0</p>
-          <p className="mt-1 text-xs text-[#737686]">No tasks yet</p>
+          <p className="mt-2 text-3xl font-bold text-[#121C28]">{openTasks}</p>
+          <p className="mt-1 text-xs text-[#737686]">
+            {tasks.length > 0
+              ? `${tasks.length} total, ${tasks.filter((t) => t.status === "done").length} done`
+              : "No tasks yet"}
+          </p>
         </div>
         <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <p className="text-xs font-medium uppercase tracking-wider text-[#737686]">Team Members</p>
@@ -48,7 +62,7 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
           <h2 className="mb-3 text-sm font-semibold text-[#121C28]">Quick Actions</h2>
           <div className="space-y-2">
             <button
-              onClick={() => alert("Task creation will be available in Phase 1.8")}
+              onClick={() => setCreateDialogOpen(true)}
               className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -93,6 +107,12 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
           </div>
         </div>
       </div>
+
+      <CreateTaskDialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        workspaceId={workspaceId}
+      />
     </div>
   );
 }

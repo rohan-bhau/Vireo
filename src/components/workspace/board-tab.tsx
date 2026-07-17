@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
+  DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -18,6 +20,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
+import { useGetWorkspaceTasksQuery, useMoveTaskMutation, type Task } from "@/store/taskApi";
+import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 
 interface Column {
   id: string;
@@ -51,17 +55,40 @@ function saveColumns(workspaceId: string, columns: Column[]) {
   } catch {}
 }
 
+const TYPE_ICONS: Record<string, string> = {
+  task: "☐",
+  bug: "🐛",
+  epic: "★",
+  story: "📖",
+  subtask: "↳",
+};
+
+const PRIORITY_COLORS: Record<string, string> = {
+  lowest: "text-[#C3C6D7]",
+  low: "text-[#737686]",
+  medium: "text-[#2563EB]",
+  high: "text-[#D97706]",
+  highest: "text-[#DC2626]",
+};
+
 interface BoardTabProps {
   workspaceId: string;
 }
 
 export function BoardTab({ workspaceId }: BoardTabProps) {
+  const router = useRouter();
+  const { data: tasks = [], isLoading } = useGetWorkspaceTasksQuery(workspaceId);
+  const [moveTask] = useMoveTaskMutation();
+
   const [columns, setColumns] = useState<Column[]>(() => loadColumns(workspaceId));
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createColumnId, setCreateColumnId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     saveColumns(workspaceId, columns);
@@ -71,26 +98,62 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const sortedColumns = columns;
-
   const filteredColumns = searchQuery
-    ? sortedColumns.filter((col) =>
+    ? columns.filter((col) =>
         col.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : sortedColumns;
+    : columns;
 
-  function handleDragStart(event: any) {
-    setActiveId(event.active.id);
+  function getColumnTasks(columnId: string): Task[] {
+    return tasks.filter((t) => {
+      const taskColId = t.columnId || defaultColumnId(t.status);
+      return taskColId === columnId;
+    });
   }
 
-  function handleDragEnd(event: DragEndEvent) {
+  function defaultColumnId(status: string): string {
+    switch (status) {
+      case "todo": return "todo";
+      case "in_progress": return "in-progress";
+      case "in_review": return "in-review";
+      case "done": return "done";
+      default: return "todo";
+    }
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string);
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveId(null);
-    if (!over || active.id === over.id) return;
-    const oldIndex = sortedColumns.findIndex((c) => c.id === active.id);
-    const newIndex = sortedColumns.findIndex((c) => c.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-    setColumns(arrayMove(sortedColumns, oldIndex, newIndex));
+    if (!over) return;
+
+    const activeTaskKey = active.id as string;
+    const overId = over.id as string;
+
+    const task = tasks.find((t) => t.taskKey === activeTaskKey);
+    const targetColumn = columns.find((c) => c.id === overId);
+
+    if (task && targetColumn) {
+      const columnTasks = getColumnTasks(targetColumn.id);
+      await moveTask({
+        taskKey: activeTaskKey,
+        columnId: targetColumn.id,
+        position: columnTasks.length,
+      }).unwrap();
+      return;
+    }
+
+    const isColumnDrag = columns.some((c) => c.id === activeTaskKey);
+    if (isColumnDrag) {
+      const oldIndex = columns.findIndex((c) => c.id === activeTaskKey);
+      const newIndex = columns.findIndex((c) => c.id === overId);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        setColumns(arrayMove(columns, oldIndex, newIndex));
+      }
+    }
   }
 
   function handleAddColumn() {
@@ -104,6 +167,11 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
   function handleRemoveColumn(columnId: string) {
     setColumns(columns.filter((c) => c.id !== columnId));
     setConfirmRemove(null);
+  }
+
+  function handleCreateTask(columnId: string) {
+    setCreateColumnId(columnId);
+    setCreateDialogOpen(true);
   }
 
   return (
@@ -130,6 +198,9 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
             <option value="priority" disabled>By priority (coming soon)</option>
           </select>
         </div>
+        <Button size="sm" onClick={() => handleCreateTask("todo")}>
+          + Create task
+        </Button>
       </div>
 
       <div className="flex flex-1 gap-4 overflow-x-auto pb-4 max-sm:px-1 max-sm:gap-3">
@@ -144,15 +215,20 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
               <BoardColumn
                 key={column.id}
                 column={column}
+                tasks={getColumnTasks(column.id)}
+                typeIcons={TYPE_ICONS}
+                priorityColors={PRIORITY_COLORS}
                 onRemove={() => setConfirmRemove(column.id)}
+                onCreateTask={() => handleCreateTask(column.id)}
+                onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
               />
             ))}
           </SortableContext>
           <DragOverlay>
-            {activeId ? (
+            {activeId && columns.some((c) => c.id === activeId) ? (
               <div className="rounded-lg bg-white px-4 py-3 shadow-lg border border-[#2563EB]/30 w-72">
                 <p className="text-sm font-medium text-[#121C28]">
-                  {sortedColumns.find((c) => c.id === activeId)?.name}
+                  {columns.find((c) => c.id === activeId)?.name}
                 </p>
               </div>
             ) : null}
@@ -206,16 +282,33 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
           </div>
         </div>
       )}
+
+      <CreateTaskDialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        workspaceId={workspaceId}
+        columnId={createColumnId}
+      />
     </div>
   );
 }
 
 function BoardColumn({
   column,
+  tasks,
+  typeIcons,
+  priorityColors,
   onRemove,
+  onCreateTask,
+  onTaskClick,
 }: {
   column: Column;
+  tasks: Task[];
+  typeIcons: Record<string, string>;
+  priorityColors: Record<string, string>;
   onRemove: () => void;
+  onCreateTask: () => void;
+  onTaskClick: (taskKey: string) => void;
 }) {
   const {
     setNodeRef,
@@ -246,36 +339,83 @@ function BoardColumn({
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-[#C3C6D7]" />
           <h3 className="text-sm font-semibold text-[#121C28]">{column.name}</h3>
-          <span className="rounded-md bg-[#E5E7EF] px-1.5 py-0.5 text-[11px] font-medium text-[#737686]">0</span>
+          <span className="rounded-md bg-[#E5E7EF] px-1.5 py-0.5 text-[11px] font-medium text-[#737686]">
+            {tasks.length}
+          </span>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            className="rounded p-1 text-[#737686] hover:bg-[#E5E7EF] hover:text-red-500 transition-colors"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="rounded p-1 text-[#737686] hover:bg-[#E5E7EF] hover:text-red-500 transition-colors"
+        >
+          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
-        <div className="flex flex-col items-center justify-center py-8 text-center">
-          <svg className="mb-2 h-8 w-8 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <path d="M12 8v8M8 12h8" />
-          </svg>
-          <p className="text-xs text-[#737686]">No tasks yet</p>
-          <p className="text-[11px] text-[#C3C6D7] mt-0.5">Tasks will appear here in Phase 1.8</p>
-        </div>
+        {tasks.length > 0 ? (
+          tasks.map((task) => (
+            <button
+              key={task.taskKey}
+              onClick={() => onTaskClick(task.taskKey)}
+              className="w-full rounded-lg bg-white p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#C3C6D7]/20 hover:border-[#2563EB]/30 hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-xs">{typeIcons[task.type] || "☐"}</span>
+                <span className="text-[11px] font-mono font-medium text-[#737686]">
+                  {task.taskKey}
+                </span>
+                <span className={priorityColors[task.priority] || "text-[#737686]"}>
+                  {task.priority === "highest" ? "!!" : task.priority === "high" ? "!" : ""}
+                </span>
+              </div>
+              <p className="text-sm font-medium text-[#121C28] line-clamp-2">
+                {task.title}
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                {task.assignee && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2563EB] text-[9px] font-semibold text-white">
+                    {task.assignee.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {task.labels.length > 0 && (
+                  <div className="flex gap-1 overflow-hidden">
+                    {task.labels.slice(0, 2).map((label) => (
+                      <span
+                        key={label}
+                        className="rounded bg-[#EEF4FF] px-1.5 py-0.5 text-[10px] font-medium text-[#2563EB] truncate max-w-[80px]"
+                      >
+                        {label}
+                      </span>
+                    ))}
+                    {task.labels.length > 2 && (
+                      <span className="text-[10px] text-[#737686]">+{task.labels.length - 2}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </button>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <svg className="mb-2 h-8 w-8 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M12 8v8M8 12h8" />
+            </svg>
+            <p className="text-xs text-[#737686]">No tasks yet</p>
+          </div>
+        )}
       </div>
 
       <div className="px-3 pb-3">
-        <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-[#737686] transition-colors hover:bg-[#E5E7EF] hover:text-[#121C28]">
+        <button
+          onClick={onCreateTask}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-[#737686] transition-colors hover:bg-[#E5E7EF] hover:text-[#121C28]"
+        >
           <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14" />
           </svg>
