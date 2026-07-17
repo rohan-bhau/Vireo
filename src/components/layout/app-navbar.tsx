@@ -21,6 +21,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import { useGetUnreadCountQuery } from "@/store/notificationApi";
 
 interface AppNavbarProps {
   onMobileMenuToggle?: () => void;
@@ -35,6 +36,7 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
   const [doLogout] = useLogoutMutation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
+  const { data: unreadCount = 0 } = useGetUnreadCountQuery();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isInWorkspace = pathname.startsWith("/w/");
@@ -108,12 +110,18 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
         </Link>
 
         <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-[#C3C6D7]/20">
-          <button
-            className="relative flex h-8 w-8 items-center justify-center rounded-lg text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28] cursor-pointer"
+          <Link
+            href="/notifications"
+            className="relative flex h-8 w-8 items-center justify-center rounded-lg text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28]"
             title="Notifications"
           >
             <Bell className="h-5 w-5" />
-          </button>
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </Link>
 
           <div className="relative" ref={dropdownRef}>
             <button
