@@ -20,6 +20,7 @@ import {
   User,
   Settings,
   LogOut,
+  Search,
 } from "lucide-react";
 import { useGetUnreadCountQuery } from "@/store/notificationApi";
 
@@ -101,6 +102,14 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        <Link
+          href="/search"
+          className="flex items-center gap-1.5 rounded-lg border border-[#C3C6D7]/50 px-3 py-1.5 text-xs font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">Search</span>
+        </Link>
+
         <Link
           href="/ai-assistant"
           className="hidden md:flex items-center gap-1.5 rounded-lg border border-[#C3C6D7]/50 px-3 py-1.5 text-xs font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
