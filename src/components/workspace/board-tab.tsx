@@ -8,6 +8,7 @@ import {
   DndContext,
   DragEndEvent,
   DragStartEvent,
+  DragOverEvent,
   PointerSensor,
   useSensor,
   useSensors,
@@ -103,6 +104,7 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createColumnId, setCreateColumnId] = useState<string | undefined>(undefined);
+  const [hoverColumnId, setHoverColumnId] = useState<string | null>(null);
 
   useEffect(() => {
     saveColumns(workspaceId, columns);
@@ -139,6 +141,13 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
     }
   }
 
+  function isDoneColumn(columnId: string): boolean {
+    const col = columns.find((c) => c.id === columnId);
+    if (!col) return false;
+    const name = col.name.toLowerCase();
+    return name.includes("done") || name.includes("complete");
+  }
+
   function findColumnOfTask(taskKey: string): string | null {
     const task = tasks.find((t) => t.taskKey === taskKey);
     if (!task) return null;
@@ -149,9 +158,22 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
     setActiveId(event.active.id as string);
   }
 
+  function handleDragOver(event: DragOverEvent) {
+    const overId = event.over?.id as string | undefined;
+    if (overId && columns.some((c) => c.id === overId)) {
+      setHoverColumnId(overId);
+    } else if (overId) {
+      const overTask = tasks.find((t) => t.taskKey === overId);
+      if (overTask) {
+        setHoverColumnId(overTask.columnId || defaultColumnId(overTask.status));
+      }
+    }
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveId(null);
+    setHoverColumnId(null);
     if (!over) return;
 
     const activeIdStr = active.id as string;
@@ -256,6 +278,7 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
           sensors={sensors}
           collisionDetection={collisionDetection}
           onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
@@ -281,7 +304,10 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
               </div>
             ) : activeId && tasks.find((t) => t.taskKey === activeId) ? (
               <div className="rounded-lg bg-white p-3 shadow-lg border border-[#2563EB]/30 w-72">
-                <p className="text-sm font-medium text-[#121C28]">
+                <p className={clsx(
+                  "text-sm font-medium text-[#121C28]",
+                  hoverColumnId && isDoneColumn(hoverColumnId) && "line-through"
+                )}>
                   {tasks.find((t) => t.taskKey === activeId)?.title}
                 </p>
               </div>
