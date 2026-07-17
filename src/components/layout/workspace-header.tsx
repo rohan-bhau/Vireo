@@ -161,7 +161,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
         <div className="space-y-4">
           <p className="text-sm text-[#737686]">
             Are you sure you want to delete <strong>{workspace.name}</strong>?
-            This will permanently remove all projects, issues, and member
+            This will permanently remove all projects, tasks, and member
             associations.
           </p>
           <div className="flex justify-end gap-3">

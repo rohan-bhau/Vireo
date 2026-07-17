@@ -22,9 +22,9 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
           <p className="mt-1 text-xs text-green-600">Ready to start</p>
         </div>
         <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-          <p className="text-xs font-medium uppercase tracking-wider text-[#737686]">Open Issues</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-[#737686]">Open Tasks</p>
           <p className="mt-2 text-3xl font-bold text-[#121C28]">0</p>
-          <p className="mt-1 text-xs text-[#737686]">No issues yet</p>
+          <p className="mt-1 text-xs text-[#737686]">No tasks yet</p>
         </div>
         <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <p className="text-xs font-medium uppercase tracking-wider text-[#737686]">Team Members</p>
@@ -41,20 +41,20 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
               <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
             </svg>
             <p className="text-sm text-[#737686]">No recent activity</p>
-            <p className="text-xs text-[#C3C6D7] mt-1">Activity will appear once issues and projects are created</p>
+            <p className="text-xs text-[#C3C6D7] mt-1">Activity will appear once tasks and projects are created</p>
           </div>
         </div>
         <div className="rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <h2 className="mb-3 text-sm font-semibold text-[#121C28]">Quick Actions</h2>
           <div className="space-y-2">
             <button
-              onClick={() => alert("Issue creation will be available in Phase 1.8")}
+              onClick={() => alert("Task creation will be available in Phase 1.8")}
               className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Create issue
+              Create task
             </button>
             <Link
               href={`/w/${workspaceId}/members`}

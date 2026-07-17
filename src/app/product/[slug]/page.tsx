@@ -12,7 +12,7 @@ const sectionVariants = {
 };
 
 const iconMap: Record<string, typeof Bug> = {
-  "issue-tracking": Bug,
+  "task-tracking": Bug,
   "kanban-boards": Columns,
   "scrum-sprints": IterationCcw,
   "roadmaps": Route,
@@ -41,22 +41,22 @@ const iconMap: Record<string, typeof Bug> = {
 };
 
 const articleContent: Record<string, { sections: { title: string; content: string; icon?: keyof typeof iconMap }[]; benefits?: string[]; cta?: string }> = {
-  "issue-tracking": {
+  "task-tracking": {
     sections: [
-      { title: "Custom Issue Types", content: "Create issue types that match your workflow — from bugs and tasks to epics and custom types. Define custom fields, workflows, and screen schemes for each type." },
-      { title: "Rich Text & Attachments", content: "Write detailed issue descriptions with rich text formatting, code blocks, inline images, and file attachments. Keep all context in one place." },
-      { title: "Dependencies & Linking", content: "Link issues to show dependencies, blockers, and relationships. Visualise how work is connected across your project." },
-      { title: "Repository Integration", content: "Connect your GitHub or GitLab repositories. See branches, commits, and pull requests directly on each issue." },
+      { title: "Custom Task Types", content: "Create task types that match your workflow — from bugs and tasks to epics and custom types. Define custom fields, workflows, and screen schemes for each type." },
+      { title: "Rich Text & Attachments", content: "Write detailed task descriptions with rich text formatting, code blocks, inline images, and file attachments. Keep all context in one place." },
+      { title: "Dependencies & Linking", content: "Link tasks to show dependencies, blockers, and relationships. Visualise how work is connected across your project." },
+      { title: "Repository Integration", content: "Connect your GitHub or GitLab repositories. See branches, commits, and pull requests directly on each task." },
     ],
-    benefits: ["Centralised issue tracking across all projects", "Custom workflows that match your process", "Real-time collaboration on every issue", "Deep integration with your development tools"],
-    cta: "Start tracking issues today — free.",
+    benefits: ["Centralised task tracking across all projects", "Custom workflows that match your process", "Real-time collaboration on every task", "Deep integration with your development tools"],
+    cta: "Start tracking tasks today — free.",
   },
   "kanban-boards": {
     sections: [
       { title: "Drag-and-Drop Workflows", content: "Move cards across columns with smooth drag-and-drop. Customise your workflow stages to match your team's process exactly." },
       { title: "WIP Limits", content: "Set work-in-progress limits per column to prevent bottlenecks and keep your team focused on finishing work before starting new work." },
       { title: "Swimlanes", content: "Organise cards into horizontal swimlanes by team member, priority, or any custom criteria. See the big picture at a glance." },
-      { title: "Automation Rules", content: "Automate repetitive actions — auto-close completed issues, assign based on column changes, and send notifications when work is blocked." },
+      { title: "Automation Rules", content: "Automate repetitive actions — auto-close completed tasks, assign based on column changes, and send notifications when work is blocked." },
     ],
     benefits: ["Visualise your entire workflow at a glance", "Identify and eliminate bottlenecks immediately", "Enforce WIP limits for better focus", "Automate repetitive board management tasks"],
   },
@@ -64,7 +64,7 @@ const articleContent: Record<string, { sections: { title: string; content: strin
     sections: [
       { title: "Sprint Planning", content: "Plan sprints with confidence. Use velocity tracking from previous sprints to predict what your team can deliver." },
       { title: "Capacity Management", content: "Track team member availability and assign work based on individual capacity. Avoid overloading your team." },
-      { title: "AI-Powered Estimation", content: "Let AI suggest story points based on issue complexity, historical data, and similar completed work. Reduce estimation overhead." },
+      { title: "AI-Powered Estimation", content: "Let AI suggest story points based on task complexity, historical data, and similar completed work. Reduce estimation overhead." },
       { title: "Sprint Retrospectives", content: "After each sprint, receive an AI-generated retro summary with patterns, bottlenecks, and actionable recommendations for improvement." },
     ],
     benefits: ["Data-driven sprint planning and estimation", "AI assistance that learns from your team's history", "Automated retrospectives with actionable insights", "Continuous improvement built into your workflow"],
@@ -88,20 +88,20 @@ const articleContent: Record<string, { sections: { title: string; content: strin
   },
   "collaboration": {
     sections: [
-      { title: "Threaded Discussions", content: "Discuss issues in threaded comments. Mention teammates, share updates, and keep conversations organised." },
-      { title: "Real-Time Notifications", content: "Get instant notifications when you're mentioned, assigned, or when issues you follow are updated." },
+      { title: "Threaded Discussions", content: "Discuss tasks in threaded comments. Mention teammates, share updates, and keep conversations organised." },
+      { title: "Real-Time Notifications", content: "Get instant notifications when you're mentioned, assigned, or when tasks you follow are updated." },
       { title: "Team Chat Integration", content: "Connect with your team without leaving Vireo. Integrated chat keeps context close to your work." },
     ],
-    benefits: ["Context-rich discussions on every issue", "Real-time updates across your team", "Integrated chat keeps conversations in context"],
+    benefits: ["Context-rich discussions on every task", "Real-time updates across your team", "Integrated chat keeps conversations in context"],
   },
   "ai-assistant": {
     sections: [
-      { title: "Smart Estimation", content: "AI assigns story points based on historical velocity and issue complexity, reducing planning overhead." },
+      { title: "Smart Estimation", content: "AI assigns story points based on historical velocity and task complexity, reducing planning overhead." },
       { title: "Auto-Prioritisation", content: "Surface the highest-impact work first using weighted scoring across business value, effort, and dependencies." },
-      { title: "Risk Detection", content: "Get alerted when a sprint is at risk due to scope creep, unbalanced assignments, or blocked issues." },
+      { title: "Risk Detection", content: "Get alerted when a sprint is at risk due to scope creep, unbalanced assignments, or blocked tasks." },
       { title: "Retro Insights", content: "After each sprint, receive an AI-generated retro summary with patterns, bottlenecks, and actionable recommendations." },
-      { title: "Standup Summaries", content: "AI compiles individual progress from issue updates into a team-wide standup report — no meetings required." },
-      { title: "Natural Language Search", content: 'Ask "what issues are blocked in the current sprint?" and get an instant, contextual answer.' },
+      { title: "Standup Summaries", content: "AI compiles individual progress from task updates into a team-wide standup report — no meetings required." },
+      { title: "Natural Language Search", content: 'Ask "what tasks are blocked in the current sprint?" and get an instant, contextual answer.' },
     ],
     benefits: ["Reduce planning overhead with AI estimation", "Catch risks before they become blockers", "Eliminate manual standup meetings", "Get actionable insights from your data"],
   },
@@ -115,16 +115,16 @@ const articleContent: Record<string, { sections: { title: string; content: strin
   },
   "git-integration": {
     sections: [
-      { title: "Branch Linking", content: "Create branches directly from issues. Vireo automatically links branches, commits, and pull requests to the right issues." },
-      { title: "Commit History", content: "View commit history on every issue. See who changed what and when, with links back to your repository." },
-      { title: "Automated Workflows", content: "Automatically transition issues when commits are pushed or PRs are merged. Keep your board in sync with your code." },
+      { title: "Branch Linking", content: "Create branches directly from tasks. Vireo automatically links branches, commits, and pull requests to the right tasks." },
+      { title: "Commit History", content: "View commit history on every task. See who changed what and when, with links back to your repository." },
+      { title: "Automated Workflows", content: "Automatically transition tasks when commits are pushed or PRs are merged. Keep your board in sync with your code." },
     ],
   },
   "ci-cd": {
     sections: [
-      { title: "Pipeline Status", content: "View CI/CD pipeline status directly on your issues and boards. See build and deploy status at a glance." },
+      { title: "Pipeline Status", content: "View CI/CD pipeline status directly on your tasks and boards. See build and deploy status at a glance." },
       { title: "Deployment Tracking", content: "Track deployments across environments. Know which version of your code is in production at all times." },
-      { title: "Quality Gates", content: "Set quality gates that prevent issues from moving forward when builds fail or tests don't pass." },
+      { title: "Quality Gates", content: "Set quality gates that prevent tasks from moving forward when builds fail or tests don't pass." },
     ],
   },
   "code-review": {
@@ -341,9 +341,9 @@ export default function ProductArticlePage() {
                 </motion.div>
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                   {[
-                    { step: "01", title: "Create your workspace", desc: "Set up a dedicated space for your team, configure issue types, and invite members in seconds." },
-                    { step: "02", title: "Build your backlog", desc: "Draft issues, prioritise with AI-weighted scoring, and organise into epics and sprints." },
-                    { step: "03", title: "Plan a sprint", desc: "Drag issues into a sprint, let AI estimate effort, and assign work based on team capacity." },
+                    { step: "01", title: "Create your workspace", desc: "Set up a dedicated space for your team, configure task types, and invite members in seconds." },
+                    { step: "02", title: "Build your backlog", desc: "Draft tasks, prioritise with AI-weighted scoring, and organise into epics and sprints." },
+                    { step: "03", title: "Plan a sprint", desc: "Drag tasks into a sprint, let AI estimate effort, and assign work based on team capacity." },
                     { step: "04", title: "Track & ship", desc: "Move cards across boards, monitor progress with live reports, and ship with confidence." },
                   ].map((step, idx) => (
                     <motion.div
@@ -393,12 +393,12 @@ export default function ProductArticlePage() {
                   className="mt-12 grid gap-6 text-left sm:grid-cols-2 lg:grid-cols-3"
                 >
                   {[
-                    { title: "Smart estimation", desc: "AI assigns story points based on historical velocity and issue complexity, reducing planning overhead." },
+                    { title: "Smart estimation", desc: "AI assigns story points based on historical velocity and task complexity, reducing planning overhead." },
                     { title: "Auto-prioritisation", desc: "Surface the highest-impact work first using weighted scoring across business value, effort, and dependencies." },
-                    { title: "Risk detection", desc: "Get alerted when a sprint is at risk due to scope creep, unbalanced assignments, or blocked issues." },
+                    { title: "Risk detection", desc: "Get alerted when a sprint is at risk due to scope creep, unbalanced assignments, or blocked tasks." },
                     { title: "Retro insights", desc: "After each sprint, receive an AI-generated retro summary with patterns, bottlenecks, and actionable recommendations." },
-                    { title: "Standup summaries", desc: "AI compiles individual progress from issue updates into a team-wide standup report — no meetings required." },
-                    { title: "Natural language search", desc: 'Ask "what issues are blocked in the current sprint?" and get an instant, contextual answer.' },
+                    { title: "Standup summaries", desc: "AI compiles individual progress from task updates into a team-wide standup report — no meetings required." },
+                    { title: "Natural language search", desc: 'Ask "what tasks are blocked in the current sprint?" and get an instant, contextual answer.' },
                   ].map((ai) => (
                     <motion.div
                       key={ai.title}

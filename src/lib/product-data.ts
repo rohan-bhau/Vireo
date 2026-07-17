@@ -24,9 +24,9 @@ export const productCategories: ProductCategory[] = [
       "From backlog grooming to sprint retrospectives — Vireo gives your team the structure of enterprise tools with the speed and AI intelligence of modern software.",
     items: [
       {
-        title: "Issue & Bug Tracking",
-        slug: "issue-tracking",
-        description: "Custom issue types, rich text fields, dependencies, and linked repositories. Keep every detail in one place.",
+        title: "Task & Bug Tracking",
+        slug: "task-tracking",
+        description: "Custom task types, rich text fields, dependencies, and linked repositories. Keep every detail in one place.",
         categoryId: "features",
       },
       {
@@ -56,7 +56,7 @@ export const productCategories: ProductCategory[] = [
       {
         title: "Team Collaboration",
         slug: "collaboration",
-        description: "Threaded issue discussions, real-time mentions, and integrated team chat so context never gets lost.",
+        description: "Threaded task discussions, real-time mentions, and integrated team chat so context never gets lost.",
         categoryId: "features",
       },
       {
@@ -84,13 +84,13 @@ export const productCategories: ProductCategory[] = [
       {
         title: "Git Integration",
         slug: "git-integration",
-        description: "GitHub / GitLab integration with branch linking. View commit history, create branches from issues, and automate workflows.",
+        description: "GitHub / GitLab integration with branch linking. View commit history, create branches from tasks, and automate workflows.",
         categoryId: "developers",
       },
       {
         title: "CI/CD Pipeline",
         slug: "ci-cd",
-        description: "CI/CD pipeline status on every issue. See build and deploy status directly from your boards.",
+        description: "CI/CD pipeline status on every task. See build and deploy status directly from your boards.",
         categoryId: "developers",
       },
       {

@@ -26,7 +26,7 @@ export function ListTab(_props: ListTabProps) {
   }
 
   const columns: { key: SortKey; label: string }[] = [
-    { key: "key", label: "Issue" },
+    { key: "key", label: "Task" },
     { key: "title", label: "Title" },
     { key: "status", label: "Status" },
     { key: "priority", label: "Priority" },
@@ -42,7 +42,7 @@ export function ListTab(_props: ListTabProps) {
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <input
-            placeholder="Search issues..."
+            placeholder="Search tasks..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             className="w-full rounded-lg border border-[#C3C6D7] bg-white py-2 pl-9 pr-3 text-sm text-[#121C28] placeholder:text-[#C3C6D7] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
@@ -91,8 +91,8 @@ export function ListTab(_props: ListTabProps) {
                     <rect x="3" y="3" width="18" height="18" rx="2" />
                     <path d="M9 14l2 2 4-4" />
                   </svg>
-                  <p className="text-sm text-[#737686]">No issues yet</p>
-                  <p className="text-xs text-[#C3C6D7]">Issues will appear here once created</p>
+                  <p className="text-sm text-[#737686]">No tasks yet</p>
+                  <p className="text-xs text-[#C3C6D7]">Tasks will appear here once created</p>
                 </div>
               </td>
             </tr>

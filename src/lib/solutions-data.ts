@@ -38,7 +38,7 @@ export const solutionCategories: SolutionCategory[] = [
       {
         title: "CI/CD Pipeline Management",
         slug: "cicd-pipeline",
-        description: "Track build and deploy status directly from your boards. Set quality gates that prevent issues from moving forward.",
+        description: "Track build and deploy status directly from your boards. Set quality gates that prevent tasks from moving forward.",
         categoryId: "engineering-teams",
       },
       {
@@ -150,7 +150,7 @@ export const solutionCategories: SolutionCategory[] = [
       {
         title: "Lean Workflows",
         slug: "lean-workflows",
-        description: "Lightweight Kanban boards and simple issue tracking that adapts as your team grows.",
+        description: "Lightweight Kanban boards and simple task tracking that adapts as your team grows.",
         categoryId: "startups",
       },
       {

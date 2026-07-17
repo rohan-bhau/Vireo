@@ -88,7 +88,7 @@ export default function DashboardPage() {
                     <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <p className="text-xs font-semibold text-[#121C28]">Track issues</p>
+                <p className="text-xs font-semibold text-[#121C28]">Track tasks</p>
                 <p className="mt-0.5 text-[11px] text-[#737686]">Organize with boards &amp; sprints</p>
               </div>
               <div className="rounded-lg bg-[#F8F9FF] p-4 text-left">

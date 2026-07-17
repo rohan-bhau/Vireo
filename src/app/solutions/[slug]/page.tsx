@@ -33,7 +33,7 @@ const iconMap: Record<string, typeof Code> = {
 const articleContent: Record<string, { sections: { title: string; content: string }[]; benefits?: string[]; cta?: string }> = {
   "agile-development": {
     sections: [
-      { title: "Scrum & Sprint Planning", content: "Plan sprints with confidence using velocity tracking from previous sprints. Let AI estimate story points based on issue complexity and historical data." },
+      { title: "Scrum & Sprint Planning", content: "Plan sprints with confidence using velocity tracking from previous sprints. Let AI estimate story points based on task complexity and historical data." },
       { title: "Kanban Workflows", content: "Visualise your workflow with drag-and-drop Kanban boards. Set WIP limits, create swimlanes, and automate repetitive board management tasks." },
       { title: "Hybrid Methodologies", content: "Mix Scrum and Kanban to create a workflow that fits your team. Use sprints for planned work and Kanban for incoming requests." },
       { title: "Retrospectives & Improvement", content: "After each sprint, receive an AI-generated retro summary with patterns, bottlenecks, and actionable recommendations for improvement." },
@@ -45,21 +45,21 @@ const articleContent: Record<string, { sections: { title: string; content: strin
     sections: [
       { title: "Review Checklists", content: "Create custom code review checklists that must be completed before merging. Ensure every PR meets your team's standards." },
       { title: "Quality Gates", content: "Define automated quality gates that block merging until code review is complete and all checks pass." },
-      { title: "Integration with GitHub & GitLab", content: "See branch, commit, and PR status directly on issues. Automatically transition issues when PRs are merged." },
+      { title: "Integration with GitHub & GitLab", content: "See branch, commit, and PR status directly on tasks. Automatically transition tasks when PRs are merged." },
     ],
     benefits: ["Consistent code quality across your team", "Automated enforcement of review standards", "Deep integration with your existing git workflow"],
   },
   "cicd-pipeline": {
     sections: [
-      { title: "Pipeline Visibility", content: "View CI/CD pipeline status directly on your issues and boards. See build and deploy status at a glance without switching tools." },
+      { title: "Pipeline Visibility", content: "View CI/CD pipeline status directly on your tasks and boards. See build and deploy status at a glance without switching tools." },
       { title: "Deployment Tracking", content: "Track deployments across environments. Know which version of your code is in production at all times." },
-      { title: "Quality Gates", content: "Set quality gates that prevent issues from moving forward when builds fail or tests don't pass. Automate your release criteria." },
+      { title: "Quality Gates", content: "Set quality gates that prevent tasks from moving forward when builds fail or tests don't pass. Automate your release criteria." },
     ],
     benefits: ["End-to-end pipeline visibility from your project board", "Automated quality gates that enforce release criteria", "Deployment history and environment tracking"],
   },
   "developer-experience": {
     sections: [
-      { title: "Git Integration", content: "Create branches directly from issues. Vireo automatically links branches, commits, and pull requests to the right issues." },
+      { title: "Git Integration", content: "Create branches directly from tasks. Vireo automatically links branches, commits, and pull requests to the right tasks." },
       { title: "Real-Time Sync", content: "Multiple team members can work in the same project simultaneously. Changes sync instantly across all connected clients." },
       { title: "API & Extensibility", content: "Extend Vireo with REST and GraphQL APIs, webhooks, and custom automations. Connect to your existing toolchain." },
     ],
@@ -138,14 +138,14 @@ const articleContent: Record<string, { sections: { title: string; content: strin
     sections: [
       { title: "Pre-Built Templates", content: "Get started in minutes with pre-built templates for common workflows — Scrum, Kanban, bug tracking, and more." },
       { title: "Instant Invites", content: "Invite team members with a single link. No complex setup or configuration required." },
-      { title: "Guided Setup", content: "Step-by-step onboarding wizard that helps you configure your workspace, issue types, and workflow in minutes." },
+      { title: "Guided Setup", content: "Step-by-step onboarding wizard that helps you configure your workspace, task types, and workflow in minutes." },
     ],
     benefits: ["Go from signup to shipping in under 10 minutes", "Pre-built templates for common workflows", "Zero-configuration team invites"],
   },
   "lean-workflows": {
     sections: [
       { title: "Simple Kanban", content: "Start with a simple Kanban board. Add columns, customise workflows, and invite your team in minutes." },
-      { title: "Lightweight Issue Tracking", content: "Track bugs, tasks, and ideas without complex configuration. Add custom fields as your needs grow." },
+      { title: "Lightweight Task Tracking", content: "Track bugs, tasks, and ideas without complex configuration. Add custom fields as your needs grow." },
       { title: "Scales With You", content: "Start simple and add complexity as your team grows. Enable sprints, roadmaps, and analytics when you need them." },
     ],
   },

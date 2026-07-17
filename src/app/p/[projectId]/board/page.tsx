@@ -261,8 +261,8 @@ function BoardColumn({ column }: { column: ColumnData }) {
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <path d="M12 8v8M8 12h8" />
           </svg>
-          <p className="text-xs text-[#737686]">No issues yet</p>
-          <p className="text-[11px] text-[#C3C6D7] mt-0.5">Issues will appear here in Phase 1.8</p>
+          <p className="text-xs text-[#737686]">No tasks yet</p>
+          <p className="text-[11px] text-[#C3C6D7] mt-0.5">Tasks will appear here in Phase 1.8</p>
         </div>
       </div>
 
@@ -271,7 +271,7 @@ function BoardColumn({ column }: { column: ColumnData }) {
           <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          Create issue
+          Create task
         </button>
       </div>
     </div>

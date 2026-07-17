@@ -14,9 +14,9 @@ import {
 
 const features = [
   {
-    title: "Issue tracking",
+    title: "Task tracking",
     description:
-      "Rapid issue creation with custom fields, dependencies, and markdown support.",
+      "Rapid task creation with custom fields, dependencies, and markdown support.",
     icon: Bug,
   },
   {
@@ -58,7 +58,7 @@ const features = [
   {
     title: "Team chat",
     description:
-      "Threaded discussions integrated directly into every issue card.",
+      "Threaded discussions integrated directly into every task card.",
     icon: MessageSquareMore,
   },
 ];

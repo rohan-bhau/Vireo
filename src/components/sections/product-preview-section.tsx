@@ -130,7 +130,7 @@ export function ProductPreviewSection() {
               <motion.div variants={itemVariants} className="flex items-center gap-3">
                 <div className="flex items-center gap-2 rounded-lg border border-[#C3C6D7]/30 bg-[#F8F9FF] px-3 py-2 text-sm text-[#6B7280] transition-colors hover:border-[#C3C6D7]/50">
                   <Search className="h-4 w-4" />
-                  <span>Search issues...</span>
+                  <span>Search tasks...</span>
                 </div>
                 <button className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#004AC6] to-[#005DA7] px-4 py-2 text-xs font-bold text-white shadow-[0_2px_8px_rgba(0,74,198,0.25)] transition-all hover:shadow-[0_4px_12px_rgba(0,74,198,0.35)] hover:brightness-110">
                   <Plus className="h-3.5 w-3.5" />

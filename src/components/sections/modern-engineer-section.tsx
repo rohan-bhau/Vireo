@@ -11,7 +11,7 @@ const items = [
   },
   {
     title: "AI-Assisted Tickets",
-    desc: "Draft high-quality issues and bug reports in seconds with our contextual AI assistant that learns your project structure.",
+    desc: "Draft high-quality tasks and bug reports in seconds with our contextual AI assistant that learns your project structure.",
     icon: Sparkles,
   },
   {

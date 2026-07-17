@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Vireo — AI-powered project management",
   description:
-    "AI-assisted issue tracking and agile project management platform",
+    "AI-assisted task tracking and agile project management platform",
   icons: {
     icon: "/vireo-icon.svg",
   },
