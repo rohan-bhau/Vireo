@@ -141,6 +141,13 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
     }
   }
 
+  function mapColumnIdToStatus(columnId: string): Task["status"] {
+    if (columnId.includes("progress")) return "in_progress";
+    if (columnId.includes("review")) return "in_review";
+    if (columnId.includes("done") || columnId.includes("complete")) return "done";
+    return "todo";
+  }
+
   function isDoneColumn(columnId: string): boolean {
     const col = columns.find((c) => c.id === columnId);
     if (!col) return false;
@@ -211,6 +218,7 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
         const task = draft.find((t) => t.taskKey === activeIdStr);
         if (task) {
           task.columnId = targetColumnId;
+          task.status = mapColumnIdToStatus(targetColumnId);
         }
       })
     );
@@ -525,7 +533,7 @@ function TaskCard({
           {task.priority === "highest" ? "!!" : task.priority === "high" ? "!" : ""}
         </span>
       </div>
-      <p className="text-sm font-medium text-[#121C28] line-clamp-2">
+      <p className={clsx("text-sm font-medium text-[#121C28] line-clamp-2", task.status === "done" && "line-through")}>
         {task.title}
       </p>
       <div className="mt-2 flex items-center gap-2">
