@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/store";
 import {
   DndContext,
   DragEndEvent,
@@ -11,16 +13,21 @@ import {
   useSensors,
   DragOverlay,
   closestCorners,
+  pointerWithin,
+  rectIntersection,
+  CollisionDetection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   horizontalListSortingStrategy,
+  verticalListSortingStrategy,
   arrayMove,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { clsx } from "clsx";
 import { Button } from "@/components/ui/button";
-import { useGetWorkspaceTasksQuery, useMoveTaskMutation, type Task } from "@/store/taskApi";
+import { useGetWorkspaceTasksQuery, useMoveTaskMutation, taskApi, type Task } from "@/store/taskApi";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 
 interface Column {
@@ -71,12 +78,19 @@ const PRIORITY_COLORS: Record<string, string> = {
   highest: "text-[#DC2626]",
 };
 
+const collisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) return pointerCollisions;
+  return rectIntersection(args);
+};
+
 interface BoardTabProps {
   workspaceId: string;
 }
 
 export function BoardTab({ workspaceId }: BoardTabProps) {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const { data: tasks = [], isLoading } = useGetWorkspaceTasksQuery(workspaceId);
   const [moveTask] = useMoveTaskMutation();
 
@@ -95,7 +109,9 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
   }, [columns, workspaceId]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
   );
 
   const filteredColumns = searchQuery
@@ -103,6 +119,8 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
         col.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : columns;
+
+  const columnIds = filteredColumns.map((c) => c.id);
 
   function getColumnTasks(columnId: string): Task[] {
     return tasks.filter((t) => {
@@ -121,6 +139,12 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
     }
   }
 
+  function findColumnOfTask(taskKey: string): string | null {
+    const task = tasks.find((t) => t.taskKey === taskKey);
+    if (!task) return null;
+    return task.columnId || defaultColumnId(task.status);
+  }
+
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
   }
@@ -130,29 +154,53 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
     setActiveId(null);
     if (!over) return;
 
-    const activeTaskKey = active.id as string;
-    const overId = over.id as string;
+    const activeIdStr = active.id as string;
+    const overIdStr = over.id as string;
 
-    const task = tasks.find((t) => t.taskKey === activeTaskKey);
-    const targetColumn = columns.find((c) => c.id === overId);
-
-    if (task && targetColumn) {
-      const columnTasks = getColumnTasks(targetColumn.id);
-      await moveTask({
-        taskKey: activeTaskKey,
-        columnId: targetColumn.id,
-        position: columnTasks.length,
-      }).unwrap();
-      return;
-    }
-
-    const isColumnDrag = columns.some((c) => c.id === activeTaskKey);
-    if (isColumnDrag) {
-      const oldIndex = columns.findIndex((c) => c.id === activeTaskKey);
-      const newIndex = columns.findIndex((c) => c.id === overId);
+    const isColumn = columns.some((c) => c.id === activeIdStr);
+    if (isColumn) {
+      const oldIndex = columns.findIndex((c) => c.id === activeIdStr);
+      const newIndex = columns.findIndex((c) => c.id === overIdStr);
       if (oldIndex !== -1 && newIndex !== -1) {
         setColumns(arrayMove(columns, oldIndex, newIndex));
       }
+      return;
+    }
+
+    const activeTask = tasks.find((t) => t.taskKey === activeIdStr);
+    if (!activeTask) return;
+
+    const overTask = tasks.find((t) => t.taskKey === overIdStr);
+    let targetColumnId: string;
+
+    if (overTask) {
+      targetColumnId = overTask.columnId || defaultColumnId(overTask.status);
+    } else if (columns.some((c) => c.id === overIdStr)) {
+      targetColumnId = overIdStr;
+    } else {
+      return;
+    }
+
+    const currentColId = activeTask.columnId || defaultColumnId(activeTask.status);
+    if (currentColId === targetColumnId) return;
+
+    dispatch(
+      taskApi.util.updateQueryData("getWorkspaceTasks", workspaceId, (draft) => {
+        const task = draft.find((t) => t.taskKey === activeIdStr);
+        if (task) {
+          task.columnId = targetColumnId;
+        }
+      })
+    );
+
+    try {
+      await moveTask({
+        taskKey: activeIdStr,
+        columnId: targetColumnId,
+        position: 0,
+      }).unwrap();
+    } catch {
+      dispatch(taskApi.util.invalidateTags(["Task"]));
     }
   }
 
@@ -206,11 +254,11 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
       <div className="flex flex-1 gap-4 overflow-x-auto pb-4 max-sm:px-1 max-sm:gap-3">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={collisionDetection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={filteredColumns.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
+          <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
             {filteredColumns.map((column) => (
               <BoardColumn
                 key={column.id}
@@ -229,6 +277,12 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
               <div className="rounded-lg bg-white px-4 py-3 shadow-lg border border-[#2563EB]/30 w-72">
                 <p className="text-sm font-medium text-[#121C28]">
                   {columns.find((c) => c.id === activeId)?.name}
+                </p>
+              </div>
+            ) : activeId && tasks.find((t) => t.taskKey === activeId) ? (
+              <div className="rounded-lg bg-white p-3 shadow-lg border border-[#2563EB]/30 w-72">
+                <p className="text-sm font-medium text-[#121C28]">
+                  {tasks.find((t) => t.taskKey === activeId)?.title}
                 </p>
               </div>
             ) : null}
@@ -325,6 +379,8 @@ function BoardColumn({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const taskIds = tasks.map((t) => t.taskKey);
+
   return (
     <div
       ref={setNodeRef}
@@ -356,60 +412,29 @@ function BoardColumn({
         </button>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
-        {tasks.length > 0 ? (
-          tasks.map((task) => (
-            <button
-              key={task.taskKey}
-              onClick={() => onTaskClick(task.taskKey)}
-              className="w-full rounded-lg bg-white p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#C3C6D7]/20 hover:border-[#2563EB]/30 hover:shadow-md transition-all"
-            >
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-xs">{typeIcons[task.type] || "☐"}</span>
-                <span className="text-[11px] font-mono font-medium text-[#737686]">
-                  {task.taskKey}
-                </span>
-                <span className={priorityColors[task.priority] || "text-[#737686]"}>
-                  {task.priority === "highest" ? "!!" : task.priority === "high" ? "!" : ""}
-                </span>
-              </div>
-              <p className="text-sm font-medium text-[#121C28] line-clamp-2">
-                {task.title}
-              </p>
-              <div className="mt-2 flex items-center gap-2">
-                {task.assignee && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2563EB] text-[9px] font-semibold text-white">
-                    {task.assignee.charAt(0).toUpperCase()}
-                  </span>
-                )}
-                {task.labels.length > 0 && (
-                  <div className="flex gap-1 overflow-hidden">
-                    {task.labels.slice(0, 2).map((label) => (
-                      <span
-                        key={label}
-                        className="rounded bg-[#EEF4FF] px-1.5 py-0.5 text-[10px] font-medium text-[#2563EB] truncate max-w-[80px]"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                    {task.labels.length > 2 && (
-                      <span className="text-[10px] text-[#737686]">+{task.labels.length - 2}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </button>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <svg className="mb-2 h-8 w-8 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M12 8v8M8 12h8" />
-            </svg>
-            <p className="text-xs text-[#737686]">No tasks yet</p>
-          </div>
-        )}
-      </div>
+      <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+        <div className="flex-1 space-y-2 overflow-y-auto px-3 pb-3">
+          {tasks.length > 0 ? (
+            tasks.map((task) => (
+              <TaskCard
+                key={task.taskKey}
+                task={task}
+                typeIcons={typeIcons}
+                priorityColors={priorityColors}
+                onClick={() => onTaskClick(task.taskKey)}
+              />
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <svg className="mb-2 h-8 w-8 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M12 8v8M8 12h8" />
+              </svg>
+              <p className="text-xs text-[#737686]">No tasks yet</p>
+            </div>
+          )}
+        </div>
+      </SortableContext>
 
       <div className="px-3 pb-3">
         <button
@@ -421,6 +446,83 @@ function BoardColumn({
           </svg>
           Create task
         </button>
+      </div>
+    </div>
+  );
+}
+
+function TaskCard({
+  task,
+  typeIcons,
+  priorityColors,
+  onClick,
+}: {
+  task: Task;
+  typeIcons: Record<string, string>;
+  priorityColors: Record<string, string>;
+  onClick: () => void;
+}) {
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({ id: task.taskKey });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      className={clsx(
+        "cursor-pointer rounded-lg bg-white p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#C3C6D7]/20 hover:border-[#2563EB]/30 hover:shadow-md transition-all touch-none select-none",
+        isOver && !isDragging && "border-t-2 border-t-[#2563EB]"
+      )}
+    >
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className="text-xs">{typeIcons[task.type] || "☐"}</span>
+        <span className="text-[11px] font-mono font-medium text-[#737686]">
+          {task.taskKey}
+        </span>
+        <span className={priorityColors[task.priority] || "text-[#737686]"}>
+          {task.priority === "highest" ? "!!" : task.priority === "high" ? "!" : ""}
+        </span>
+      </div>
+      <p className="text-sm font-medium text-[#121C28] line-clamp-2">
+        {task.title}
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        {task.assignee && (
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2563EB] text-[9px] font-semibold text-white">
+            {task.assignee.charAt(0).toUpperCase()}
+          </span>
+        )}
+        {task.labels.length > 0 && (
+          <div className="flex gap-1 overflow-hidden">
+            {task.labels.slice(0, 2).map((label) => (
+              <span
+                key={label}
+                className="rounded bg-[#EEF4FF] px-1.5 py-0.5 text-[10px] font-medium text-[#2563EB] truncate max-w-[80px]"
+              >
+                {label}
+              </span>
+            ))}
+            {task.labels.length > 2 && (
+              <span className="text-[10px] text-[#737686]">+{task.labels.length - 2}</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

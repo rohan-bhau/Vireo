@@ -181,9 +181,7 @@ export const taskApi = api.injectEndpoints({
         body,
       }),
       transformResponse: (response: TaskResponse) => response.data.task,
-      invalidatesTags: (_result, _error, { taskKey }) => [
-        { type: "Task", id: taskKey },
-      ],
+      invalidatesTags: ["Task"],
     }),
     addAttachment: builder.mutation<Task, { taskKey: string; url: string; filename: string; publicId: string }>({
       query: ({ taskKey, ...body }) => ({
