@@ -17,6 +17,7 @@ import { RichTextEditor } from "@/components/tasks/rich-text-editor";
 import { CommentThread } from "@/components/tasks/comment-thread";
 import { ActivityLog } from "@/components/tasks/activity-log";
 import { AttachmentList } from "@/components/tasks/attachment-list";
+import { AISummarizer } from "@/components/ai/ai-summarizer";
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string; color: string }[] = [
   { value: "todo", label: "Todo", color: "bg-[#E5E7EF] text-[#434655]" },
@@ -216,6 +217,19 @@ export default function TaskDetailPage() {
                 Add a description
               </button>
             )}
+          </div>
+
+          <div className="flex gap-2">
+            <AISummarizer taskKey={taskKey} />
+            <button
+              onClick={() => router.push(`/ai-assistant`)}
+              className="flex items-center gap-1.5 rounded-lg border border-[#C3C6D7]/50 px-3 py-1.5 text-xs font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+              </svg>
+              Ask AI
+            </button>
           </div>
 
           <AttachmentList taskKey={taskKey} attachments={task.attachments} />

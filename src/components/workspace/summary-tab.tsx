@@ -6,6 +6,10 @@ import { useGetWorkspaceQuery, useGetMembersQuery } from "@/store/workspaceApi";
 import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
 import { useGetWorkspaceTasksQuery } from "@/store/taskApi";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
+import { AITicketWriter } from "@/components/ai/ai-ticket-writer";
+import { AITriage } from "@/components/ai/ai-triage";
+import { AISprintPlanner } from "@/components/ai/ai-sprint-planner";
+import { Sparkles } from "lucide-react";
 
 interface SummaryTabProps {
   workspaceId: string;
@@ -18,6 +22,11 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
   const { data: tasks = [] } = useGetWorkspaceTasksQuery(workspaceId);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [ticketWriterOpen, setTicketWriterOpen] = useState(false);
+  const [triageOpen, setTriageOpen] = useState(false);
+  const [sprintPlannerOpen, setSprintPlannerOpen] = useState(false);
+
+  const projectId = projects.length > 0 ? projects[0].id : "";
 
   const openTasks = tasks.filter(
     (t) => t.status === "todo" || t.status === "in_progress" || t.status === "in_review"
@@ -70,6 +79,20 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
               </svg>
               Create task
             </button>
+            <button
+              onClick={() => setTicketWriterOpen(true)}
+              className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Write ticket
+            </button>
+            <button
+              onClick={() => setTriageOpen(true)}
+              className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Smart triage
+            </button>
             <Link
               href={`/w/${workspaceId}/members`}
               className="flex items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
@@ -92,27 +115,57 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-[#2563EB]/20 bg-[#EEF4FF] p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2563EB]">
-            <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+      {projectId && (
+        <button
+          onClick={() => setSprintPlannerOpen(true)}
+          className="mt-6 w-full rounded-xl border border-[#2563EB]/20 bg-gradient-to-r from-[#EEF4FF] to-[#F8F9FF] p-5 text-left transition-colors hover:border-[#2563EB]/40"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2563EB]">
+              <Sparkles className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-[#121C28]">AI Sprint Planner</h3>
+              <p className="text-xs text-[#737686] mt-0.5">
+                Let AI suggest an optimal sprint plan from your backlog based on priority and capacity.
+              </p>
+            </div>
+            <svg className="h-5 w-5 text-[#2563EB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 18l6-6-6-6" />
             </svg>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-[#121C28]">AI Sprint Summary</h3>
-            <p className="text-xs text-[#737686] mt-0.5">
-              AI-powered sprint insights coming soon. Get automatic summaries of sprint progress, bottlenecks, and team velocity.
-            </p>
-          </div>
-        </div>
-      </div>
+        </button>
+      )}
 
       <CreateTaskDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         workspaceId={workspaceId}
       />
+
+      {projectId && (
+        <>
+          <AITicketWriter
+            open={ticketWriterOpen}
+            onClose={() => setTicketWriterOpen(false)}
+            projectId={projectId}
+            onApply={(result) => {
+              setCreateDialogOpen(true);
+            }}
+          />
+          <AITriage
+            open={triageOpen}
+            onClose={() => setTriageOpen(false)}
+            workspaceId={workspaceId}
+            onApply={() => {}}
+          />
+          <AISprintPlanner
+            open={sprintPlannerOpen}
+            onClose={() => setSprintPlannerOpen(false)}
+            projectId={projectId}
+          />
+        </>
+      )}
     </div>
   );
 }
