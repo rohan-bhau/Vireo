@@ -34,6 +34,7 @@ export default function MembersPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
+  const [inviteMessage, setInviteMessage] = useState("");
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
 
@@ -49,8 +50,14 @@ export default function MembersPage() {
       return;
     }
     try {
-      await createInvitation({ workspaceId, inviteeEmail: inviteEmail.trim(), role: inviteRole }).unwrap();
+      await createInvitation({
+        workspaceId,
+        inviteeEmail: inviteEmail.trim(),
+        role: inviteRole,
+        message: inviteMessage.trim() || undefined,
+      }).unwrap();
       setInviteEmail("");
+      setInviteMessage("");
       setInviteSuccess("Invitation sent to " + inviteEmail.trim());
       setTimeout(() => setInviteSuccess(null), 3000);
     } catch (err: any) {
@@ -247,6 +254,16 @@ export default function MembersPage() {
                 ? "Full access to billing, members, and all projects."
                 : "Can create projects and manage their own work."}
             </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-[#434655]">Personal message (optional)</label>
+            <textarea
+              placeholder="Hey, I'd love for you to join our workspace!"
+              value={inviteMessage}
+              onChange={(e) => setInviteMessage(e.target.value)}
+              rows={3}
+              className="w-full resize-none rounded-lg border border-[#C3C6D7] px-3 py-2.5 text-sm text-[#121C28] placeholder:text-[#9CA3AF] focus:border-[#2563EB] focus:outline-none"
+            />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setShowInvite(false)}>Cancel</Button>

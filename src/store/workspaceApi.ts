@@ -121,7 +121,7 @@ export const workspaceApi = api.injectEndpoints({
       transformResponse: (response: InvitationsResponse) => response.data.invitations,
       providesTags: (_result, _error, id) => [{ type: "Invitations", id }],
     }),
-    createInvitation: builder.mutation<Invitation, { workspaceId: string; inviteeEmail: string; role?: "ADMIN" | "MEMBER" }>({
+    createInvitation: builder.mutation<Invitation, { workspaceId: string; inviteeEmail: string; role?: "ADMIN" | "MEMBER"; message?: string }>({
       query: ({ workspaceId, ...body }) => ({
         url: `/workspaces/${workspaceId}/invitations`,
         method: "POST",
@@ -141,6 +141,20 @@ export const workspaceApi = api.injectEndpoints({
         { type: "Invitations", id: workspaceId },
       ],
     }),
+    acceptInvitation: builder.mutation<void, string>({
+      query: (token) => ({
+        url: `/invitations/${token}/accept`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Invitations", "Members"],
+    }),
+    declineInvitation: builder.mutation<void, string>({
+      query: (token) => ({
+        url: `/invitations/${token}/decline`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Invitations"],
+    }),
   }),
 });
 
@@ -156,4 +170,6 @@ export const {
   useGetInvitationsQuery,
   useCreateInvitationMutation,
   useCancelInvitationMutation,
+  useAcceptInvitationMutation,
+  useDeclineInvitationMutation,
 } = workspaceApi;

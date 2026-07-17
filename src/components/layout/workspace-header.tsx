@@ -32,6 +32,8 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
   const [showDelete, setShowDelete] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteMessage, setInviteMessage] = useState("");
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +59,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     setInviteError(null);
+    setInviteSuccess(null);
     if (!inviteEmail.trim()) {
       setInviteError("Email is required");
       return;
@@ -65,9 +68,12 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
       await createInvitation({
         workspaceId,
         inviteeEmail: inviteEmail.trim(),
+        message: inviteMessage.trim() || undefined,
       }).unwrap();
-      setShowInvite(false);
       setInviteEmail("");
+      setInviteMessage("");
+      setInviteSuccess("Invitation sent to " + inviteEmail.trim());
+      setTimeout(() => setInviteSuccess(null), 3000);
     } catch (err: unknown) {
       const message =
         (err as { data?: { message?: string } })?.data?.message ||
@@ -189,6 +195,11 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
         title="Add member"
       >
         <form onSubmit={handleInvite} className="space-y-4">
+          {inviteSuccess && (
+            <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+              {inviteSuccess}
+            </div>
+          )}
           {inviteError && (
             <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
               {inviteError}
@@ -202,6 +213,16 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
             onChange={(e) => setInviteEmail(e.target.value)}
             required
           />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-[#434655]">Personal message (optional)</label>
+            <textarea
+              placeholder="Hey, I'd love for you to join our workspace!"
+              value={inviteMessage}
+              onChange={(e) => setInviteMessage(e.target.value)}
+              rows={3}
+              className="w-full resize-none rounded-lg border border-[#C3C6D7] px-3 py-2.5 text-sm text-[#121C28] placeholder:text-[#9CA3AF] focus:border-[#2563EB] focus:outline-none"
+            />
+          </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button
               type="button"

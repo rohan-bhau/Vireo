@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,8 @@ export default function LoginPage() {
   );
   const dispatch = useDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,9 +33,7 @@ export default function LoginPage() {
       const result = await login({ email, password }).unwrap();
       setTokens(result.data.accessToken, result.data.refreshToken);
       dispatch(setCredentials(result.data));
-      router.replace(
-        activeWorkspaceId ? `/w/${activeWorkspaceId}` : "/dashboard"
-      );
+      router.replace(redirectUrl || (activeWorkspaceId ? `/w/${activeWorkspaceId}` : "/dashboard"));
     } catch (err: unknown) {
       setError(
         (err as { data?: { message?: string } })?.data?.message ||
