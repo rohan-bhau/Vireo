@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, startTransition } from "react";
+import { Suspense, useEffect, useState, startTransition } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { useDeclineInvitationMutation } from "@/store/workspaceApi";
 
-export default function DeclineInvitationPage() {
+function DeclineContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -104,5 +104,17 @@ export default function DeclineInvitationPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function DeclineInvitationPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-[#F0F0F5] px-4">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#2563EB] border-t-transparent" />
+      </div>
+    }>
+      <DeclineContent />
+    </Suspense>
   );
 }

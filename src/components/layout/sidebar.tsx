@@ -25,6 +25,10 @@ import {
   MessageSquare,
   Bot,
   ListOrdered,
+  Shield,
+  History as HistoryIcon,
+  ExternalLink,
+  LayoutGrid,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
@@ -60,6 +64,10 @@ const extraMenuItems: MenuItem[] = [
   { key: "roadmap", label: "Roadmap", icon: Map, href: "roadmap" },
   { key: "teamChat", label: "Team Chat", icon: MessageSquare, href: "chat" },
   { key: "automation", label: "Automation", icon: Bot, href: "automation" },
+  { key: "dashboard", label: "Dashboard", icon: LayoutGrid, href: "dashboard" },
+  { key: "admin", label: "Admin", icon: Shield, href: "admin" },
+  { key: "auditLog", label: "Audit Log", icon: HistoryIcon, href: "audit-log" },
+  { key: "integrations", label: "Integrations", icon: ExternalLink, href: "integrations" },
 ];
 
 function WorkspaceMenuItem({

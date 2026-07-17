@@ -30,6 +30,10 @@ interface WorkspaceState {
     roadmap: boolean;
     teamChat: boolean;
     automation: boolean;
+    dashboard: boolean;
+    admin: boolean;
+    auditLog: boolean;
+    integrations: boolean;
   };
   tabsByWorkspace: Record<string, WorkspaceTabsConfig>;
 }
@@ -72,6 +76,10 @@ function loadState(): WorkspaceState {
           roadmap: parsed.visibleMenuItems?.roadmap ?? false,
           teamChat: parsed.visibleMenuItems?.teamChat ?? false,
           automation: parsed.visibleMenuItems?.automation ?? false,
+          dashboard: parsed.visibleMenuItems?.dashboard ?? false,
+          admin: parsed.visibleMenuItems?.admin ?? false,
+          auditLog: parsed.visibleMenuItems?.auditLog ?? false,
+          integrations: parsed.visibleMenuItems?.integrations ?? false,
         },
         tabsByWorkspace: parsed.tabsByWorkspace || {},
       };
@@ -97,6 +105,10 @@ const defaultState: WorkspaceState = {
     roadmap: false,
     teamChat: false,
     automation: false,
+    dashboard: false,
+    admin: false,
+    auditLog: false,
+    integrations: false,
   },
   tabsByWorkspace: {},
 };
