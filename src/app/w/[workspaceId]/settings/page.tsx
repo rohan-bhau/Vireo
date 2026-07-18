@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import {
@@ -15,15 +15,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
 
-type SettingsTab = "general" | "members";
+type SettingsTab = "general" | "members" | "billing";
 
 export default function WorkspaceSettingsPage() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const workspaceId = params.workspaceId as string;
   const { user } = useSelector((state: RootState) => state.auth);
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
+  const isBillingPage = pathname?.endsWith("/settings/billing");
 
   const { data: workspace, isLoading } = useGetWorkspaceQuery(workspaceId);
   const { data: members = [] } = useGetMembersQuery(workspaceId);
@@ -103,19 +105,36 @@ export default function WorkspaceSettingsPage() {
         <span className="font-semibold text-[#121C28]">Settings</span>
       </div>
       <div className="flex gap-2 mb-6 border-b border-[#C3C6D7]/20 pb-4">
-        {(["general", "members"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab
-                ? "bg-[#EEF4FF] text-[#004AC6]"
-                : "text-[#434655] hover:bg-[#F8F9FF]"
-            }`}
-          >
-            {tab === "general" ? "General Details" : "Members"}
-          </button>
-        ))}
+        {(["general", "members", "billing"] as const).map((tab) => {
+          if (tab === "billing") {
+            return (
+              <Link
+                key={tab}
+                href={`/w/${workspaceId}/settings/billing`}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  isBillingPage
+                    ? "bg-[#EEF4FF] text-[#004AC6]"
+                    : "text-[#434655] hover:bg-[#F8F9FF]"
+                }`}
+              >
+                Plans & Billing
+              </Link>
+            );
+          }
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === tab
+                  ? "bg-[#EEF4FF] text-[#004AC6]"
+                  : "text-[#434655] hover:bg-[#F8F9FF]"
+              }`}
+            >
+              {tab === "general" ? "General Details" : "Members"}
+            </button>
+          );
+        })}
       </div>
 
       {activeTab === "general" && (

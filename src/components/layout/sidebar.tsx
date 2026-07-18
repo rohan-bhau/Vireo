@@ -29,6 +29,8 @@ import {
   History as HistoryIcon,
   ExternalLink,
   LayoutGrid,
+  Settings,
+  CreditCard,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
@@ -68,6 +70,8 @@ const extraMenuItems: MenuItem[] = [
   { key: "admin", label: "Admin", icon: Shield, href: "admin" },
   { key: "auditLog", label: "Audit Log", icon: HistoryIcon, href: "audit-log" },
   { key: "integrations", label: "Integrations", icon: ExternalLink, href: "integrations" },
+  { key: "settings", label: "Settings", icon: Settings, href: "settings" },
+  { key: "billing", label: "Billing", icon: CreditCard, href: "settings/billing" },
 ];
 
 function WorkspaceMenuItem({

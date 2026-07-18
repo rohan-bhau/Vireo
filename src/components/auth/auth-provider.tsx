@@ -6,6 +6,7 @@ import type { AppDispatch, RootState } from "@/store";
 import { setCredentials, setLoading, logout } from "@/store/authSlice";
 import { authApi } from "@/store/authApi";
 import { getAccessToken, clearTokens } from "@/lib/auth";
+import { connectSocket, disconnectSocket } from "@/lib/socket";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             refreshToken: "",
           })
         );
+        connectSocket();
       })
       .catch(() => {
         clearTokens();
@@ -41,6 +43,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => {
         dispatch(setLoading(false));
       });
+
+    return () => {
+      disconnectSocket();
+    };
   }, [dispatch]);
 
   if (isLoading) {
