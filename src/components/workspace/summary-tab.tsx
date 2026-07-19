@@ -6,6 +6,7 @@ import { useGetWorkspaceQuery, useGetMembersQuery } from "@/store/workspaceApi";
 import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
 import { useGetWorkspaceTasksQuery } from "@/store/taskApi";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
+import { SkeletonSummaryCards } from "@/components/ui/skeleton";
 import { AITicketWriter } from "@/components/ai/ai-ticket-writer";
 import { AITriage } from "@/components/ai/ai-triage";
 import { AISprintPlanner } from "@/components/ai/ai-sprint-planner";
@@ -17,9 +18,9 @@ interface SummaryTabProps {
 
 export function SummaryTab({ workspaceId }: SummaryTabProps) {
   useGetWorkspaceQuery(workspaceId);
-  const { data: members = [] } = useGetMembersQuery(workspaceId);
-  const { data: projects = [] } = useGetWorkspaceProjectsQuery(workspaceId);
-  const { data: tasks = [] } = useGetWorkspaceTasksQuery(workspaceId);
+  const { data: members = [], isLoading: membersLoading } = useGetMembersQuery(workspaceId);
+  const { data: projects = [], isLoading: projectsLoading } = useGetWorkspaceProjectsQuery(workspaceId);
+  const { data: tasks = [], isLoading: tasksLoading } = useGetWorkspaceTasksQuery(workspaceId);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [ticketWriterOpen, setTicketWriterOpen] = useState(false);
@@ -31,6 +32,16 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
   const openTasks = tasks.filter(
     (t) => t.status === "todo" || t.status === "in_progress" || t.status === "in_review"
   ).length;
+
+  const loading = membersLoading || projectsLoading || tasksLoading;
+
+  if (loading) {
+    return (
+      <div>
+        <SkeletonSummaryCards />
+      </div>
+    );
+  }
 
   return (
     <div>

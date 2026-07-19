@@ -28,6 +28,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/button";
+import { SkeletonBoardColumn } from "@/components/ui/skeleton";
 import { useGetWorkspaceTasksQuery, useMoveTaskMutation, taskApi, type Task } from "@/store/taskApi";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 
@@ -282,7 +283,15 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
       </div>
 
       <div className="flex flex-1 gap-4 overflow-x-auto pb-4 max-sm:px-1 max-sm:gap-3">
-        <DndContext
+        {isLoading ? (
+          <>
+            <SkeletonBoardColumn />
+            <SkeletonBoardColumn />
+            <SkeletonBoardColumn />
+            <SkeletonBoardColumn />
+          </>
+        ) : (
+          <><DndContext
           sensors={sensors}
           collisionDetection={collisionDetection}
           onDragStart={handleDragStart}
@@ -353,7 +362,8 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
               Add column
             </button>
           )}
-        </div>
+        </div></>
+      )}
       </div>
 
       {confirmRemove && (

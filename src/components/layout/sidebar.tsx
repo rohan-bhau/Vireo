@@ -36,6 +36,7 @@ import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SkeletonSidebarItem } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
   addRecentWorkspace,
@@ -172,7 +173,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
     visibleSections,
     visibleMenuItems,
   } = useSelector((state: RootState) => state.workspace);
-  const { data: workspaces = [] } = useGetWorkspacesQuery();
+  const { data: workspaces = [], isLoading: workspacesLoading } = useGetWorkspacesQuery();
 
   const [createWorkspace, { isLoading: isCreating }] =
     useCreateWorkspaceMutation();
@@ -293,6 +294,12 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                   Starred
                 </button>
               )}
+              {starredExpanded && workspacesLoading && !collapsed && (
+                <div className="space-y-0.5 mt-0.5">
+                  <SkeletonSidebarItem />
+                  <SkeletonSidebarItem />
+                </div>
+              )}
               {starredExpanded && starredList.length > 0 && (
                 <div className="space-y-0.5 mt-0.5">
                   {starredList.map((ws) => (
@@ -312,7 +319,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
             </div>
           )}
 
-          {visibleSections.recent && recentList.length > 0 && (
+          {visibleSections.recent && (workspacesLoading || recentList.length > 0) && (
             <div>
               {!collapsed && (
                 <button
@@ -327,6 +334,12 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                   <History className="h-3 w-3" />
                   Recent
                 </button>
+              )}
+              {recentExpanded && workspacesLoading && !collapsed && (
+                <div className="space-y-0.5 mt-0.5">
+                  <SkeletonSidebarItem />
+                  <SkeletonSidebarItem />
+                </div>
               )}
               {recentExpanded && (
                 <div className="space-y-0.5 mt-0.5">
@@ -381,7 +394,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
             </div>
           )}
 
-          {visibleSections.allWorkspaces && workspaces.length > 0 && (
+          {visibleSections.allWorkspaces && (workspacesLoading || workspaces.length > 0) && (
             <div>
               {!collapsed && (
                 <button
@@ -395,6 +408,14 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                   )}
                   All Workspaces
                 </button>
+              )}
+              {allExpanded && workspacesLoading && !collapsed && (
+                <div className="space-y-0.5 mt-0.5">
+                  <SkeletonSidebarItem />
+                  <SkeletonSidebarItem />
+                  <SkeletonSidebarItem />
+                  <SkeletonSidebarItem />
+                </div>
               )}
               {allExpanded && (
                 <div

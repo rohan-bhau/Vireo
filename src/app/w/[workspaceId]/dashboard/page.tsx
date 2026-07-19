@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useGetDashboardStatsQuery, useGetTaskTimelineQuery, useGetTeamWorkloadQuery } from "@/store/dashboardApi";
 import { useGetWorkspaceQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
+import { SkeletonDashboardContent } from "@/components/ui/skeleton";
 import {
   LayoutDashboard,
   ListChecks,
@@ -150,12 +151,7 @@ export default function WorkspaceDashboardPage() {
       </div>
 
       {statsLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <svg className="h-6 w-6 animate-spin text-[#2563EB]" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-        </div>
+        <SkeletonDashboardContent />
       ) : !stats ? (
         <div className="rounded-xl bg-white p-16 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EEF4FF]">

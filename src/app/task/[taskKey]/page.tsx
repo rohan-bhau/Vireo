@@ -13,6 +13,7 @@ import {
   type TaskType,
 } from "@/store/taskApi";
 import { Button } from "@/components/ui/button";
+import { SkeletonTaskDetail } from "@/components/ui/skeleton";
 import { RichTextEditor } from "@/components/tasks/rich-text-editor";
 import { CommentThread } from "@/components/tasks/comment-thread";
 import { ActivityLog } from "@/components/tasks/activity-log";
@@ -60,11 +61,7 @@ export default function TaskDetailPage() {
   const [deleting, setDeleting] = useState(false);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-1 items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
-      </div>
-    );
+    return <SkeletonTaskDetail />;
   }
 
   if (error || !task) {

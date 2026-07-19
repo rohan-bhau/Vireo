@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { useGetWorkspaceTasksQuery, type Task } from "@/store/taskApi";
 import { Button } from "@/components/ui/button";
+import { SkeletonTableRows } from "@/components/ui/skeleton";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 
 type SortKey = "key" | "title" | "status" | "priority" | "assignee" | "updated";
@@ -167,14 +168,7 @@ export function ListTab({ workspaceId }: ListTabProps) {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-16 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
-                    <span className="text-sm text-[#737686]">Loading tasks...</span>
-                  </div>
-                </td>
-              </tr>
+              <SkeletonTableRows rows={5} />
             ) : filtered.length > 0 ? (
               filtered.map((task) => (
                 <tr
