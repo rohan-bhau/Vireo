@@ -47,16 +47,16 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
     >
       <div
         className={clsx(
-          "w-full max-w-md rounded-xl bg-white shadow-xl max-sm:fixed max-sm:inset-0 max-sm:max-w-none max-sm:rounded-none max-sm:flex max-sm:flex-col",
+          "w-full max-w-md rounded-[3px] bg-surface shadow-modal max-sm:fixed max-sm:inset-0 max-sm:max-w-none max-sm:rounded-none max-sm:flex max-sm:flex-col",
           className
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-[#C3C6D7]/20 px-6 py-4 max-sm:min-h-[56px]">
-            <h2 className="text-lg font-semibold text-[#121C28]">{title}</h2>
+          <div className="flex items-center justify-between border-b border-border-light px-6 py-4 max-sm:min-h-[56px]">
+            <h2 className="text-lg font-semibold text-text">{title}</h2>
             <button
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28]"
+              className="flex h-9 w-9 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
               aria-label="Close"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

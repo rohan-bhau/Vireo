@@ -1,22 +1,249 @@
 @import "tailwindcss";
 
+:root {
+  /* ---- Color Palette (Jira Match) ---- */
+
+  /* Primary */
+  --color-primary-default: #0052CC;
+  --color-primary-dark: #0747A6;
+  --color-primary-light: #4C9AFF;
+  --color-primary-bg: #E6F4FF;
+
+  /* Neutrals */
+  --color-text: #172B4D;
+  --color-text-secondary: #42526E;
+  --color-text-tertiary: #5E6C84;
+  --color-text-placeholder: #7A869A;
+  --color-border: #B3BAC5;
+  --color-border-light: #DFE1E6;
+  --color-border-input: #EBECF0;
+  --color-background: #FFFFFF;
+  --color-background-light: #F4F5F7;
+  --color-background-input: #FAFBFC;
+  --color-background-neutral: #EBECF0;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #EBECF0;
+  --color-surface-active: #DEEBFF;
+
+  /* Semantic */
+  --color-success: #36B37E;
+  --color-success-bg: #E3FCEF;
+  --color-warning: #FFAB00;
+  --color-warning-bg: #FFF0B3;
+  --color-danger: #FF5630;
+  --color-danger-bg: #FFECEB;
+  --color-info: #00B8D9;
+  --color-info-bg: #E6FCFF;
+  --color-purple: #6554C0;
+  --color-purple-bg: #EAE6FF;
+
+  /* Priority colors */
+  --color-priority-highest: #CD1317;
+  --color-priority-high: #FF8B00;
+  --color-priority-medium: #0052CC;
+  --color-priority-low: #5E6C84;
+  --color-priority-lowest: #7A869A;
+
+  /* Issue type colors */
+  --color-issue-epic: #6554C0;
+  --color-issue-story: #36B37E;
+  --color-issue-task: #4C9AFF;
+  --color-issue-bug: #FF5630;
+  --color-issue-subtask: #00B8D9;
+
+  /* ---- Typography ---- */
+
+  --font-family: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SFMono-Medium', 'SF Mono', 'Fira Code', monospace;
+
+  --font-size-11: 0.6875rem;
+  --font-size-12: 0.75rem;
+  --font-size-14: 0.875rem;
+  --font-size-16: 1rem;
+  --font-size-20: 1.25rem;
+  --font-size-24: 1.5rem;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.0;
+  --line-height-normal: 1.2;
+  --line-height-relaxed: 1.4;
+  --line-height-loose: 1.6;
+
+  /* ---- Spacing (4px grid) ---- */
+
+  --spacing-0: 0px;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-14: 3.5rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+  --spacing-32: 8rem;
+  --spacing-40: 10rem;
+  --spacing-48: 12rem;
+  --spacing-56: 14rem;
+  --spacing-64: 16rem;
+
+  /* ---- Border Radius ---- */
+
+  --radius-sm: 3px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* ---- Shadows ---- */
+
+  --shadow-card: 0 1px 1px rgba(9, 30, 66, 0.12);
+  --shadow-card-hover: 0 2px 4px rgba(9, 30, 66, 0.16);
+  --shadow-modal: 0 8px 24px rgba(9, 30, 66, 0.16);
+  --shadow-dropdown: 0 12px 48px rgba(9, 30, 66, 0.2);
+  --shadow-tooltip: 0 4px 8px rgba(9, 30, 66, 0.12);
+
+  /* ---- Animation ---- */
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+}
+
+/* ---- Dark Mode ---- */
+
+[data-theme="dark"] {
+  --color-primary-default: #4C9AFF;
+  --color-primary-dark: #0052CC;
+  --color-primary-light: #7AB8FF;
+  --color-primary-bg: #082145;
+
+  --color-text: #E6EDF3;
+  --color-text-secondary: #B3BAC5;
+  --color-text-tertiary: #8C9BAB;
+  --color-text-placeholder: #5E6C84;
+  --color-border: #454F5E;
+  --color-border-light: #353F4D;
+  --color-border-input: #353F4D;
+  --color-background: #1D232B;
+  --color-background-light: #222A33;
+  --color-background-input: #1D232B;
+  --color-background-neutral: #2D3744;
+  --color-surface: #222A33;
+  --color-surface-hover: #2D3744;
+  --color-surface-active: #082145;
+
+  --color-success-bg: #1F3A2F;
+  --color-warning-bg: #3D2E0F;
+  --color-danger-bg: #3D1F1F;
+  --color-info-bg: #0F2D3D;
+  --color-purple-bg: #1F1A3D;
+
+  --shadow-card: 0 1px 1px rgba(0, 0, 0, 0.24);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.32);
+  --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-dropdown: 0 12px 48px rgba(0, 0, 0, 0.5);
+  --shadow-tooltip: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ---- Tailwind v4 Theme Extension ---- */
+
 @theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #121c28;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-primary: #2563eb;
-  --color-primary-dark: #004ac6;
+  --color-primary: var(--color-primary-default);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-light: var(--color-primary-light);
+  --color-primary-bg: var(--color-primary-bg);
+
+  --color-text-primary: var(--color-text);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-text-placeholder: var(--color-text-placeholder);
+
+  --color-border-default: var(--color-border);
+  --color-border-light: var(--color-border-light);
+  --color-border-input: var(--color-border-input);
+
+  --color-bg-primary: var(--color-background);
+  --color-bg-light: var(--color-background-light);
+  --color-bg-input: var(--color-background-input);
+  --color-bg-neutral: var(--color-background-neutral);
+
+  --color-surface: var(--color-surface);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-surface-active: var(--color-surface-active);
+
+  --color-success: var(--color-success);
+  --color-success-bg: var(--color-success-bg);
+  --color-warning: var(--color-warning);
+  --color-warning-bg: var(--color-warning-bg);
+  --color-danger: var(--color-danger);
+  --color-danger-bg: var(--color-danger-bg);
+  --color-info: var(--color-info);
+  --color-info-bg: var(--color-info-bg);
+  --color-purple: var(--color-purple);
+  --color-purple-bg: var(--color-purple-bg);
+
+  --color-priority-highest: var(--color-priority-highest);
+  --color-priority-high: var(--color-priority-high);
+  --color-priority-medium: var(--color-priority-medium);
+  --color-priority-low: var(--color-priority-low);
+  --color-priority-lowest: var(--color-priority-lowest);
+
+  --color-issue-epic: var(--color-issue-epic);
+  --color-issue-story: var(--color-issue-story);
+  --color-issue-task: var(--color-issue-task);
+  --color-issue-bug: var(--color-issue-bug);
+  --color-issue-subtask: var(--color-issue-subtask);
+
+  --font-sans: var(--font-family);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+  --shadow-modal: var(--shadow-modal);
+  --shadow-dropdown: var(--shadow-dropdown);
+  --shadow-tooltip: var(--shadow-tooltip);
+
+  --ease-fast: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --animate-fade-in: fade-in var(--transition-normal);
+  --animate-slide-up: slide-up var(--transition-normal);
+  --animate-slide-down: slide-down var(--transition-normal);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 body {
   background: var(--color-background);
-  color: var(--color-foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-size-14);
+  line-height: var(--line-height-relaxed);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

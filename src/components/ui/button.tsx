@@ -9,13 +9,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants = {
   primary:
-    "bg-[#2563EB] text-[#EEEFFF] hover:bg-[#1d4ed8] shadow-[0_1px_2px_rgba(0,0,0,0.05)]",
+    "bg-primary text-white hover:bg-primary-dark shadow-card",
   secondary:
-    "bg-[#004AC6] text-white hover:bg-[#003da8] shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)]",
+    "bg-primary-dark text-white hover:brightness-110 shadow-card",
   outline:
-    "border border-[#C3C6D7] text-[#121C28] hover:bg-[#F8F9FF]",
-  ghost: "text-[#434655] hover:bg-[#F8F9FF]",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+    "border border-border-light text-text hover:bg-bg-light",
+  ghost: "text-text-secondary hover:bg-bg-light",
+  danger: "bg-danger text-white hover:brightness-110",
 };
 
 const sizes = {
@@ -34,7 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={clsx(
-          "inline-flex items-center justify-center gap-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center gap-2 rounded-[3px] transition-[background,box-shadow,opacity] duration-[200ms] ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
           variants[variant],
           sizes[size],
           className
