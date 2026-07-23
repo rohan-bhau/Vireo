@@ -9,6 +9,7 @@ import {
   useGetWorkspacesQuery,
   useCreateWorkspaceMutation,
 } from "@/store/workspaceApi";
+import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
 import {
   LayoutDashboard,
   Plus,
@@ -19,18 +20,14 @@ import {
   ChevronRight,
   MoreHorizontal,
   Settings2,
+  Folders,
   Columns3,
-  Map,
-  BarChart3,
-  MessageSquare,
-  Bot,
   ListOrdered,
-  Shield,
-  History as HistoryIcon,
+  Bug,
+  BookOpen,
+  LayoutList,
+  Filter,
   ExternalLink,
-  LayoutGrid,
-  Settings,
-  CreditCard,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
@@ -38,12 +35,11 @@ import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SkeletonSidebarItem } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { SidebarCustomizeDialog } from "@/components/nav/sidebar-customize-dialog";
 import {
   addRecentWorkspace,
   toggleStarredWorkspace,
   setActiveWorkspace,
-  setVisibleSections,
-  setVisibleMenuItems,
 } from "@/store/workspaceSlice";
 
 interface SidebarProps {
@@ -53,26 +49,21 @@ interface SidebarProps {
   embedded?: boolean;
 }
 
-interface MenuItem {
-  key: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href: string;
-}
+const projectNavItems = [
+  { key: "board", label: "Board", icon: Columns3 },
+  { key: "backlog", label: "Backlog", icon: ListOrdered },
+  { key: "issues", label: "Issues", icon: Bug },
+  { key: "reports", label: "Reports", icon: LayoutList },
+];
 
-const extraMenuItems: MenuItem[] = [
-  { key: "board", label: "Board", icon: Columns3, href: "" },
-  { key: "list", label: "List", icon: ListOrdered, href: "list" },
-  { key: "reports", label: "Reports", icon: BarChart3, href: "reports" },
-  { key: "roadmap", label: "Roadmap", icon: Map, href: "roadmap" },
-  { key: "teamChat", label: "Team Chat", icon: MessageSquare, href: "chat" },
-  { key: "automation", label: "Automation", icon: Bot, href: "automation" },
-  { key: "dashboard", label: "Dashboard", icon: LayoutGrid, href: "dashboard" },
-  { key: "admin", label: "Admin", icon: Shield, href: "admin" },
-  { key: "auditLog", label: "Audit Log", icon: HistoryIcon, href: "audit-log" },
-  { key: "integrations", label: "Integrations", icon: ExternalLink, href: "integrations" },
-  { key: "settings", label: "Settings", icon: Settings, href: "settings" },
-  { key: "billing", label: "Billing", icon: CreditCard, href: "settings/billing" },
+const dashboards = [
+  { label: "Default Dashboard", href: "/dashboard" },
+];
+
+const savedFilters = [
+  { label: "Assigned to me", query: "assignee = currentUser()" },
+  { label: "Recently updated", query: "updated >= -7d" },
+  { label: "High priority", query: "priority = High" },
 ];
 
 function WorkspaceMenuItem({
@@ -163,6 +154,50 @@ function WorkspaceMenuItem({
   );
 }
 
+function CollapsibleSection({
+  label,
+  icon: Icon,
+  collapsed,
+  expanded,
+  onToggle,
+  children,
+}: {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  collapsed: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  if (collapsed) {
+    return (
+      <div title={label}>
+        <div className="flex items-center justify-center rounded-lg px-3 py-2 text-[#737686]">
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
+      >
+        {expanded ? (
+          <ChevronDown className="h-3 w-3" />
+        ) : (
+          <ChevronRight className="h-3 w-3" />
+        )}
+        <Icon className="h-3 w-3" />
+        {label}
+      </button>
+      {expanded && <div className="space-y-0.5 mt-0.5">{children}</div>}
+    </div>
+  );
+}
+
 export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   const pathname = usePathname();
   const dispatch = useDispatch<AppDispatch>();
@@ -171,21 +206,31 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
     recentWorkspaces,
     starredWorkspaces,
     visibleSections,
-    visibleMenuItems,
   } = useSelector((state: RootState) => state.workspace);
   const { data: workspaces = [], isLoading: workspacesLoading } = useGetWorkspacesQuery();
 
-  const [createWorkspace, { isLoading: isCreating }] =
-    useCreateWorkspaceMutation();
+  const [createWorkspace, { isLoading: isCreating }] = useCreateWorkspaceMutation();
   const [showCreate, setShowCreate] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
-  const [allExpanded, setAllExpanded] = useState(true);
+  const [forYouExpanded, setForYouExpanded] = useState(true);
   const [starredExpanded, setStarredExpanded] = useState(true);
   const [recentExpanded, setRecentExpanded] = useState(false);
+  const [projectsExpanded, setProjectsExpanded] = useState(true);
+  const [dashboardsExpanded, setDashboardsExpanded] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
   const [forYouMessage, setForYouMessage] = useState<string | null>(null);
+
+  const activeWorkspaceId = useSelector(
+    (state: RootState) => state.workspace.activeWorkspaceId
+  );
+  const currentWsId = workspaceId || activeWorkspaceId;
+
+  const { data: projects = [], isLoading: projectsLoading } =
+    useGetWorkspaceProjectsQuery(currentWsId ?? "", { skip: !currentWsId });
 
   const isInWorkspace = pathname.startsWith("/w/") && !!workspaceId;
 
@@ -197,10 +242,6 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
     (ws) => !recentWorkspaces.includes(ws.id) && !starredWorkspaces[ws.id]
   );
 
-  const visibleExtraItems = extraMenuItems.filter(
-    (item) => visibleMenuItems[item.key as keyof typeof visibleMenuItems]
-  );
-
   function isDashboardActive() {
     return pathname === "/dashboard";
   }
@@ -209,6 +250,13 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
     dispatch(setActiveWorkspace(wsId));
     dispatch(addRecentWorkspace(wsId));
     onNavigate?.();
+  }
+
+  function toggleProjectExpanded(projectId: string) {
+    setExpandedProjects((prev) => ({
+      ...prev,
+      [projectId]: !prev[projectId],
+    }));
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -237,6 +285,35 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
     }
   }
 
+  function SidebarNavItem({
+    href,
+    icon: Icon,
+    label,
+    active,
+  }: {
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    active?: boolean;
+  }) {
+    return (
+      <Link
+        href={href}
+        onClick={onNavigate}
+        className={clsx(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
+          active
+            ? "bg-[#EEF4FF] text-[#004AC6]"
+            : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
+        )}
+        title={collapsed ? label : undefined}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        {!collapsed && <span>{label}</span>}
+      </Link>
+    );
+  }
+
   return (
     <>
       <motion.aside
@@ -245,201 +322,253 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
         className={embedded ? "flex flex-col bg-white" : "flex h-full flex-col border-r border-[#C3C6D7]/20 bg-white shrink-0 overflow-hidden"}
       >
         <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-2 py-3">
+          {/* For You */}
           {visibleSections.forYou && (
-            <div>
-              {!collapsed ? (
-                <button
+            <CollapsibleSection
+              label="For You"
+              icon={Sparkles}
+              collapsed={collapsed}
+              expanded={forYouExpanded}
+              onToggle={() => setForYouExpanded(!forYouExpanded)}
+            >
+              {forYouList.length > 0 ? (
+                forYouList.map((ws) => (
+                  <WorkspaceMenuItem
+                    key={ws.id}
+                    workspaceId={ws.id}
+                    name={ws.name}
+                    collapsed={collapsed}
+                    isStarred={false}
+                    isActive={pathname === `/w/${ws.id}`}
+                    onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
+                    onNavigate={() => handleNavigate(ws.id)}
+                  />
+                ))
+              ) : (
+                <div
                   onClick={() => {
                     setForYouMessage("Coming soon!");
                     setTimeout(() => setForYouMessage(null), 2000);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-[#737686] hover:bg-[#F8F9FF] cursor-pointer"
                 >
-                  <Sparkles className="h-3 w-3" />
-                  For You
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Activity feed
                   {forYouMessage && (
                     <span className="ml-auto text-[10px] text-[#2563EB] font-medium animate-pulse">
                       {forYouMessage}
                     </span>
                   )}
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setForYouMessage("Coming soon!");
-                    setTimeout(() => setForYouMessage(null), 2000);
-                  }}
-                  className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
-                  title="For You"
-                >
-                  <Sparkles className="h-4 w-4" />
-                </button>
+                </div>
               )}
-            </div>
+            </CollapsibleSection>
           )}
 
+          {/* Starred */}
           {visibleSections.starred && (
-            <div>
-              {!collapsed && (
-                <button
-                  onClick={() => setStarredExpanded(!starredExpanded)}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
-                >
-                  {starredExpanded ? (
-                    <ChevronDown className="h-3 w-3" />
-                  ) : (
-                    <ChevronRight className="h-3 w-3" />
-                  )}
-                  <Star className="h-3 w-3" />
-                  Starred
-                </button>
-              )}
-              {starredExpanded && workspacesLoading && !collapsed && (
-                <div className="space-y-0.5 mt-0.5">
+            <CollapsibleSection
+              label="Starred"
+              icon={Star}
+              collapsed={collapsed}
+              expanded={starredExpanded}
+              onToggle={() => setStarredExpanded(!starredExpanded)}
+            >
+              {workspacesLoading && (
+                <>
                   <SkeletonSidebarItem />
                   <SkeletonSidebarItem />
-                </div>
+                </>
               )}
-              {starredExpanded && starredList.length > 0 && (
-                <div className="space-y-0.5 mt-0.5">
-                  {starredList.map((ws) => (
-                    <WorkspaceMenuItem
-                      key={ws.id}
-                      workspaceId={ws.id}
-                      name={ws.name}
-                      collapsed={collapsed}
-                      isStarred={true}
-                      isActive={pathname === `/w/${ws.id}`}
-                      onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
-                      onNavigate={() => handleNavigate(ws.id)}
-                    />
-                  ))}
-                </div>
+              {starredList.length === 0 && !workspacesLoading && (
+                <p className="px-3 py-1.5 text-xs text-[#737686]">
+                  Star items for quick access
+                </p>
               )}
-            </div>
+              {starredList.map((ws) => (
+                <WorkspaceMenuItem
+                  key={ws.id}
+                  workspaceId={ws.id}
+                  name={ws.name}
+                  collapsed={collapsed}
+                  isStarred={true}
+                  isActive={pathname === `/w/${ws.id}`}
+                  onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
+                  onNavigate={() => handleNavigate(ws.id)}
+                />
+              ))}
+            </CollapsibleSection>
           )}
 
-          {visibleSections.recent && (workspacesLoading || recentList.length > 0) && (
-            <div>
-              {!collapsed && (
-                <button
-                  onClick={() => setRecentExpanded(!recentExpanded)}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
-                >
-                  {recentExpanded ? (
-                    <ChevronDown className="h-3 w-3" />
-                  ) : (
-                    <ChevronRight className="h-3 w-3" />
-                  )}
-                  <History className="h-3 w-3" />
-                  Recent
-                </button>
-              )}
-              {recentExpanded && workspacesLoading && !collapsed && (
-                <div className="space-y-0.5 mt-0.5">
+          {/* Recent */}
+          {visibleSections.recent && (
+            <CollapsibleSection
+              label="Recent"
+              icon={History}
+              collapsed={collapsed}
+              expanded={recentExpanded}
+              onToggle={() => setRecentExpanded(!recentExpanded)}
+            >
+              {workspacesLoading && (
+                <>
                   <SkeletonSidebarItem />
                   <SkeletonSidebarItem />
-                </div>
+                </>
               )}
-              {recentExpanded && (
-                <div className="space-y-0.5 mt-0.5">
-                  {recentList.map((ws) => (
-                    <WorkspaceMenuItem
-                      key={ws.id}
-                      workspaceId={ws.id}
-                      name={ws.name}
-                      collapsed={collapsed}
-                      isStarred={!!starredWorkspaces[ws.id]}
-                      isActive={pathname === `/w/${ws.id}`}
-                      onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
-                      onNavigate={() => handleNavigate(ws.id)}
-                    />
-                  ))}
-                </div>
+              {recentList.length === 0 && !workspacesLoading && (
+                <p className="px-3 py-1.5 text-xs text-[#737686]">
+                  No recent workspaces
+                </p>
               )}
-            </div>
+              {recentList.map((ws) => (
+                <WorkspaceMenuItem
+                  key={ws.id}
+                  workspaceId={ws.id}
+                  name={ws.name}
+                  collapsed={collapsed}
+                  isStarred={!!starredWorkspaces[ws.id]}
+                  isActive={pathname === `/w/${ws.id}`}
+                  onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
+                  onNavigate={() => handleNavigate(ws.id)}
+                />
+              ))}
+            </CollapsibleSection>
           )}
 
-          <NavItem
+          {/* Dashboard link */}
+          <SidebarNavItem
             href="/dashboard"
             icon={LayoutDashboard}
             label="Dashboard"
-            collapsed={collapsed}
             active={isDashboardActive()}
-            onNavigate={onNavigate}
           />
 
-          {visibleExtraItems.length > 0 && isInWorkspace && (
-            <div>
-              {!collapsed && (
-                <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686]">
-                  Menu
+          {/* Projects */}
+          {visibleSections.projects && isInWorkspace && (
+            <CollapsibleSection
+              label="Projects"
+              icon={Folders}
+              collapsed={collapsed}
+              expanded={projectsExpanded}
+              onToggle={() => setProjectsExpanded(!projectsExpanded)}
+            >
+              {projectsLoading && (
+                <>
+                  <SkeletonSidebarItem />
+                  <SkeletonSidebarItem />
+                </>
+              )}
+              {projects.length === 0 && !projectsLoading && (
+                <p className="px-3 py-1.5 text-xs text-[#737686]">
+                  No projects yet
                 </p>
               )}
-              {visibleExtraItems.map((item) => (
-                <NavItem
-                  key={item.key}
-                  href={`/w/${workspaceId}/${item.href}`}
-                  icon={item.icon}
-                  label={item.label}
-                  collapsed={collapsed}
-                  onNavigate={onNavigate}
-                  active={
-                    item.href === ""
-                      ? pathname === `/w/${workspaceId}`
-                      : pathname.startsWith(`/w/${workspaceId}/${item.href}`)
-                  }
-                />
+              {projects.map((project) => (
+                <div key={project.id}>
+                  <button
+                    onClick={() => toggleProjectExpanded(project.id)}
+                    className={clsx(
+                      "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[38px]",
+                      "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
+                    )}
+                  >
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] bg-gradient-to-br from-[#2563EB] to-[#7C3AED] text-[9px] font-bold text-white">
+                      {project.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="truncate flex-1 text-left">{project.name}</span>
+                    {expandedProjects[project.id] ? (
+                      <ChevronDown className="h-3 w-3 shrink-0 text-[#737686]" />
+                    ) : (
+                      <ChevronRight className="h-3 w-3 shrink-0 text-[#737686]" />
+                    )}
+                  </button>
+                  {expandedProjects[project.id] && (
+                    <div className="ml-2 space-y-0.5 border-l border-[#C3C6D7]/30 pl-2">
+                      {projectNavItems.map((item) => (
+                        <Link
+                          key={item.key}
+                          href={`/w/${workspaceId}/${item.key}`}
+                          onClick={onNavigate}
+                          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-[#737686] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[32px]"
+                        >
+                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
-            </div>
+            </CollapsibleSection>
           )}
 
-          {visibleSections.allWorkspaces && (workspacesLoading || workspaces.length > 0) && (
-            <div>
-              {!collapsed && (
-                <button
-                  onClick={() => setAllExpanded(!allExpanded)}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
+          {/* Dashboards */}
+          {visibleSections.dashboards && !collapsed && (
+            <CollapsibleSection
+              label="Dashboards"
+              icon={LayoutDashboard}
+              collapsed={collapsed}
+              expanded={dashboardsExpanded}
+              onToggle={() => setDashboardsExpanded(!dashboardsExpanded)}
+            >
+              {dashboards.map((db) => (
+                <Link
+                  key={db.label}
+                  href={db.href}
+                  onClick={onNavigate}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[38px]"
                 >
-                  {allExpanded ? (
-                    <ChevronDown className="h-3 w-3" />
-                  ) : (
-                    <ChevronRight className="h-3 w-3" />
-                  )}
-                  All Workspaces
-                </button>
-              )}
-              {allExpanded && workspacesLoading && !collapsed && (
-                <div className="space-y-0.5 mt-0.5">
-                  <SkeletonSidebarItem />
-                  <SkeletonSidebarItem />
-                  <SkeletonSidebarItem />
-                  <SkeletonSidebarItem />
-                </div>
-              )}
-              {allExpanded && (
-                <div
-                  className={clsx(
-                    collapsed ? "space-y-0.5" : "space-y-0.5 mt-0.5"
-                  )}
+                  <LayoutDashboard className="h-4 w-4 shrink-0 text-[#737686]" />
+                  <span className="truncate">{db.label}</span>
+                </Link>
+              ))}
+            </CollapsibleSection>
+          )}
+
+          {/* Filters */}
+          {visibleSections.filters && !collapsed && (
+            <CollapsibleSection
+              label="Filters"
+              icon={Filter}
+              collapsed={collapsed}
+              expanded={filtersExpanded}
+              onToggle={() => setFiltersExpanded(!filtersExpanded)}
+            >
+              {savedFilters.map((f) => (
+                <Link
+                  key={f.label}
+                  href={`/search?q=${encodeURIComponent(f.query)}`}
+                  onClick={onNavigate}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[38px]"
                 >
-                  {workspaces.map((ws) => (
-                    <WorkspaceMenuItem
-                      key={ws.id}
-                      workspaceId={ws.id}
-                      name={ws.name}
-                      collapsed={collapsed}
-                      isStarred={!!starredWorkspaces[ws.id]}
-                      isActive={pathname === `/w/${ws.id}`}
-                      onStarToggle={() =>
-                        dispatch(toggleStarredWorkspace(ws.id))
-                      }
-                      onNavigate={() => handleNavigate(ws.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+                  <Filter className="h-4 w-4 shrink-0 text-[#737686]" />
+                  <span className="truncate">{f.label}</span>
+                </Link>
+              ))}
+            </CollapsibleSection>
+          )}
+
+          {/* All Workspaces */}
+          {workspaces.length > 0 && (
+            <CollapsibleSection
+              label="All Workspaces"
+              icon={ExternalLink}
+              collapsed={collapsed}
+              expanded={true}
+              onToggle={() => {}}
+            >
+              {workspaces.map((ws) => (
+                <WorkspaceMenuItem
+                  key={ws.id}
+                  workspaceId={ws.id}
+                  name={ws.name}
+                  collapsed={collapsed}
+                  isStarred={!!starredWorkspaces[ws.id]}
+                  isActive={pathname === `/w/${ws.id}`}
+                  onStarToggle={() => dispatch(toggleStarredWorkspace(ws.id))}
+                  onNavigate={() => handleNavigate(ws.id)}
+                />
+              ))}
+            </CollapsibleSection>
           )}
         </nav>
 
@@ -507,112 +636,10 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
         </form>
       </Dialog>
 
-      <Dialog
+      <SidebarCustomizeDialog
         open={showCustomize}
         onClose={() => setShowCustomize(false)}
-        title="Customize Sidebar"
-      >
-        <div className="space-y-4">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#737686]">
-              Sections
-            </p>
-            <div className="space-y-1">
-              {(
-                [
-                  { key: "forYou" as const, label: "For You" },
-                  { key: "starred" as const, label: "Starred" },
-                  { key: "recent" as const, label: "Recent" },
-                  { key: "allWorkspaces" as const, label: "All Workspaces" },
-                ] as const
-              ).map(({ key, label }) => (
-                <label
-                  key={key}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[#F8F9FF] cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={visibleSections[key]}
-                    onChange={() =>
-                      dispatch(
-                        setVisibleSections({ [key]: !visibleSections[key] })
-                      )
-                    }
-                    className="h-4 w-4 rounded border-[#C3C6D7] text-[#2563EB] focus:ring-[#2563EB]"
-                  />
-                  <span className="text-sm font-medium text-[#121C28]">
-                    {label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="border-t border-[#C3C6D7]/20 pt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#737686]">
-              Menu Items
-            </p>
-            <div className="space-y-1">
-              {extraMenuItems.map((item) => {
-                const key = item.key as keyof typeof visibleMenuItems;
-                return (
-                  <label
-                    key={key}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[#F8F9FF] cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={visibleMenuItems[key]}
-                      onChange={() =>
-                        dispatch(
-                          setVisibleMenuItems({ [key]: !visibleMenuItems[key] })
-                        )
-                      }
-                      className="h-4 w-4 rounded border-[#C3C6D7] text-[#2563EB] focus:ring-[#2563EB]"
-                    />
-                    <item.icon className="h-4 w-4 text-[#737686]" />
-                    <span className="text-sm font-medium text-[#121C28]">
-                      {item.label}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </Dialog>
+      />
     </>
-  );
-}
-
-function NavItem({
-  href,
-  icon: Icon,
-  label,
-  collapsed,
-  active,
-  onNavigate,
-}: {
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  collapsed: boolean;
-  active: boolean;
-  onNavigate?: () => void;
-}) {
-  return (
-    <Link
-      href={href}
-      onClick={onNavigate}
-      className={clsx(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
-        active
-          ? "bg-[#EEF4FF] text-[#004AC6]"
-          : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
-      )}
-      title={collapsed ? label : undefined}
-    >
-      <Icon className="h-4 w-4 shrink-0" />
-      {!collapsed && <span>{label}</span>}
-    </Link>
   );
 }

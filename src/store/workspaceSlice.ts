@@ -22,6 +22,9 @@ interface WorkspaceState {
     starred: boolean;
     recent: boolean;
     allWorkspaces: boolean;
+    projects: boolean;
+    dashboards: boolean;
+    filters: boolean;
   };
   visibleMenuItems: {
     board: boolean;
@@ -68,6 +71,9 @@ function loadState(): WorkspaceState {
           starred: parsed.visibleSections?.starred ?? true,
           recent: parsed.visibleSections?.recent ?? true,
           allWorkspaces: parsed.visibleSections?.allWorkspaces ?? true,
+          projects: parsed.visibleSections?.projects ?? true,
+          dashboards: parsed.visibleSections?.dashboards ?? true,
+          filters: parsed.visibleSections?.filters ?? true,
         },
         visibleMenuItems: {
           board: parsed.visibleMenuItems?.board ?? false,
@@ -97,6 +103,9 @@ const defaultState: WorkspaceState = {
     starred: true,
     recent: true,
     allWorkspaces: true,
+    projects: true,
+    dashboards: true,
+    filters: true,
   },
   visibleMenuItems: {
     board: false,
