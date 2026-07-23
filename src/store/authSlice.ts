@@ -9,6 +9,14 @@ interface User {
   createdAt: string;
 }
 
+interface OnboardingData {
+  role?: string;
+  teamSize?: string;
+  useCase?: string;
+  completed: boolean;
+  selectedTemplate?: string;
+}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
@@ -16,6 +24,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  onboarding: OnboardingData;
 }
 
 const initialState: AuthState = {
@@ -25,6 +34,9 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: true,
   error: null,
+  onboarding: {
+    completed: false,
+  },
 };
 
 const authSlice = createSlice({
@@ -57,12 +69,19 @@ const authSlice = createSlice({
     setError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
     },
+    setOnboarding(state, action: PayloadAction<Partial<OnboardingData>>) {
+      state.onboarding = { ...state.onboarding, ...action.payload };
+    },
+    completeOnboarding(state) {
+      state.onboarding.completed = true;
+    },
     logout(state) {
       state.user = null;
       state.accessToken = null;
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.onboarding = { completed: false };
     },
   },
 });
@@ -73,6 +92,8 @@ export const {
   setAccessToken,
   setLoading,
   setError,
+  setOnboarding,
+  completeOnboarding,
   logout,
 } = authSlice.actions;
 

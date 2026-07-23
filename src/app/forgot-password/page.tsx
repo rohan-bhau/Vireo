@@ -16,10 +16,23 @@ export default function ForgotPasswordPage() {
     setError(null);
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Something went wrong");
       setSent(true);
-    }, 1000);
+    } catch (err) {
+      setError((err as Error).message || "Failed to send reset link");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (

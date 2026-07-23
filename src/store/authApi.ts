@@ -49,6 +49,21 @@ interface RegisterInput {
   password: string;
 }
 
+interface OnboardingInput {
+  role: string;
+  teamSize: string;
+  useCase: string;
+  selectedTemplate?: string;
+}
+
+interface OnboardingResponse {
+  status: string;
+  data: {
+    message: string;
+    redirect?: string;
+  };
+}
+
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     register: builder.mutation<AuthResponse, RegisterInput>({
@@ -92,6 +107,13 @@ export const authApi = api.injectEndpoints({
         body,
       }),
     }),
+    submitOnboarding: builder.mutation<OnboardingResponse, OnboardingInput>({
+      query: (body) => ({
+        url: "/auth/onboarding",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -103,4 +125,5 @@ export const {
   useGetProfileQuery,
   useLazyGetProfileQuery,
   useUpdateProfileMutation,
+  useSubmitOnboardingMutation,
 } = authApi;
