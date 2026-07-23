@@ -2,17 +2,26 @@
 
 import { useState, useRef, KeyboardEvent, ClipboardEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { useVerifyEmailMutation, useResendOtpMutation } from "@/store/authApi";
 
 interface EmailVerificationProps {
   email: string;
-  onVerified: () => void;
+  onVerified: (data: { user: any; accessToken: string; refreshToken: string }) => void;
   onBack: () => void;
+}
+
+interface VerifyResult {
+  user: { id: string; name: string; email: string; avatar?: string; role: string; createdAt: string };
+  accessToken: string;
+  refreshToken: string;
 }
 
 export function EmailVerification({ email, onVerified, onBack }: EmailVerificationProps) {
   const [code, setCode] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [verifyEmail, { isLoading }] = useVerifyEmailMutation();
+  const [resendOtp] = useResendOtpMutation();
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   function handleChange(index: number, value: string) {
@@ -49,25 +58,23 @@ export function EmailVerification({ email, onVerified, onBack }: EmailVerificati
       setError("Please enter the complete verification code");
       return;
     }
-    setIsLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/verify-email`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, code: fullCode }),
-        }
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Invalid verification code");
-      }
-      onVerified();
-    } catch (err) {
-      setError((err as Error).message || "Verification failed. Please try again.");
-    } finally {
-      setIsLoading(false);
+      const result: VerifyResult = await verifyEmail({ email, code: fullCode }).unwrap();
+      onVerified(result);
+    } catch (err: any) {
+      setError(err?.data?.message || err?.message || "Verification failed. Please try again.");
+    }
+  }
+
+  async function handleResend() {
+    setResendMessage(null);
+    setError(null);
+    try {
+      await resendOtp({ email }).unwrap();
+      setResendMessage("New code sent!");
+      setTimeout(() => setResendMessage(null), 3000);
+    } catch (err: any) {
+      setError(err?.data?.message || "Failed to resend code");
     }
   }
 
@@ -86,6 +93,12 @@ export function EmailVerification({ email, onVerified, onBack }: EmailVerificati
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-600">
           {error}
+        </div>
+      )}
+
+      {resendMessage && (
+        <div className="rounded-xl border border-green-200 bg-green-50/80 px-4 py-3 text-sm text-green-600">
+          {resendMessage}
         </div>
       )}
 
@@ -109,6 +122,16 @@ export function EmailVerification({ email, onVerified, onBack }: EmailVerificati
       <Button type="submit" size="lg" className="w-full" isLoading={isLoading}>
         Verify email
       </Button>
+
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={handleResend}
+          className="text-sm text-[#2563EB] hover:text-[#1D4ED8] transition-colors cursor-pointer"
+        >
+          Resend code
+        </button>
+      </div>
 
       <button
         type="button"

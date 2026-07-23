@@ -34,8 +34,8 @@ function LoginForm() {
 
     try {
       const result = await login({ email, password }).unwrap();
-      setTokens(result.data.accessToken, result.data.refreshToken);
-      dispatch(setCredentials(result.data));
+      setTokens(result.accessToken, result.refreshToken);
+      dispatch(setCredentials(result));
       router.replace(redirectUrl || (activeWorkspaceId ? `/w/${activeWorkspaceId}` : "/dashboard"));
     } catch (err: unknown) {
       setError(

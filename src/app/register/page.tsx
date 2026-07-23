@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { EmailVerification } from "@/components/auth/email-verification";
-import { useRegisterMutation, useSubmitOnboardingMutation } from "@/store/authApi";
+import { useRegisterMutation, useVerifyEmailMutation, useResendOtpMutation, useSubmitOnboardingMutation } from "@/store/authApi";
 import { setCredentials, setOnboarding } from "@/store/authSlice";
 import { setTokens } from "@/lib/auth";
 import { GuestGuard } from "@/components/auth/guest-guard";
@@ -62,8 +62,11 @@ export default function RegisterPage() {
   const [onboardingTeamSize, setOnboardingTeamSize] = useState("");
   const [onboardingUseCase, setOnboardingUseCase] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [verifiedData, setVerifiedData] = useState<{ user: any; accessToken: string; refreshToken: string } | null>(null);
 
   const [register, { isLoading }] = useRegisterMutation();
+  const [verifyEmail, { isLoading: isVerifying }] = useVerifyEmailMutation();
+  const [resendOtp] = useResendOtpMutation();
   const [submitOnboarding, { isLoading: onboardingLoading }] = useSubmitOnboardingMutation();
   const dispatch = useDispatch();
   const router = useRouter();
@@ -99,7 +102,9 @@ export default function RegisterPage() {
     }
   }
 
-  function handleVerified() {
+  function handleVerified(data: { accessToken: string; refreshToken: string; user: any }) {
+    setVerifiedData(data);
+    setTokens(data.accessToken, data.refreshToken);
     goTo("onboarding");
   }
 
@@ -125,6 +130,9 @@ export default function RegisterPage() {
     }
     setError(null);
     try {
+      if (verifiedData) {
+        dispatch(setCredentials(verifiedData));
+      }
       await submitOnboarding({
         role: onboardingRole,
         teamSize: onboardingTeamSize,
@@ -134,20 +142,22 @@ export default function RegisterPage() {
       dispatch(setOnboarding({ selectedTemplate, completed: true }));
       goTo("invite");
     } catch {
-      goTo("invite");
+      if (verifiedData) {
+        goTo("invite");
+      } else {
+        router.replace("/dashboard");
+      }
     }
   }
 
   async function handleSkipInvite() {
-    try {
-      const result = await register({ name, email, password }).unwrap();
-      setTokens(result.data.accessToken, result.data.refreshToken);
-      dispatch(setCredentials(result.data));
+    if (verifiedData) {
+      dispatch(setCredentials(verifiedData));
       goTo("complete");
       setTimeout(() => {
         router.replace(activeWorkspaceId ? `/w/${activeWorkspaceId}` : "/dashboard");
       }, 1500);
-    } catch {
+    } else {
       router.replace("/dashboard");
     }
   }

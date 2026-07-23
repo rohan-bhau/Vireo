@@ -1,6 +1,9 @@
 import { api } from "./api";
 
-interface Column {
+export type ProjectTemplate = "SCRUM" | "KANBAN" | "BUG_TRACKING" | "PROJECT_MANAGEMENT" | "DEVOPS" | "TASK_TRACKING" | "BLANK";
+export type BoardType = "SCRUM" | "KANBAN";
+
+export interface Column {
   id: string;
   name: string;
   position: number;
@@ -9,22 +12,26 @@ interface Column {
   updatedAt: string;
 }
 
-interface Board {
+export interface Board {
   id: string;
   name: string;
+  type: BoardType;
   projectId: string;
   createdAt: string;
   updatedAt: string;
   columns: Column[];
 }
 
-interface Project {
+export interface Project {
   id: string;
   name: string;
   description: string | null;
   key: string;
   workspaceId: string;
   ownerId: string;
+  template: ProjectTemplate;
+  avatar: string | null;
+  isTeamManaged: boolean;
   createdAt: string;
   updatedAt: string;
   boards: Board[];
@@ -72,7 +79,15 @@ export const projectApi = api.injectEndpoints({
       transformResponse: (response: ProjectResponse) => response.data.project,
       providesTags: (_result, _error, projectId) => [{ type: "Project", id: projectId }],
     }),
-    createProject: builder.mutation<Project, { workspaceId: string; name: string; key: string; description?: string }>({
+    createProject: builder.mutation<Project, {
+      workspaceId: string;
+      name: string;
+      key: string;
+      description?: string;
+      template?: ProjectTemplate;
+      avatar?: string;
+      isTeamManaged?: boolean;
+    }>({
       query: ({ workspaceId, ...body }) => ({
         url: `/workspaces/${workspaceId}/projects`,
         method: "POST",
@@ -83,7 +98,15 @@ export const projectApi = api.injectEndpoints({
         { type: "Project", id: `workspace-${workspaceId}` },
       ],
     }),
-    updateProject: builder.mutation<Project, { workspaceId: string; projectId: string; name?: string; description?: string; key?: string }>({
+    updateProject: builder.mutation<Project, {
+      workspaceId: string;
+      projectId: string;
+      name?: string;
+      description?: string;
+      key?: string;
+      avatar?: string;
+      isTeamManaged?: boolean;
+    }>({
       query: ({ workspaceId, projectId, ...body }) => ({
         url: `/workspaces/${workspaceId}/projects/${projectId}`,
         method: "PUT",
@@ -115,7 +138,7 @@ export const projectApi = api.injectEndpoints({
       transformResponse: (response: BoardResponse) => response.data.board,
       providesTags: (_result, _error, id) => [{ type: "Board", id }],
     }),
-    createBoard: builder.mutation<Board, { workspaceId: string; projectId: string; name: string }>({
+    createBoard: builder.mutation<Board, { workspaceId: string; projectId: string; name: string; type?: BoardType }>({
       query: ({ workspaceId, projectId, ...body }) => ({
         url: `/workspaces/${workspaceId}/projects/${projectId}/boards`,
         method: "POST",
