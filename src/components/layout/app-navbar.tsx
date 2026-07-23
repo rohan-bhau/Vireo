@@ -21,8 +21,10 @@ import {
   Settings,
   LogOut,
   Search,
+  Palette,
 } from "lucide-react";
 import { useGetUnreadCountQuery } from "@/store/notificationApi";
+import { ThemeToggle, ThemeMenuItems } from "@/components/theme/theme-toggle";
 
 interface AppNavbarProps {
   onMobileMenuToggle?: () => void;
@@ -69,11 +71,11 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
   }
 
   return (
-    <header className="flex h-14 md:h-16 items-center justify-between border-b border-[#C3C6D7]/20 bg-white px-3 md:px-4">
+    <header className="flex h-14 md:h-16 items-center justify-between border-b border-border-light bg-surface px-3 md:px-4">
       <div className="flex items-center gap-2 md:gap-3">
         <button
           onClick={() => dispatch(toggleSidebar())}
-          className="hidden md:flex h-9 w-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+          className="hidden md:flex h-9 w-9 items-center justify-center rounded-[3px] text-text-secondary transition-colors hover:bg-bg-light"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
@@ -85,7 +87,7 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
 
         <button
           onClick={onMobileMenuToggle}
-          className="flex md:hidden h-11 w-11 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+          className="flex md:hidden h-11 w-11 items-center justify-center rounded-[3px] text-text-secondary transition-colors hover:bg-bg-light"
           title="Open sidebar"
         >
           <Menu className="h-5 w-5" />
@@ -93,18 +95,18 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
 
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image src="/vireo-icon.svg" alt="Vireo" width={24} height={24} className="shrink-0 md:w-7 md:h-7" />
-          <span className="hidden sm:inline text-sm font-bold text-[#121C28]">Vireo</span>
+          <span className="hidden sm:inline text-sm font-bold text-text">Vireo</span>
         </Link>
 
         {isInWorkspace && (
-          <span className="hidden md:inline-block h-4 w-px bg-[#C3C6D7]/40 mx-1" />
+          <span className="hidden md:inline-block h-4 w-px bg-border-light mx-1" />
         )}
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
         <Link
           href="/search"
-          className="flex items-center gap-1.5 rounded-lg border border-[#C3C6D7]/50 px-3 py-1.5 text-xs font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+          className="flex items-center gap-1.5 rounded-[3px] border border-border-light px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-light"
         >
           <Search className="h-3.5 w-3.5" />
           <span className="hidden md:inline">Search</span>
@@ -112,16 +114,18 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
 
         <Link
           href="/ai-assistant"
-          className="hidden md:flex items-center gap-1.5 rounded-lg border border-[#C3C6D7]/50 px-3 py-1.5 text-xs font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+          className="hidden md:flex items-center gap-1.5 rounded-[3px] border border-border-light px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-light"
         >
           <Sparkles className="h-3.5 w-3.5" />
           <span>AI Assistant</span>
         </Link>
 
-        <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-[#C3C6D7]/20">
+        <div className="flex items-center gap-1 md:gap-2 pl-2 md:pl-4 border-l border-border-light">
+          <ThemeToggle />
+
           <Link
             href="/notifications"
-            className="relative flex h-8 w-8 items-center justify-center rounded-lg text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28]"
+            className="relative flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
             title="Notifications"
           >
             <Bell className="h-5 w-5" />
@@ -135,7 +139,7 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-full bg-[#2563EB] text-[10px] md:text-xs font-bold text-white hover:bg-[#1d4ed8] transition-colors"
+              className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-full bg-primary text-[10px] md:text-xs font-bold text-white hover:bg-primary-dark transition-colors"
             >
               {user?.name
                 ?.split(" ")
@@ -146,17 +150,17 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-[#C3C6D7]/20 bg-white shadow-lg z-50">
-                <div className="border-b border-[#C3C6D7]/20 px-4 py-3">
-                  <p className="text-sm font-semibold text-[#121C28]">{user?.name || "User"}</p>
-                  <p className="text-xs text-[#737686] truncate">{user?.email || ""}</p>
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-[3px] border border-border-light bg-surface shadow-dropdown z-50">
+                <div className="border-b border-border-light px-4 py-3">
+                  <p className="text-sm font-semibold text-text">{user?.name || "User"}</p>
+                  <p className="text-xs text-text-tertiary truncate">{user?.email || ""}</p>
                 </div>
 
                 <div className="py-1">
                   <Link
                     href="/profile"
                     onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-[#434655] hover:bg-[#F8F9FF] transition-colors cursor-pointer"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-text-secondary hover:bg-bg-light transition-colors cursor-pointer"
                   >
                     <User className="h-4 w-4" />
                     Profile
@@ -164,19 +168,26 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
 
                   <button
                     onClick={handleAccountSettings}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-[#434655] hover:bg-[#F8F9FF] transition-colors relative cursor-pointer"
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-text-secondary hover:bg-bg-light transition-colors relative cursor-pointer"
                   >
                     <Settings className="h-4 w-4" />
                     Account Settings
                     {comingSoon && (
-                      <span className="ml-auto text-[10px] text-[#2563EB] font-medium animate-pulse">
+                      <span className="ml-auto text-[10px] text-primary font-medium animate-pulse">
                         {comingSoon}
                       </span>
                     )}
                   </button>
                 </div>
 
-                <div className="border-t border-[#C3C6D7]/20 py-1">
+                <div className="border-t border-border-light">
+                  <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary">
+                    Theme
+                  </div>
+                  <ThemeMenuItems onClose={() => setDropdownOpen(false)} />
+                </div>
+
+                <div className="border-t border-border-light py-1">
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
