@@ -100,6 +100,7 @@ interface CreateTaskInput {
   labels?: string[];
   dueDate?: string;
   storyPoints?: number;
+  parentTask?: string;
   workspaceId: string;
 }
 

@@ -17,6 +17,7 @@ interface WorkspaceMember {
   role: "ADMIN" | "MEMBER";
   joinedAt: string;
   invitedBy: string | null;
+  user: { name: string; email: string; avatar?: string } | null;
 }
 
 interface Invitation {
