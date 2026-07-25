@@ -1,0 +1,482 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  pointerWithin,
+  rectIntersection,
+  CollisionDetection,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { useGetProjectQuery, useGetProjectBoardsQuery, useReorderColumnsMutation, useAddColumnMutation } from "@/store/projectApi";
+import { useGetBoardTasksQuery, useMoveTaskMutation } from "@/store/taskApi";
+import { useGetSprintQuery, useGetSprintTasksQuery, useCompleteSprintMutation } from "@/store/sprintApi";
+import { Button } from "@/components/ui/button";
+import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
+import { BoardSwitcher } from "./board-switcher";
+import { BoardHeader } from "./board-header";
+import { BoardFilterBar } from "./board-filter-bar";
+import { BoardColumn } from "./board-column";
+import { IssueCardOverlay } from "./issue-card";
+import { BoardConfigPanel } from "./board-config-panel";
+import { connectSocket } from "@/lib/socket";
+import type { Task } from "@/store/taskApi";
+import type { Board, Column } from "@/store/projectApi";
+
+interface BoardViewProps {
+  projectId: string;
+  workspaceId: string;
+  boardId?: string;
+  sprintId?: string;
+  onBack?: () => void;
+}
+
+const DEFAULT_COLUMNS: { id: string; name: string; wipLimit: number | null }[] = [
+  { id: "todo", name: "Todo", wipLimit: null },
+  { id: "in_progress", name: "In Progress", wipLimit: null },
+  { id: "in_review", name: "In Review", wipLimit: null },
+  { id: "done", name: "Done", wipLimit: null },
+];
+
+const collisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) return pointerCollisions;
+  return rectIntersection(args);
+};
+
+export function BoardView({ projectId, workspaceId, boardId: initialBoardId, sprintId, onBack }: BoardViewProps) {
+  const router = useRouter();
+
+  const { data: project } = useGetProjectQuery(projectId);
+  const { data: boards = [] } = useGetProjectBoardsQuery(projectId);
+
+  const [activeBoardId, setActiveBoardId] = useState<string | undefined>(initialBoardId);
+  const [showConfig, setShowConfig] = useState(false);
+  const [showAddColumn, setShowAddColumn] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
+
+  const activeBoard = boards.find((b) => b.id === activeBoardId) || boards[0] || null;
+
+  // Fetch board tasks (Kanban) or sprint tasks (Scrum)
+  const { data: boardTasks = [], isLoading: tasksLoading } = useGetBoardTasksQuery(activeBoardId ?? "", { skip: !activeBoardId || !!sprintId });
+  const { data: sprintTasks = [], isLoading: sprintTasksLoading } = useGetSprintTasksQuery(sprintId ?? "", { skip: !sprintId });
+  const { data: sprint } = useGetSprintQuery(sprintId ?? "", { skip: !sprintId });
+
+  const tasks = sprintId ? sprintTasks : boardTasks;
+
+  const [moveTask] = useMoveTaskMutation();
+  const [reorderColumns] = useReorderColumnsMutation();
+  const [addColumn] = useAddColumnMutation();
+  const [completeSprint] = useCompleteSprintMutation();
+
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [hoverColumnId, setHoverColumnId] = useState<string | null>(null);
+
+  // Quick filters state
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
+  const [jqlQuery, setJqlQuery] = useState("");
+
+  // Create dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createColumnId, setCreateColumnId] = useState<string>("");
+
+  // Socket connection for real-time updates
+  useEffect(() => {
+    if (!activeBoardId) return;
+    const socket = connectSocket();
+    const boardId = activeBoardId;
+
+    socket.emit("join-board", boardId);
+
+    return () => {
+      socket.emit("leave-board", boardId);
+    };
+  }, [activeBoardId]);
+
+  // Set initial board from project's first board
+  useEffect(() => {
+    if (!activeBoardId && boards.length > 0) {
+      setActiveBoardId(boards[0].id);
+    }
+  }, [boards, activeBoardId]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const isScrum = sprintId || activeBoard?.type === "SCRUM";
+  const isKanban = !isScrum;
+
+  // Columns from board or defaults
+  const columns: { id: string; name: string; wipLimit: number | null }[] = useMemo(() => {
+    if (activeBoard?.columns && activeBoard.columns.length > 0) {
+      return [...activeBoard.columns]
+        .sort((a, b) => a.position - b.position)
+        .map((c: Column) => ({
+          id: c.id,
+          name: c.name,
+          wipLimit: (c as any).wipLimit ?? null,
+        }));
+    }
+    if (sprintId) {
+      return DEFAULT_COLUMNS;
+    }
+    return DEFAULT_COLUMNS;
+  }, [activeBoard, sprintId]);
+
+  const columnIds = columns.map((c) => c.id);
+
+  function getColumnTasks(columnId: string): Task[] {
+    return tasks.filter((t) => {
+      const taskColId = t.columnId || defaultColumnId(t.status);
+      return taskColId === columnId;
+    });
+  }
+
+  function defaultColumnId(status: string): string {
+    switch (status) {
+      case "todo": return columns[0]?.id || "todo";
+      case "in_progress": return columns[1]?.id || "in_progress";
+      case "in_review": return columns[2]?.id || "in_review";
+      case "done": return columns[3]?.id || "done";
+      default: return columns[0]?.id || "todo";
+    }
+  }
+
+  function mapColumnIdToStatus(columnId: string): Task["status"] {
+    if (columnId.includes("progress")) return "in_progress";
+    if (columnId.includes("review")) return "in_review";
+    if (columnId.includes("done") || columnId.includes("complete")) return "done";
+    return "todo";
+  }
+
+  // Apply filters
+  const filteredTasks = useMemo(() => {
+    let result = [...tasks];
+    if (activeFilters.includes("my-issues")) {
+      result = result.filter((t) => t.assignee === "currentUser");
+    }
+    if (activeFilters.includes("unassigned")) {
+      result = result.filter((t) => !t.assignee);
+    }
+    if (activeFilters.includes("recently-updated")) {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      result = result.filter((t) => new Date(t.updatedAt) >= sevenDaysAgo);
+    }
+    if (assigneeFilter.length > 0) {
+      result = result.filter((t) => t.assignee && assigneeFilter.includes(t.assignee));
+    }
+    return result;
+  }, [tasks, activeFilters, assigneeFilter]);
+
+  function handleToggleFilter(filterId: string) {
+    setActiveFilters((prev) =>
+      prev.includes(filterId) ? prev.filter((f) => f !== filterId) : [...prev, filterId]
+    );
+  }
+
+  function handleToggleAssignee(userId: string) {
+    setAssigneeFilter((prev) =>
+      prev.includes(userId) ? prev.filter((u) => u !== userId) : [...prev, userId]
+    );
+  }
+
+  function handleClearFilters() {
+    setActiveFilters([]);
+    setAssigneeFilter([]);
+    setJqlQuery("");
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string);
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const overId = event.over?.id as string | undefined;
+    if (overId && columns.some((c) => c.id === overId)) {
+      setHoverColumnId(overId);
+    } else if (overId) {
+      const overTask = tasks.find((t) => t.taskKey === overId);
+      if (overTask) {
+        setHoverColumnId(overTask.columnId || defaultColumnId(overTask.status));
+      }
+    }
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setActiveId(null);
+    setHoverColumnId(null);
+    if (!over) return;
+
+    const activeIdStr = active.id as string;
+    const overIdStr = over.id as string;
+
+    // Column reorder
+    const isColumn = columns.some((c) => c.id === activeIdStr);
+    if (isColumn) {
+      if (!activeBoard || !activeBoard.columns) return;
+      const sorted = [...activeBoard.columns].sort((a, b) => a.position - b.position);
+      const oldIndex = sorted.findIndex((c) => c.id === activeIdStr);
+      const newIndex = sorted.findIndex((c) => c.id === overIdStr);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reordered = arrayMove(sorted, oldIndex, newIndex);
+        await reorderColumns({
+          boardId: activeBoard.id,
+          columnIds: reordered.map((c) => c.id),
+        });
+      }
+      return;
+    }
+
+    // Task move
+    const activeTask = tasks.find((t) => t.taskKey === activeIdStr);
+    if (!activeTask) return;
+
+    const overTask = tasks.find((t) => t.taskKey === overIdStr);
+    let targetColumnId: string;
+
+    if (overTask) {
+      targetColumnId = overTask.columnId || defaultColumnId(overTask.status);
+    } else if (columns.some((c) => c.id === overIdStr)) {
+      targetColumnId = overIdStr;
+    } else {
+      return;
+    }
+
+    const currentColId = activeTask.columnId || defaultColumnId(activeTask.status);
+    if (currentColId === targetColumnId) return;
+
+    try {
+      await moveTask({
+        taskKey: activeIdStr,
+        columnId: targetColumnId,
+        position: 0,
+      }).unwrap();
+    } catch {
+      // Mutation already invalidates Task tags
+    }
+  }
+
+  async function handleAddColumn() {
+    if (!newColumnName.trim() || !activeBoard) return;
+    await addColumn({ boardId: activeBoard.id, name: newColumnName.trim() });
+    setNewColumnName("");
+    setShowAddColumn(false);
+  }
+
+  async function handleCompleteSprint() {
+    if (!sprintId) return;
+    try {
+      await completeSprint({ sprintId, projectId }).unwrap();
+      router.push(`/p/${projectId}/backlog`);
+    } catch {}
+  }
+
+  function handleCreateTask(colId: string) {
+    setCreateColumnId(colId);
+    setCreateDialogOpen(true);
+  }
+
+  const isLoading = tasksLoading || sprintTasksLoading;
+  const boardForConfig = activeBoard as Board | null;
+
+  // Compute sprint stats
+  const totalPoints = tasks.reduce((sum, t) => sum + (t.storyPoints || 0), 0);
+  const donePoints = tasks.filter((t) => t.status === "done").reduce((sum, t) => sum + (t.storyPoints || 0), 0);
+  const donePercent = totalPoints > 0 ? Math.round((donePoints / totalPoints) * 100) : 0;
+
+  return (
+    <div className="flex flex-1 flex-col h-full">
+      {/* Sprint header for scrum boards */}
+      {sprint && (
+        <div className="flex items-center justify-between mb-4 px-1">
+          <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="rounded-lg p-1.5 text-[#737686] hover:bg-[#F1F2F6] transition-colors"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            <div>
+              <h2 className="text-base font-semibold text-[#121C28]">{sprint.name}</h2>
+              <p className="text-xs text-[#737686]">
+                {sprint.goal && `Goal: ${sprint.goal}`}
+                {sprint.startDate && ` · ${new Date(sprint.startDate).toLocaleDateString()}`}
+                {sprint.endDate && ` — ${new Date(sprint.endDate).toLocaleDateString()}`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            {totalPoints > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-24 h-2 rounded-full bg-[#DFE1E6] overflow-hidden">
+                  <div className="h-full rounded-full bg-[#059669] transition-all" style={{ width: `${donePercent}%` }} />
+                </div>
+                <span className="text-xs text-[#737686] whitespace-nowrap">
+                  <span className="font-medium text-[#121C28]">{donePoints}/{totalPoints}</span> pts
+                </span>
+              </div>
+            )}
+            {(sprint as any).status === "ACTIVE" && (
+              <Button size="sm" variant="outline" onClick={handleCompleteSprint}>
+                <svg className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><path d="M22 4L12 14.01l-3-3" />
+                </svg>
+                Complete sprint
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Board switcher & header */}
+      {!sprintId && (
+        <div className="mb-3 space-y-3">
+          {boards.length > 1 && (
+            <BoardSwitcher
+              boards={boards}
+              activeBoardId={activeBoardId || boards[0]?.id || ""}
+              onSelect={setActiveBoardId}
+            />
+          )}
+          {activeBoard && (
+            <BoardHeader
+              board={activeBoard as any}
+              boardCount={boards.length}
+              onOpenConfig={() => setShowConfig(true)}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Filter bar */}
+      <div className="mb-4">
+        <BoardFilterBar
+          quickFilters={[]}
+          activeFilters={activeFilters}
+          onToggleFilter={handleToggleFilter}
+          onJqlSearch={setJqlQuery}
+          assigneeFilter={assigneeFilter}
+          onToggleAssignee={handleToggleAssignee}
+          onClearFilters={handleClearFilters}
+        />
+      </div>
+
+      {/* Board area */}
+      <div className="flex-1 min-h-0">
+        {isLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <svg className="h-6 w-6 animate-spin text-[#2563EB]" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={collisionDetection}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex gap-4 overflow-x-auto pb-4 h-full max-sm:gap-3 max-sm:px-1">
+              <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                {columns.map((column) => (
+                  <BoardColumn
+                    key={column.id}
+                    column={column}
+                    tasks={getColumnTasks(column.id)}
+                    onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
+                    onCreateTask={handleCreateTask}
+                    isOver={hoverColumnId === column.id}
+                  />
+                ))}
+              </SortableContext>
+
+              {/* Add column button */}
+              <div className="flex-shrink-0 w-72 max-sm:w-64">
+                {showAddColumn ? (
+                  <div className="rounded-[3px] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#C3C6D7]/20">
+                    <input
+                      autoFocus
+                      placeholder="Column name"
+                      value={newColumnName}
+                      onChange={(e) => setNewColumnName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAddColumn();
+                        if (e.key === "Escape") setShowAddColumn(false);
+                      }}
+                      className="w-full rounded-[3px] border border-[#C3C6D7] px-3 py-2 text-sm text-[#121C28] placeholder:text-[#C3C6D7] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent mb-2"
+                    />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleAddColumn}>Add</Button>
+                      <Button size="sm" variant="outline" onClick={() => setShowAddColumn(false)}>Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAddColumn(true)}
+                    className="flex w-full items-center gap-2 rounded-[3px] border-2 border-dashed border-[#C3C6D7]/30 p-4 text-sm font-medium text-[#737686] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Add column
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <DragOverlay>
+              {activeId && columns.some((c) => c.id === activeId) ? (
+                <div className="rounded-[3px] bg-white px-4 py-3 shadow-lg border border-[#2563EB]/30 w-72">
+                  <p className="text-sm font-medium text-[#121C28]">
+                    {columns.find((c) => c.id === activeId)?.name}
+                  </p>
+                </div>
+              ) : activeId && tasks.find((t) => t.taskKey === activeId) ? (
+                <IssueCardOverlay task={tasks.find((t) => t.taskKey === activeId)!} />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
+      </div>
+
+      {/* Board config panel */}
+      {boardForConfig && (
+        <BoardConfigPanel
+          open={showConfig}
+          onClose={() => setShowConfig(false)}
+          board={boardForConfig}
+          projectId={projectId}
+        />
+      )}
+
+      {/* Create task dialog */}
+      <CreateTaskDialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        workspaceId={workspaceId}
+        columnId={createColumnId}
+      />
+    </div>
+  );
+}

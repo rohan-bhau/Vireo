@@ -52,3 +52,37 @@ export function reconnectSocket() {
   disconnectSocket();
   return connectSocket();
 }
+
+export function joinBoardRoom(boardId: string) {
+  const s = connectSocket();
+  s.emit("join-board", boardId);
+}
+
+export function leaveBoardRoom(boardId: string) {
+  const s = getSocket();
+  if (s) s.emit("leave-board", boardId);
+}
+
+export function onBoardUpdated(callback: () => void): () => void {
+  const s = connectSocket();
+  s.on("board-updated", callback);
+  return () => { s.off("board-updated", callback); };
+}
+
+export function onTaskMoved(callback: (data: any) => void): () => void {
+  const s = connectSocket();
+  s.on("task-moved", callback);
+  return () => { s.off("task-moved", callback); };
+}
+
+export function onTaskCreated(callback: (data: any) => void): () => void {
+  const s = connectSocket();
+  s.on("task-created", callback);
+  return () => { s.off("task-created", callback); };
+}
+
+export function onTaskUpdated(callback: (data: any) => void): () => void {
+  const s = connectSocket();
+  s.on("task-updated", callback);
+  return () => { s.off("task-updated", callback); };
+}

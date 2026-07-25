@@ -149,7 +149,7 @@ export const projectApi = api.injectEndpoints({
         { type: "Board", id: `project-${projectId}` },
       ],
     }),
-    addColumn: builder.mutation<Column, { boardId: string; name: string; position?: number }>({
+    addColumn: builder.mutation<Column, { boardId: string; name: string; position?: number; wipLimit?: number }>({
       query: ({ boardId, ...body }) => ({
         url: `/boards/${boardId}/columns`,
         method: "POST",
@@ -160,7 +160,7 @@ export const projectApi = api.injectEndpoints({
         { type: "Board", id: boardId },
       ],
     }),
-    updateColumn: builder.mutation<Column, { boardId: string; columnId: string; name?: string; position?: number }>({
+    updateColumn: builder.mutation<Column, { boardId: string; columnId: string; name?: string; position?: number; wipLimit?: number | null }>({
       query: ({ boardId, columnId, ...body }) => ({
         url: `/boards/${boardId}/columns/${columnId}`,
         method: "PUT",
