@@ -120,17 +120,18 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
             <Link
               href={`/w/${workspaceId}/admin`}
               className="hidden md:flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
-              title="Admin settings"
+              title="Workspace admin"
             >
               <Settings className="h-5 w-5" />
             </Link>
           ) : (
-            <button
+            <Link
+              href="/admin"
               className="hidden md:flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
-              title="Settings"
+              title="Site administration"
             >
               <Settings className="h-5 w-5" />
-            </button>
+            </Link>
           )}
 
           <div className="pl-2 ml-1 border-l border-border-light">

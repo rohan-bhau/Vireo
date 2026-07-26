@@ -8,7 +8,7 @@ import type { RootState, AppDispatch } from "@/store";
 import { useLogoutMutation } from "@/store/authApi";
 import { logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, Shield } from "lucide-react";
 import { ThemeMenuItems } from "@/components/theme/theme-toggle";
 
 export function UserAvatarMenu() {
@@ -77,6 +77,16 @@ export function UserAvatarMenu() {
               <User className="h-4 w-4" />
               Profile
             </Link>
+            {user?.role === "admin" && (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-text-secondary hover:bg-bg-light transition-colors cursor-pointer"
+              >
+                <Shield className="h-4 w-4" />
+                Administration
+              </Link>
+            )}
           </div>
 
           <div className="border-t border-border-light">
