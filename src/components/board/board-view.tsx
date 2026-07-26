@@ -29,7 +29,8 @@ import { BoardSwitcher } from "./board-switcher";
 import { BoardHeader } from "./board-header";
 import { BoardFilterBar } from "./board-filter-bar";
 import { BoardColumn } from "./board-column";
-import { IssueCardOverlay } from "./issue-card";
+import { IssueCard, IssueCardOverlay } from "./issue-card";
+import { SwimlaneRow } from "./swimlane-row";
 import { BoardConfigPanel } from "./board-config-panel";
 import { connectSocket } from "@/lib/socket";
 import type { Task } from "@/store/taskApi";
@@ -69,7 +70,6 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
 
   const activeBoard = boards.find((b) => b.id === activeBoardId) || boards[0] || null;
 
-  // Fetch board tasks (Kanban) or sprint tasks (Scrum)
   const { data: boardTasks = [], isLoading: tasksLoading } = useGetBoardTasksQuery(activeBoardId ?? "", { skip: !activeBoardId || !!sprintId });
   const { data: sprintTasks = [], isLoading: sprintTasksLoading } = useGetSprintTasksQuery(sprintId ?? "", { skip: !sprintId });
   const { data: sprint } = useGetSprintQuery(sprintId ?? "", { skip: !sprintId });
@@ -84,29 +84,21 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hoverColumnId, setHoverColumnId] = useState<string | null>(null);
 
-  // Quick filters state
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
   const [jqlQuery, setJqlQuery] = useState("");
+  const [swimlaneType, setSwimlaneType] = useState<string>("none");
 
-  // Create dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createColumnId, setCreateColumnId] = useState<string>("");
 
-  // Socket connection for real-time updates
   useEffect(() => {
     if (!activeBoardId) return;
     const socket = connectSocket();
-    const boardId = activeBoardId;
-
-    socket.emit("join-board", boardId);
-
-    return () => {
-      socket.emit("leave-board", boardId);
-    };
+    socket.emit("join-board", activeBoardId);
+    return () => { socket.emit("leave-board", activeBoardId); };
   }, [activeBoardId]);
 
-  // Set initial board from project's first board
   useEffect(() => {
     if (!activeBoardId && boards.length > 0) {
       setActiveBoardId(boards[0].id);
@@ -117,22 +109,13 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  const isScrum = sprintId || activeBoard?.type === "SCRUM";
-  const isKanban = !isScrum;
+  const boardConfig = activeBoard?.config || {};
 
-  // Columns from board or defaults
   const columns: { id: string; name: string; wipLimit: number | null }[] = useMemo(() => {
     if (activeBoard?.columns && activeBoard.columns.length > 0) {
       return [...activeBoard.columns]
         .sort((a, b) => a.position - b.position)
-        .map((c: Column) => ({
-          id: c.id,
-          name: c.name,
-          wipLimit: (c as any).wipLimit ?? null,
-        }));
-    }
-    if (sprintId) {
-      return DEFAULT_COLUMNS;
+        .map((c: Column) => ({ id: c.id, name: c.name, wipLimit: (c as any).wipLimit ?? null }));
     }
     return DEFAULT_COLUMNS;
   }, [activeBoard, sprintId]);
@@ -163,7 +146,6 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     return "todo";
   }
 
-  // Apply filters
   const filteredTasks = useMemo(() => {
     let result = [...tasks];
     if (activeFilters.includes("my-issues")) {
@@ -225,7 +207,6 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     const activeIdStr = active.id as string;
     const overIdStr = over.id as string;
 
-    // Column reorder
     const isColumn = columns.some((c) => c.id === activeIdStr);
     if (isColumn) {
       if (!activeBoard || !activeBoard.columns) return;
@@ -234,21 +215,16 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
       const newIndex = sorted.findIndex((c) => c.id === overIdStr);
       if (oldIndex !== -1 && newIndex !== -1) {
         const reordered = arrayMove(sorted, oldIndex, newIndex);
-        await reorderColumns({
-          boardId: activeBoard.id,
-          columnIds: reordered.map((c) => c.id),
-        });
+        await reorderColumns({ boardId: activeBoard.id, columnIds: reordered.map((c) => c.id) });
       }
       return;
     }
 
-    // Task move
     const activeTask = tasks.find((t) => t.taskKey === activeIdStr);
     if (!activeTask) return;
 
     const overTask = tasks.find((t) => t.taskKey === overIdStr);
     let targetColumnId: string;
-
     if (overTask) {
       targetColumnId = overTask.columnId || defaultColumnId(overTask.status);
     } else if (columns.some((c) => c.id === overIdStr)) {
@@ -261,14 +237,8 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     if (currentColId === targetColumnId) return;
 
     try {
-      await moveTask({
-        taskKey: activeIdStr,
-        columnId: targetColumnId,
-        position: 0,
-      }).unwrap();
-    } catch {
-      // Mutation already invalidates Task tags
-    }
+      await moveTask({ taskKey: activeIdStr, columnId: targetColumnId, position: 0 }).unwrap();
+    } catch {}
   }
 
   async function handleAddColumn() {
@@ -294,22 +264,35 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   const isLoading = tasksLoading || sprintTasksLoading;
   const boardForConfig = activeBoard as Board | null;
 
-  // Compute sprint stats
   const totalPoints = tasks.reduce((sum, t) => sum + (t.storyPoints || 0), 0);
   const donePoints = tasks.filter((t) => t.status === "done").reduce((sum, t) => sum + (t.storyPoints || 0), 0);
   const donePercent = totalPoints > 0 ? Math.round((donePoints / totalPoints) * 100) : 0;
 
+  // Swimlane grouping
+  const swimlaneGroups = useMemo(() => {
+    if (swimlaneType === "none") return null;
+    const groups: Record<string, Task[]> = {};
+    for (const task of filteredTasks) {
+      let key = "Other";
+      if (swimlaneType === "assignee") key = task.assignee || "Unassigned";
+      else if (swimlaneType === "epic") {
+        const epicLabel = task.labels.find((l) => l.startsWith("epic:"));
+        key = epicLabel ? epicLabel.replace("epic:", "") : "No epic";
+      }
+      else if (swimlaneType === "priority") key = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(task);
+    }
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  }, [filteredTasks, swimlaneType]);
+
   return (
     <div className="flex flex-1 flex-col h-full">
-      {/* Sprint header for scrum boards */}
       {sprint && (
-        <div className="flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center justify-between mb-4 px-1 max-sm:flex-col max-sm:items-start max-sm:gap-2">
           <div className="flex items-center gap-3">
             {onBack && (
-              <button
-                onClick={onBack}
-                className="rounded-lg p-1.5 text-[#737686] hover:bg-[#F1F2F6] transition-colors"
-              >
+              <button onClick={onBack} className="rounded-lg p-1.5 text-[#737686] hover:bg-[#F1F2F6] transition-colors">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
@@ -324,10 +307,10 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 max-sm:w-full max-sm:justify-between">
             {totalPoints > 0 && (
               <div className="flex items-center gap-2">
-                <div className="w-24 h-2 rounded-full bg-[#DFE1E6] overflow-hidden">
+                <div className="w-24 h-2 rounded-full bg-[#DFE1E6] overflow-hidden max-sm:w-16">
                   <div className="h-full rounded-full bg-[#059669] transition-all" style={{ width: `${donePercent}%` }} />
                 </div>
                 <span className="text-xs text-[#737686] whitespace-nowrap">
@@ -347,40 +330,31 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
         </div>
       )}
 
-      {/* Board switcher & header */}
       {!sprintId && (
         <div className="mb-3 space-y-3">
           {boards.length > 1 && (
-            <BoardSwitcher
-              boards={boards}
-              activeBoardId={activeBoardId || boards[0]?.id || ""}
-              onSelect={setActiveBoardId}
-            />
+            <BoardSwitcher boards={boards} activeBoardId={activeBoardId || boards[0]?.id || ""} onSelect={setActiveBoardId} />
           )}
           {activeBoard && (
-            <BoardHeader
-              board={activeBoard as any}
-              boardCount={boards.length}
-              onOpenConfig={() => setShowConfig(true)}
-            />
+            <BoardHeader board={activeBoard as any} boardCount={boards.length} onOpenConfig={() => setShowConfig(true)} />
           )}
         </div>
       )}
 
-      {/* Filter bar */}
       <div className="mb-4">
         <BoardFilterBar
-          quickFilters={[]}
+          quickFilters={(boardConfig as any)?.quickFilters || []}
           activeFilters={activeFilters}
           onToggleFilter={handleToggleFilter}
           onJqlSearch={setJqlQuery}
           assigneeFilter={assigneeFilter}
           onToggleAssignee={handleToggleAssignee}
           onClearFilters={handleClearFilters}
+          swimlaneType={swimlaneType}
+          onSwimlaneChange={setSwimlaneType}
         />
       </div>
 
-      {/* Board area */}
       <div className="flex-1 min-h-0">
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
@@ -388,6 +362,23 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
+          </div>
+        ) : swimlaneType !== "none" && swimlaneGroups ? (
+          <div className="overflow-y-auto h-full pb-4">
+            {swimlaneGroups.map(([groupName, groupTasks]) => (
+              <SwimlaneRow
+                key={groupName}
+                name={groupName}
+                tasks={groupTasks}
+                columns={columns}
+                onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
+              />
+            ))}
+            {swimlaneGroups.length === 0 && (
+              <div className="flex items-center justify-center h-32 text-sm text-[#737686]">
+                No issues match the current filters
+              </div>
+            )}
           </div>
         ) : (
           <DndContext
@@ -397,7 +388,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex gap-4 overflow-x-auto pb-4 h-full max-sm:gap-3 max-sm:px-1">
+            <div className="flex gap-4 overflow-x-auto pb-4 h-full max-sm:flex-col max-sm:overflow-x-hidden max-sm:overflow-y-auto max-sm:gap-6 max-sm:px-1">
               <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                 {columns.map((column) => (
                   <BoardColumn
@@ -411,13 +402,11 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                 ))}
               </SortableContext>
 
-              {/* Add column button */}
-              <div className="flex-shrink-0 w-72 max-sm:w-64">
+              <div className="flex-shrink-0 w-72 max-sm:w-full max-sm:max-w-md max-sm:mx-auto">
                 {showAddColumn ? (
                   <div className="rounded-[3px] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#C3C6D7]/20">
                     <input
-                      autoFocus
-                      placeholder="Column name"
+                      autoFocus placeholder="Column name"
                       value={newColumnName}
                       onChange={(e) => setNewColumnName(e.target.value)}
                       onKeyDown={(e) => {
@@ -448,9 +437,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
             <DragOverlay>
               {activeId && columns.some((c) => c.id === activeId) ? (
                 <div className="rounded-[3px] bg-white px-4 py-3 shadow-lg border border-[#2563EB]/30 w-72">
-                  <p className="text-sm font-medium text-[#121C28]">
-                    {columns.find((c) => c.id === activeId)?.name}
-                  </p>
+                  <p className="text-sm font-medium text-[#121C28]">{columns.find((c) => c.id === activeId)?.name}</p>
                 </div>
               ) : activeId && tasks.find((t) => t.taskKey === activeId) ? (
                 <IssueCardOverlay task={tasks.find((t) => t.taskKey === activeId)!} />
@@ -460,23 +447,11 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
         )}
       </div>
 
-      {/* Board config panel */}
       {boardForConfig && (
-        <BoardConfigPanel
-          open={showConfig}
-          onClose={() => setShowConfig(false)}
-          board={boardForConfig}
-          projectId={projectId}
-        />
+        <BoardConfigPanel open={showConfig} onClose={() => setShowConfig(false)} board={boardForConfig} projectId={projectId} />
       )}
 
-      {/* Create task dialog */}
-      <CreateTaskDialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        workspaceId={workspaceId}
-        columnId={createColumnId}
-      />
+      <CreateTaskDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} workspaceId={workspaceId} columnId={createColumnId} />
     </div>
   );
 }

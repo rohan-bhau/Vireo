@@ -19,6 +19,8 @@ interface BoardFilterBarProps {
   assigneeFilter: string[];
   onToggleAssignee: (userId: string) => void;
   onClearFilters: () => void;
+  swimlaneType?: string;
+  onSwimlaneChange?: (type: string) => void;
 }
 
 const PREDEFINED_FILTERS: QuickFilter[] = [
@@ -36,6 +38,8 @@ export function BoardFilterBar({
   assigneeFilter,
   onToggleAssignee,
   onClearFilters,
+  swimlaneType,
+  onSwimlaneChange,
 }: BoardFilterBarProps) {
   const [jqlInput, setJqlInput] = useState("");
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
@@ -121,6 +125,19 @@ export function BoardFilterBar({
           </div>
         )}
       </div>
+
+      {onSwimlaneChange && (
+        <select
+          value={swimlaneType || "none"}
+          onChange={(e) => onSwimlaneChange(e.target.value)}
+          className="rounded-[3px] border border-[#DFE1E6] bg-white px-2.5 py-1 text-[11px] font-medium text-[#42526E] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+        >
+          <option value="none">No swimlanes</option>
+          <option value="assignee">By assignee</option>
+          <option value="epic">By epic</option>
+          <option value="priority">By priority</option>
+        </select>
+      )}
 
       <div className="relative flex-1 min-w-[160px] max-w-[240px]">
         <svg className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

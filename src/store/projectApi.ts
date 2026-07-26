@@ -12,11 +12,35 @@ export interface Column {
   updatedAt: string;
 }
 
+export interface BoardConfig {
+  swimlanes?: {
+    enabled: boolean;
+    type: "none" | "assignee" | "epic" | "priority" | "custom";
+    customJql?: string;
+  };
+  cardLayout?: {
+    showTypeIcon: boolean;
+    showKey: boolean;
+    showPriority: boolean;
+    showAssignee: boolean;
+    showLabels: boolean;
+    showDueDate: boolean;
+    showStoryPoints: boolean;
+    showEpicColor: boolean;
+  };
+  quickFilters?: {
+    id: string;
+    name: string;
+    jql: string;
+  }[];
+}
+
 export interface Board {
   id: string;
   name: string;
   type: BoardType;
   projectId: string;
+  config: BoardConfig | null;
   createdAt: string;
   updatedAt: string;
   columns: Column[];
@@ -191,6 +215,17 @@ export const projectApi = api.injectEndpoints({
         { type: "Board", id: boardId },
       ],
     }),
+    updateBoardConfig: builder.mutation<Board, { boardId: string; config: Partial<BoardConfig> }>({
+      query: ({ boardId, config }) => ({
+        url: `/boards/${boardId}/config`,
+        method: "PUT",
+        body: { config },
+      }),
+      transformResponse: (response: BoardResponse) => response.data.board,
+      invalidatesTags: (_result, _error, { boardId }) => [
+        { type: "Board", id: boardId },
+      ],
+    }),
   }),
 });
 
@@ -207,4 +242,5 @@ export const {
   useUpdateColumnMutation,
   useRemoveColumnMutation,
   useReorderColumnsMutation,
+  useUpdateBoardConfigMutation,
 } = projectApi;
