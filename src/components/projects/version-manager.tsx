@@ -1,0 +1,271 @@
+"use client";
+
+import { useState } from "react";
+import {
+  useGetProjectVersionsQuery,
+  useCreateVersionMutation,
+  useUpdateVersionMutation,
+  useDeleteVersionMutation,
+  useReleaseVersionMutation,
+  useGetVersionProgressQuery,
+  type Version,
+  type VersionStatus,
+} from "@/store/versionApi";
+import { VersionProgress, VersionStats } from "./version-progress";
+
+interface VersionManagerProps {
+  projectId: string;
+}
+
+export function VersionManager({ projectId }: VersionManagerProps) {
+  const { data: versions, isLoading } = useGetProjectVersionsQuery(projectId);
+  const [createVersion] = useCreateVersionMutation();
+  const [updateVersion] = useUpdateVersionMutation();
+  const [deleteVersion] = useDeleteVersionMutation();
+  const [releaseVersion] = useReleaseVersionMutation();
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    startDate: "",
+    releaseDate: "",
+  });
+
+  const statusColors: Record<VersionStatus, string> = {
+    unreleased: "bg-primary/10 text-primary",
+    released: "bg-success/10 text-success",
+    archived: "bg-bg-light text-text-placeholder",
+  };
+
+  function resetForm() {
+    setForm({ name: "", description: "", startDate: "", releaseDate: "" });
+  }
+
+  async function handleCreate() {
+    if (!form.name.trim()) return;
+    await createVersion({
+      name: form.name.trim(),
+      description: form.description || undefined,
+      projectId,
+      startDate: form.startDate || undefined,
+      releaseDate: form.releaseDate || undefined,
+    });
+    resetForm();
+    setShowCreate(false);
+  }
+
+  async function handleUpdate(id: string) {
+    await updateVersion({
+      id,
+      data: {
+        name: form.name || undefined,
+        description: form.description || undefined,
+        startDate: form.startDate || null,
+        releaseDate: form.releaseDate || null,
+      },
+    });
+    setEditingId(null);
+    resetForm();
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Delete this version?")) return;
+    await deleteVersion(id);
+  }
+
+  async function handleRelease(id: string) {
+    if (!confirm("Release this version?")) return;
+    await releaseVersion(id);
+  }
+
+  function startEdit(v: Version) {
+    setEditingId(v._id);
+    setForm({
+      name: v.name,
+      description: v.description || "",
+      startDate: v.startDate ? v.startDate.split("T")[0] : "",
+      releaseDate: v.releaseDate ? v.releaseDate.split("T")[0] : "",
+    });
+  }
+
+  function ProgressCell({ versionId }: { versionId: string }) {
+    const { data: progress } = useGetVersionProgressQuery(versionId);
+    if (!progress) return <span className="text-xs text-text-placeholder">-</span>;
+    return (
+      <div className="flex flex-col gap-1">
+        <VersionProgress {...progress} />
+        <VersionStats {...progress} />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <div className="text-sm text-text-placeholder py-8 text-center">Loading releases...</div>;
+  }
+
+  const unreleased = versions?.filter((v) => v.status === "unreleased") || [];
+  const released = versions?.filter((v) => v.status === "released") || [];
+  const archived = versions?.filter((v) => v.status === "archived") || [];
+
+  function renderVersionTable(title: string, list: Version[], emptyMsg: string) {
+    return (
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-text mb-3">{title} ({list.length})</h3>
+        {list.length === 0 ? (
+          <p className="text-xs text-text-placeholder py-4">{emptyMsg}</p>
+        ) : (
+          <div className="overflow-hidden rounded-[3px] border border-border-light">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-bg-light text-left text-xs font-medium uppercase tracking-wider text-text-placeholder">
+                  <th className="px-4 py-2.5">Name</th>
+                  <th className="px-4 py-2.5">Status</th>
+                  <th className="px-4 py-2.5">Release date</th>
+                  <th className="px-4 py-2.5 w-64">Progress</th>
+                  <th className="px-4 py-2.5 w-32">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-light">
+                {list.map((v) => (
+                  <tr key={v._id} className="hover:bg-bg-light/50 transition-colors">
+                    {editingId === v._id ? (
+                      <>
+                        <td className="px-4 py-2">
+                          <input
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            className="w-full rounded-[3px] border border-border-input bg-surface px-2 py-1 text-xs text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </td>
+                        <td className="px-4 py-2">
+                          <span className={`inline-block rounded px-2 py-0.5 text-[11px] font-medium ${statusColors[v.status]}`}>
+                            {v.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2">
+                          <input
+                            type="date"
+                            value={form.releaseDate}
+                            onChange={(e) => setForm({ ...form, releaseDate: e.target.value })}
+                            className="w-full rounded-[3px] border border-border-input bg-surface px-2 py-1 text-xs text-text focus:outline-none"
+                          />
+                        </td>
+                        <td className="px-4 py-2"><ProgressCell versionId={v._id} /></td>
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => handleUpdate(v._id)} className="text-xs font-medium text-primary hover:text-primary-dark">Save</button>
+                            <button onClick={() => { setEditingId(null); resetForm(); }} className="text-xs text-text-placeholder hover:text-text-secondary">Cancel</button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-2.5 text-text font-medium">{v.name}</td>
+                        <td className="px-4 py-2.5">
+                          <span className={`inline-block rounded px-2 py-0.5 text-[11px] font-medium ${statusColors[v.status]}`}>
+                            {v.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-text-secondary text-xs">
+                          {v.releaseDate ? new Date(v.releaseDate).toLocaleDateString() : "-"}
+                        </td>
+                        <td className="px-4 py-2.5"><ProgressCell versionId={v._id} /></td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            {v.status === "unreleased" && (
+                              <button onClick={() => handleRelease(v._id)} className="text-xs text-success hover:text-success-dark">Release</button>
+                            )}
+                            <button onClick={() => startEdit(v)} className="text-xs text-primary hover:text-primary-dark">Edit</button>
+                            <button onClick={() => handleDelete(v._id)} className="text-xs text-danger hover:text-danger-dark">Delete</button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-text">Releases ({versions?.length || 0})</h2>
+        <button
+          onClick={() => { resetForm(); setShowCreate(true); }}
+          className="rounded-[3px] bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-dark transition-colors"
+        >
+          + Create version
+        </button>
+      </div>
+
+      {showCreate && (
+        <div className="mb-4 rounded-[3px] border border-border-light bg-bg-light p-4">
+          <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Version name *"
+              className="rounded-[3px] border border-border-input bg-surface px-2.5 py-1.5 text-sm text-text placeholder:text-text-placeholder focus:outline-none focus:ring-2 focus:ring-primary"
+              autoFocus
+            />
+            <input
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Description"
+              className="rounded-[3px] border border-border-input bg-surface px-2.5 py-1.5 text-sm text-text placeholder:text-text-placeholder focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <input
+              type="date"
+              value={form.startDate}
+              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+              placeholder="Start date"
+              className="rounded-[3px] border border-border-input bg-surface px-2.5 py-1.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <input
+              type="date"
+              value={form.releaseDate}
+              onChange={(e) => setForm({ ...form, releaseDate: e.target.value })}
+              placeholder="Release date"
+              className="rounded-[3px] border border-border-input bg-surface px-2.5 py-1.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            <button
+              onClick={handleCreate}
+              disabled={!form.name.trim()}
+              className="rounded-[3px] bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-dark disabled:opacity-50 transition-colors"
+            >
+              Create
+            </button>
+            <button
+              onClick={() => setShowCreate(false)}
+              className="rounded-[3px] border border-border-light px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-light transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {(!versions || versions.length === 0) && !showCreate ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border-light/30 py-24 text-center">
+          <h3 className="text-base font-semibold text-text">No releases yet</h3>
+          <p className="mt-1 text-sm text-text-placeholder">Create versions to track when issues are shipped</p>
+        </div>
+      ) : (
+        <>
+          {renderVersionTable("Unreleased", unreleased, "No unreleased versions")}
+          {released.length > 0 && renderVersionTable("Released", released, "")}
+          {archived.length > 0 && renderVersionTable("Archived", archived, "")}
+        </>
+      )}
+    </div>
+  );
+}

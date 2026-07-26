@@ -10,6 +10,8 @@ import { PriorityIcon } from "./priority-icon";
 import { IssueTypeIcon } from "./issue-type-icon";
 import { AssigneePicker } from "./assignee-picker";
 import { LabelEditor } from "./label-editor";
+import { MultiComponentSelector } from "./component-selector";
+import { VersionSelector } from "./version-selector";
 
 interface IssueDetailDetailsPanelProps {
   task: Task;
@@ -194,6 +196,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
               workspaceId={workspaceId}
               value={fieldValue || []}
               onChange={(v) => { handleSave("labels", v); }}
+              projectId={task.projectId}
             />
           ) : task.labels.length > 0 ? (
             <div className="flex flex-wrap gap-1">
@@ -205,6 +208,46 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
             </div>
           ) : (
             <span className="text-xs text-text-placeholder">None</span>
+          )}
+        </DetailRow>
+
+        <DetailRow
+          label="Components"
+          field="components"
+          onEdit={() => startEdit("components", task.components)}
+        >
+          {editingField === "components" ? (
+            <MultiComponentSelector
+              projectId={task.projectId}
+              value={fieldValue || []}
+              onChange={(v) => { handleSave("components", v); }}
+            />
+          ) : task.components && task.components.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {task.components.map((c) => (
+                <span key={c} className="rounded bg-bg-light px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
+                  {c}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span className="text-xs text-text-placeholder">None</span>
+          )}
+        </DetailRow>
+
+        <DetailRow
+          label="Fix Version"
+          field="fixVersion"
+          onEdit={() => startEdit("fixVersion", task.fixVersion || "")}
+        >
+          {editingField === "fixVersion" ? (
+            <VersionSelector
+              projectId={task.projectId}
+              value={fieldValue || ""}
+              onChange={(v) => { handleSave("fixVersion", v || null); }}
+            />
+          ) : (
+            <span className="text-xs text-text">{task.fixVersion || "None"}</span>
           )}
         </DetailRow>
 

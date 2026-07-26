@@ -17,6 +17,8 @@ import { IssueTypeIcon } from "./issue-type-icon";
 import { PriorityIcon } from "./priority-icon";
 import { AssigneePicker } from "./assignee-picker";
 import { LabelEditor } from "./label-editor";
+import { MultiComponentSelector } from "./component-selector";
+import { VersionSelector } from "./version-selector";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -71,6 +73,8 @@ export function CreateTaskDialog({
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [assignee, setAssignee] = useState<string | null>(null);
   const [labels, setLabels] = useState<string[]>([]);
+  const [components, setComponents] = useState<string[]>([]);
+  const [fixVersion, setFixVersion] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [storyPoints, setStoryPoints] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId || "");
@@ -91,6 +95,8 @@ export function CreateTaskDialog({
         setPriority(editTask.priority);
         setAssignee(editTask.assignee);
         setLabels(editTask.labels || []);
+        setComponents(editTask.components || []);
+        setFixVersion(editTask.fixVersion || "");
         setDueDate(editTask.dueDate ? editTask.dueDate.split("T")[0] : "");
         setStoryPoints(editTask.storyPoints?.toString() || "");
         setSelectedProjectId(editTask.projectId);
@@ -102,6 +108,8 @@ export function CreateTaskDialog({
         setPriority("medium");
         setAssignee(null);
         setLabels([]);
+        setComponents([]);
+        setFixVersion("");
         setDueDate("");
         setStoryPoints("");
         setSelectedProjectId(defaultProjectId || projects?.[0]?.id || "");
@@ -123,6 +131,8 @@ export function CreateTaskDialog({
         priority,
         assignee: assignee || undefined,
         labels,
+        components: components.length > 0 ? components : undefined,
+        fixVersion: fixVersion || undefined,
         dueDate: dueDate || undefined,
         storyPoints: storyPoints ? parseInt(storyPoints, 10) : undefined,
         projectId: selectedProjectId || undefined,
@@ -284,7 +294,17 @@ export function CreateTaskDialog({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-text-secondary">Labels</label>
-              <LabelEditor value={labels} onChange={setLabels} workspaceId={workspaceId} />
+              <LabelEditor value={labels} onChange={setLabels} workspaceId={workspaceId} projectId={selectedProjectId} />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-text-secondary">Components</label>
+              <MultiComponentSelector value={components} onChange={setComponents} projectId={selectedProjectId} />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-text-secondary">Fix Version</label>
+              <VersionSelector value={fixVersion} onChange={setFixVersion} projectId={selectedProjectId} />
             </div>
 
             <div className="flex flex-col gap-1.5">

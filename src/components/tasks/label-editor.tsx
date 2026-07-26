@@ -1,24 +1,29 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useSuggestLabelsQuery } from "@/store/labelApi";
 
 interface LabelEditorProps {
   value: string[];
   onChange: (labels: string[]) => void;
   workspaceId?: string;
+  projectId?: string;
 }
 
-const COMMON_LABELS = ["bug", "feature", "enhancement", "documentation", "frontend", "backend", "api", "urgent", "design", "testing"];
-
-export function LabelEditor({ value, onChange, workspaceId }: LabelEditorProps) {
+export function LabelEditor({ value, onChange, workspaceId, projectId }: LabelEditorProps) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
-  const allLabels = [...new Set([...COMMON_LABELS, ...value])];
-  const filtered = allLabels.filter(
-    (l) => l.toLowerCase().includes(input.toLowerCase()) && !value.includes(l)
+  const { data: suggestions = [] } = useSuggestLabelsQuery(
+    { projectId: projectId || "", q: input },
+    { skip: !projectId || !input }
   );
+
+  const allLabels = [...new Set([...suggestions, ...value])];
+  const filtered = projectId
+    ? allLabels.filter((l) => l.toLowerCase().includes(input.toLowerCase()) && !value.includes(l))
+    : [];
 
   function addLabel(label: string) {
     if (!value.includes(label)) {

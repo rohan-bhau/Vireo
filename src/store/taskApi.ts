@@ -30,6 +30,8 @@ export interface Task {
   columnId: string | null;
   position: number;
   labels: string[];
+  components: string[];
+  fixVersion: string | null;
   dueDate: string | null;
   storyPoints: number | null;
   parentTask: string | null;
@@ -98,6 +100,8 @@ interface CreateTaskInput {
   boardId?: string;
   columnId?: string;
   labels?: string[];
+  components?: string[];
+  fixVersion?: string;
   dueDate?: string;
   storyPoints?: number;
   parentTask?: string;
@@ -112,6 +116,8 @@ interface UpdateTaskInput {
   priority?: TaskPriority;
   assignee?: string | null;
   labels?: string[];
+  components?: string[];
+  fixVersion?: string | null;
   dueDate?: string | null;
   storyPoints?: number | null;
   parentTask?: string | null;
