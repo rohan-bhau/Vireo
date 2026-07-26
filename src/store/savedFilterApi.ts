@@ -12,9 +12,11 @@ export interface SavedFilter {
   userId: string;
   workspaceId: string;
   projectId?: string;
+  jql?: string;
   conditions: FilterCondition[];
   sortField?: string;
   sortOrder?: "asc" | "desc";
+  columns?: string[];
   isShared: boolean;
   createdAt: string;
   updatedAt: string;
@@ -42,7 +44,8 @@ export const savedFilterApi = api.injectEndpoints({
     }),
     createSavedFilter: builder.mutation<SavedFilter, {
       name: string; workspaceId: string; projectId?: string;
-      conditions: FilterCondition[]; sortField?: string; sortOrder?: string; isShared?: boolean;
+      jql?: string;
+      conditions: FilterCondition[]; sortField?: string; sortOrder?: string; columns?: string[]; isShared?: boolean;
     }>({
       query: (body) => ({
         url: "/filters",

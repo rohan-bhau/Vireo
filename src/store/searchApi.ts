@@ -25,6 +25,20 @@ interface GlobalSearchResult {
   total: number;
 }
 
+interface Suggestion {
+  value: string;
+  label: string;
+}
+
+interface SuggestResult {
+  suggestions: Suggestion[];
+}
+
+interface JqlValidateResult {
+  valid: boolean;
+  error: { message: string; position: number } | null;
+}
+
 export const searchApi = api.injectEndpoints({
   endpoints: (builder) => ({
     searchTasks: builder.query<SearchResult, { workspaceId?: string; projectId?: string; q?: string; status?: string; priority?: string; type?: string; assignee?: string; labels?: string; sortField?: string; sortOrder?: string; page?: number; limit?: number }>({
@@ -46,6 +60,28 @@ export const searchApi = api.injectEndpoints({
       query: (q) => `/search/global?q=${encodeURIComponent(q)}`,
       transformResponse: (response: any) => response.data,
     }),
+    jqlSearch: builder.query<SearchResult, { query: string; workspaceId?: string; page?: number; limit?: number }>({
+      query: (params) => ({
+        url: "/search/jql",
+        params,
+      }),
+      transformResponse: (response: any) => response.data,
+    }),
+    validateJql: builder.mutation<JqlValidateResult, { query: string }>({
+      query: (body) => ({
+        url: "/search/validate",
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: any) => response.data,
+    }),
+    getSuggestions: builder.query<SuggestResult, { q: string; type: string; workspaceId?: string; field?: string }>({
+      query: (params) => ({
+        url: "/search/suggest",
+        params,
+      }),
+      transformResponse: (response: any) => response.data,
+    }),
   }),
 });
 
@@ -54,4 +90,8 @@ export const {
   useAdvancedFilterMutation,
   useGlobalSearchQuery,
   useLazyGlobalSearchQuery,
+  useJqlSearchQuery,
+  useLazyJqlSearchQuery,
+  useValidateJqlMutation,
+  useLazyGetSuggestionsQuery,
 } = searchApi;

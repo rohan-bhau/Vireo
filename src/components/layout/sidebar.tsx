@@ -41,6 +41,7 @@ import {
   toggleStarredWorkspace,
   setActiveWorkspace,
 } from "@/store/workspaceSlice";
+import { useGetWorkspaceFiltersQuery } from "@/store/savedFilterApi";
 
 interface SidebarProps {
   workspaceId?: string;
@@ -60,7 +61,7 @@ const dashboards = [
   { label: "Default Dashboard", href: "/dashboard" },
 ];
 
-const savedFilters = [
+const hardcodedFilters = [
   { label: "Assigned to me", query: "assignee = currentUser()" },
   { label: "Recently updated", query: "updated >= -7d" },
   { label: "High priority", query: "priority = High" },
@@ -195,6 +196,35 @@ function CollapsibleSection({
       </button>
       {expanded && <div className="space-y-0.5 mt-0.5">{children}</div>}
     </div>
+  );
+}
+
+function SavedFiltersSection({ workspaceId, onNavigate }: { workspaceId?: string; onNavigate?: () => void }) {
+  const { data: apiFilters = [] } = useGetWorkspaceFiltersQuery(workspaceId ?? "", { skip: !workspaceId });
+
+  const allFilters = [
+    ...hardcodedFilters.map((f) => ({ id: f.label, name: f.label, query: f.query, isHardcoded: true as const })),
+    ...apiFilters.map((f) => ({ id: f._id, name: f.name, query: f.jql || "", isHardcoded: false as const })),
+  ];
+
+  if (allFilters.length === 0) {
+    return <p className="px-3 py-1.5 text-xs text-[#737686]">No saved filters</p>;
+  }
+
+  return (
+    <>
+      {allFilters.map((f) => (
+        <Link
+          key={f.id}
+          href={`/search?q=${encodeURIComponent(f.query)}`}
+          onClick={onNavigate}
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[38px]"
+        >
+          <Filter className="h-4 w-4 shrink-0 text-[#737686]" />
+          <span className="truncate">{f.name}</span>
+        </Link>
+      ))}
+    </>
   );
 }
 
@@ -533,17 +563,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
               expanded={filtersExpanded}
               onToggle={() => setFiltersExpanded(!filtersExpanded)}
             >
-              {savedFilters.map((f) => (
-                <Link
-                  key={f.label}
-                  href={`/search?q=${encodeURIComponent(f.query)}`}
-                  onClick={onNavigate}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[38px]"
-                >
-                  <Filter className="h-4 w-4 shrink-0 text-[#737686]" />
-                  <span className="truncate">{f.label}</span>
-                </Link>
-              ))}
+              <SavedFiltersSection workspaceId={currentWsId ?? undefined} onNavigate={onNavigate} />
             </CollapsibleSection>
           )}
 
