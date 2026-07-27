@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useGetProjectQuery } from "@/store/projectApi";
 import { BoardView } from "@/components/board/board-view";
+import { AIContextualLauncher } from "@/components/ai/ai-contextual-launcher";
 
 export default function BoardPage() {
   const params = useParams();
@@ -22,9 +23,12 @@ export default function BoardPage() {
   }
 
   return (
-    <BoardView
-      projectId={projectId}
-      workspaceId={project.workspaceId}
-    />
+    <>
+      <BoardView
+        projectId={projectId}
+        workspaceId={project.workspaceId}
+      />
+      <AIContextualLauncher context="board" projectId={projectId} workspaceId={project.workspaceId} />
+    </>
   );
 }

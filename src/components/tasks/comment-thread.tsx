@@ -12,6 +12,7 @@ import {
 } from "@/store/taskApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
+import { AICommentSuggestion } from "@/components/ai/ai-comment-suggestion";
 
 interface CommentThreadProps {
   taskKey: string;
@@ -186,7 +187,14 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
               </div>
             )}
           </div>
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-2 mt-2">
+            <AICommentSuggestion
+              taskKey={taskKey}
+              commentText={newComment}
+              onApply={(suggestion) => {
+                setNewComment(suggestion);
+              }}
+            />
             <Button
               size="sm"
               onClick={handleSubmit}

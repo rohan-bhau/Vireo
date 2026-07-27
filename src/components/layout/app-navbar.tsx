@@ -16,9 +16,10 @@ import { KeyboardShortcutsModal } from "@/components/nav/keyboard-shortcuts-moda
 
 interface AppNavbarProps {
   onMobileMenuToggle?: () => void;
+  onToggleChat?: () => void;
 }
 
-export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
+export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) {
   const { collapsed } = useSelector((state: RootState) => state.sidebar);
   const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
@@ -98,13 +99,13 @@ export function AppNavbar({ onMobileMenuToggle }: AppNavbarProps) {
 
         {/* Right section */}
         <div className="flex items-center gap-1 md:gap-2">
-          <Link
-            href="/ai-assistant"
+          <button
+            onClick={onToggleChat}
             className="hidden md:flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
             title="AI Assistant"
           >
             <Sparkles className="h-5 w-5" />
-          </Link>
+          </button>
 
           <NotificationBell />
 

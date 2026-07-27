@@ -15,6 +15,7 @@ import { IssueDetailDetailsPanel } from "@/components/tasks/issue-detail-details
 import { LinkIssueDialog } from "@/components/tasks/link-issue-dialog";
 import { WatchToggle } from "@/components/notifications/watch-toggle";
 import { WatcherList } from "@/components/notifications/watcher-list";
+import { AIContextualLauncher } from "@/components/ai/ai-contextual-launcher";
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -165,6 +166,7 @@ export default function TaskDetailPage() {
         taskKey={taskKey}
         existingLinks={task.linkedTasks}
       />
+      <AIContextualLauncher context="issue" taskKey={taskKey} workspaceId={workspaceId || task.workspaceId} projectId={task.projectId} />
     </div>
   );
 }

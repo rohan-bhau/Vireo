@@ -6,6 +6,7 @@ import { AppNavbar } from "./app-navbar";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { NotificationListener } from "@/components/notifications/notification-listener";
+import { AIChatPanel } from "@/components/ai/ai-chat-panel";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -98,6 +99,7 @@ function MobileSidebarDrawer({
 
 export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [chatPanelOpen, setChatPanelOpen] = useState(false);
 
   const handleMobileMenuToggle = useCallback(() => {
     setMobileSidebarOpen((prev) => !prev);
@@ -107,11 +109,15 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
     setMobileSidebarOpen(false);
   }, []);
 
+  const handleToggleChat = useCallback(() => {
+    setChatPanelOpen((prev) => !prev);
+  }, []);
+
   return (
     <AuthGuard>
       <NotificationListener />
       <div className="flex min-h-screen flex-col bg-[#F8F9FF]">
-        <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} />
+        <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} onToggleChat={handleToggleChat} />
         <div className="flex flex-1 min-h-0">
           <div className="hidden md:flex">
             <Sidebar
@@ -124,6 +130,11 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
           </main>
         </div>
       </div>
+      <AIChatPanel
+        open={chatPanelOpen}
+        onClose={() => setChatPanelOpen(false)}
+        context={sidebarProps?.workspaceId ? { workspaceId: sidebarProps.workspaceId } : undefined}
+      />
       <MobileBottomNav />
       <MobileSidebarDrawer
         open={mobileSidebarOpen}

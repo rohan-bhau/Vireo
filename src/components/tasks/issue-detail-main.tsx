@@ -10,6 +10,8 @@ import { AttachmentList } from "./attachment-list";
 import { SubtaskList } from "./subtask-list";
 import { IssueTypeIcon } from "./issue-type-icon";
 import { Button } from "@/components/ui/button";
+import { AISummaryCard } from "@/components/ai/ai-summary-card";
+import { AIDescriptionGenerator } from "@/components/ai/ai-description-generator";
 
 interface IssueDetailMainProps {
   task: Task;
@@ -81,17 +83,34 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
         </div>
       </div>
 
+      <div className="mb-4">
+        <AISummaryCard taskKey={task.taskKey} />
+      </div>
+
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-text-placeholder">Description</h2>
-          {!editingDesc && (
-            <button
-              onClick={() => { setDescValue(task.description || ""); setEditingDesc(true); }}
-              className="text-xs font-medium text-text-placeholder hover:text-primary transition-colors"
-            >
-              {task.description ? "Edit" : "Add"}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {!editingDesc && (
+              <AIDescriptionGenerator
+                title={task.title}
+                taskType={task.type}
+                projectId={task.projectId}
+                onApply={(desc) => {
+                  setDescValue(desc);
+                  setEditingDesc(true);
+                }}
+              />
+            )}
+            {!editingDesc && (
+              <button
+                onClick={() => { setDescValue(task.description || ""); setEditingDesc(true); }}
+                className="text-xs font-medium text-text-placeholder hover:text-primary transition-colors"
+              >
+                {task.description ? "Edit" : "Add"}
+              </button>
+            )}
+          </div>
         </div>
         {editingDesc ? (
           <div className="flex flex-col gap-2">
