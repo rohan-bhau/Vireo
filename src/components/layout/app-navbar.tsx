@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,7 @@ import { SearchBar } from "@/components/nav/search-bar";
 import { NotificationBell } from "@/components/nav/notification-bell";
 import { UserAvatarMenu } from "@/components/nav/user-avatar-menu";
 import { KeyboardShortcutsModal } from "@/components/nav/keyboard-shortcuts-modal";
+import { useHotkey } from "@/hooks/use-hotkeys";
 
 interface AppNavbarProps {
   onMobileMenuToggle?: () => void;
@@ -28,23 +29,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
   const isInWorkspace = pathname.startsWith("/w/");
   const workspaceId = isInWorkspace ? pathname.split("/")[2] : null;
 
-  const handleShortcutsKey = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
-        const tag = (e.target as HTMLElement)?.tagName;
-        if (tag !== "INPUT" && tag !== "TEXTAREA") {
-          e.preventDefault();
-          setShortcutsOpen(true);
-        }
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleShortcutsKey);
-    return () => document.removeEventListener("keydown", handleShortcutsKey);
-  }, [handleShortcutsKey]);
+  useHotkey("?", () => setShortcutsOpen(true));
 
   return (
     <>
@@ -67,6 +52,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
             onClick={onMobileMenuToggle}
             className="flex md:hidden h-11 w-11 items-center justify-center rounded-[3px] text-text-secondary transition-colors hover:bg-bg-light"
             title="Open sidebar"
+            aria-label="Open sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -91,7 +77,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
           <div className="w-full max-w-md">
             <SearchBar />
           </div>
-          <button className="flex items-center gap-1.5 rounded-[3px] bg-[#0052CC] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0065FF] transition-colors shadow-sm whitespace-nowrap cursor-pointer">
+          <button className="flex items-center gap-1.5 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark transition-colors shadow-sm whitespace-nowrap cursor-pointer">
             <span className="text-base leading-none">+</span>
             <span>Create</span>
           </button>
@@ -103,6 +89,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
             onClick={onToggleChat}
             className="hidden md:flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
             title="AI Assistant"
+            aria-label="AI Assistant"
           >
             <Sparkles className="h-5 w-5" />
           </button>
@@ -113,6 +100,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
             onClick={() => setShortcutsOpen(true)}
             className="hidden md:flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
             title="Keyboard shortcuts"
+            aria-label="Keyboard shortcuts"
           >
             <HelpCircle className="h-5 w-5" />
           </button>
@@ -122,6 +110,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
               href={`/w/${workspaceId}/admin`}
               className="hidden md:flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
               title="Workspace admin"
+              aria-label="Workspace admin"
             >
               <Settings className="h-5 w-5" />
             </Link>
@@ -130,6 +119,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
               href="/admin"
               className="hidden md:flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
               title="Site administration"
+              aria-label="Site administration"
             >
               <Settings className="h-5 w-5" />
             </Link>
@@ -146,7 +136,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
         <div className="flex-1">
           <SearchBar />
         </div>
-        <button className="flex items-center gap-1 rounded-[3px] bg-[#0052CC] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0065FF] transition-colors shadow-sm cursor-pointer">
+        <button className="flex items-center gap-1 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark transition-colors shadow-sm cursor-pointer" aria-label="Create">
           <span className="text-base leading-none">+</span>
         </button>
       </div>

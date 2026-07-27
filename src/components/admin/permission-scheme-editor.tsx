@@ -135,8 +135,8 @@ export function PermissionSchemeEditor({
       )}
 
       {mappings.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-[#C3C6D7] p-8 text-center">
-          <p className="text-sm text-[#737686]">No role mappings yet. Add a role to configure permissions.</p>
+        <div className="rounded-lg border border-dashed border-border-light p-8 text-center">
+          <p className="text-sm text-text-tertiary">No role mappings yet. Add a role to configure permissions.</p>
         </div>
       ) : (
         mappings.map((mapping) => (

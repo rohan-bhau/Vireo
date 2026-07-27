@@ -256,7 +256,7 @@ export function SearchBar() {
           )}
 
           {!isLoading && suggestionGroups.length === 0 && value.length >= 2 && (
-            <div className="px-3 py-3 text-xs text-[#737686] text-center">No results found</div>
+            <div className="px-3 py-3 text-xs text-text-tertiary text-center">No results found</div>
           )}
 
           {value.length >= 2 && (

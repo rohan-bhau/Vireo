@@ -24,12 +24,12 @@ export function ControlChart({ data, isLoading }: ControlChartProps) {
 
   if (!data || data.issues.length === 0) {
     return (
-      <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-        <h3 className="text-sm font-semibold text-[#121C28] mb-4">Control Chart</h3>
+      <div className="rounded-xl bg-surface p-5 shadow-card">
+        <h3 className="text-sm font-semibold text-text mb-4">Control Chart</h3>
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <ScatterChart className="mb-3 h-10 w-10 text-[#C3C6D7]" />
-          <p className="text-sm text-[#737686]">No completed issues found</p>
-          <p className="text-xs text-[#C3C6D7] mt-1">Complete some issues in this project to see cycle time data</p>
+          <ScatterChart className="mb-3 h-10 w-10 text-text-tertiary" />
+          <p className="text-sm text-text-tertiary">No completed issues found</p>
+          <p className="text-xs text-text-tertiary mt-1">Complete some issues in this project to see cycle time data</p>
         </div>
       </div>
     );

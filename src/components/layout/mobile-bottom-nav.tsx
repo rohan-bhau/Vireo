@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { usePathname, useParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
@@ -39,7 +39,7 @@ const TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   reports: BarChart3,
 };
 
-function getTabIcon(tabId: string, label: string) {
+function getTabIcon(tabId: string, _label: string) {
   const Icon = TAB_ICONS[tabId];
   if (Icon) return Icon;
   return FileText;
@@ -149,7 +149,7 @@ export function MobileBottomNav() {
   if (isInWorkspace) {
     return (
       <>
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#C3C6D7]/20 md:hidden safe-area-bottom">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border-light md:hidden safe-area-bottom">
           <div className="flex items-center justify-around px-1">
             {maxVisible.map((tab) => {
               const Icon = getTabIcon(tab.id, tab.label);
@@ -161,8 +161,8 @@ export function MobileBottomNav() {
                   className={clsx(
                     "flex flex-col items-center justify-center gap-0.5 rounded-lg text-[10px] font-medium transition-colors min-w-0 flex-1 min-h-[52px] px-1",
                     isActive
-                      ? "text-[#004AC6]"
-                      : "text-[#737686] hover:text-[#121C28]"
+                      ? "text-primary"
+                      : "text-text-tertiary hover:text-text"
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -175,10 +175,13 @@ export function MobileBottomNav() {
             {hasMore && (
               <button
                 onClick={() => setShowMore(true)}
-                className="flex flex-col items-center justify-center gap-0.5 rounded-lg text-[10px] font-medium transition-colors min-w-0 flex-1 min-h-[52px] px-1 text-[#737686] hover:text-[#121C28]"
+                className={clsx(
+                  "flex flex-col items-center justify-center gap-0.5 rounded-lg text-[10px] font-medium transition-colors min-w-0 flex-1 min-h-[52px] px-1",
+                  "text-text-tertiary hover:text-text"
+                )}
               >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#EEF4FF]">
-                  <span className="text-xs font-bold text-[#004AC6]">+</span>
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-bg">
+                  <span className="text-xs font-bold text-primary">+</span>
                 </div>
                 <span className="truncate max-w-full leading-tight">More</span>
               </button>
@@ -202,13 +205,13 @@ export function MobileBottomNav() {
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-white pb-8 shadow-xl md:hidden"
+                className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-surface pb-8 shadow-modal md:hidden"
               >
                 <div className="flex items-center justify-center pt-3 pb-1">
-                  <div className="h-1 w-10 rounded-full bg-[#C3C6D7]" />
+                  <div className="h-1 w-10 rounded-full bg-border-light" />
                 </div>
                 <div className="px-4 pb-2">
-                  <h3 className="text-sm font-semibold text-[#121C28]">
+                  <h3 className="text-sm font-semibold text-text">
                     More tabs
                   </h3>
                 </div>
@@ -226,14 +229,14 @@ export function MobileBottomNav() {
                         className={clsx(
                           "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors min-h-[48px]",
                           isActive
-                            ? "bg-[#EEF4FF] text-[#004AC6]"
-                            : "text-[#434655] hover:bg-[#F8F9FF]"
+                            ? "bg-primary-bg text-primary"
+                            : "text-text-secondary hover:bg-bg-light"
                         )}
                       >
                         <Icon className="h-5 w-5 shrink-0" />
                         <span className="truncate">{tab.label}</span>
                         {isActive && (
-                          <span className="ml-auto text-[11px] font-medium text-[#2563EB]">
+                          <span className="ml-auto text-[11px] font-medium text-primary">
                             Active
                           </span>
                         )}
@@ -251,7 +254,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-[#C3C6D7]/20 bg-white md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-border-light bg-surface md:hidden">
         {dashboardNav.map((item) => {
           const isActive =
             item.href === "/dashboard"
@@ -265,8 +268,8 @@ export function MobileBottomNav() {
               className={clsx(
                 "flex flex-col items-center justify-center gap-0.5 px-3 text-[10px] font-medium transition-colors min-h-[44px] min-w-[64px]",
                 isActive
-                  ? "text-[#004AC6]"
-                  : "text-[#737686] hover:text-[#121C28]"
+                  ? "text-primary"
+                  : "text-text-tertiary hover:text-text"
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -277,9 +280,9 @@ export function MobileBottomNav() {
 
         <button
           onClick={() => setShowCreate(true)}
-          className="flex flex-col items-center justify-center gap-0.5 px-3 text-[10px] font-medium text-[#2563EB] transition-colors hover:text-[#1d4ed8] min-h-[44px] min-w-[64px]"
+          className="flex flex-col items-center justify-center gap-0.5 px-3 text-[10px] font-medium text-primary transition-colors hover:text-primary-dark min-h-[44px] min-w-[64px]"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2563EB] text-white shadow-lg">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white shadow-lg">
             <Plus className="h-5 w-5" />
           </div>
           <span className="leading-tight">Create</span>
@@ -289,7 +292,7 @@ export function MobileBottomNav() {
       <Dialog open={showCreate} onClose={() => setShowCreate(false)} title="Create workspace">
         <form onSubmit={handleCreate} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+            <div className="rounded-lg bg-danger-bg p-3 text-sm text-danger">{error}</div>
           )}
           <Input
             label="Workspace name"

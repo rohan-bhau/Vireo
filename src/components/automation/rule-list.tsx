@@ -83,12 +83,12 @@ export function RuleList({ projectId, onEdit }: RuleListProps) {
 
   if (!rules || rules.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#C3C6D7]/30 py-16 text-center">
-        <svg className="mb-3 h-12 w-12 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border-light py-16 text-center">
+        <svg className="mb-3 h-12 w-12 text-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
         </svg>
-        <h3 className="text-base font-semibold text-[#121C28]">No automation rules yet</h3>
-        <p className="mt-1 text-sm text-[#737686]">Create your first rule to automate project workflows.</p>
+        <h3 className="text-base font-semibold text-text">No automation rules yet</h3>
+        <p className="mt-1 text-sm text-text-tertiary">Create your first rule to automate project workflows.</p>
       </div>
     );
   }

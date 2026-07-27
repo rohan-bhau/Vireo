@@ -176,10 +176,10 @@ export function SearchResultsList({
             <Th sortable field="updatedAt" onClick={handleSort} width={colWidths.updatedAt} onResize={(e) => initResize("updatedAt", e)}><SortIcon field="updatedAt" />Updated</Th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#DFE1E6]/50">
+        <tbody className="divide-y divide-border-light">
           {tasks.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-4 py-12 text-center text-sm text-[#737686]">
+              <td colSpan={7} className="px-4 py-12 text-center text-sm text-text-tertiary">
                 <div className="flex flex-col items-center gap-2">
                   <svg className="h-8 w-8 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />

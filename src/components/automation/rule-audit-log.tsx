@@ -22,12 +22,12 @@ export function RuleAuditLog({ ruleId }: RuleAuditLogProps) {
 
   if (!entries || entries.length === 0) {
     return (
-      <div className="rounded-lg bg-[#F8F9FF] py-6 text-center">
-        <svg className="mx-auto mb-2 h-8 w-8 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <div className="rounded-lg bg-bg-light py-6 text-center">
+        <svg className="mx-auto mb-2 h-8 w-8 text-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <p className="text-sm text-[#737686]">No audit entries yet for this rule.</p>
-        <p className="text-xs text-[#C3C6D7] mt-1">Entries will appear after the rule is triggered.</p>
+        <p className="text-sm text-text-tertiary">No audit entries yet for this rule.</p>
+        <p className="text-xs text-text-tertiary mt-1">Entries will appear after the rule is triggered.</p>
       </div>
     );
   }

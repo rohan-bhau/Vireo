@@ -88,13 +88,13 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-2 border-b border-[#C3C6D7]/20 bg-white px-4 py-3 md:px-6 md:py-4 max-sm:flex-wrap">
+      <div className="flex items-center justify-between gap-2 border-b border-border-light bg-surface px-4 py-3 md:px-6 md:py-4 max-sm:flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF4FF] text-sm font-bold text-[#004AC6]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-bg text-sm font-bold text-primary">
             {workspace.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold text-[#121C28]">
+            <h1 className="truncate text-base font-semibold text-text">
               {workspace.name}
             </h1>
           </div>
@@ -103,7 +103,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
         <div className="flex items-center gap-2 shrink-0 max-sm:ml-auto">
           <button
             onClick={() => setShowInvite(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1d4ed8] min-h-[36px] sm:min-h-[32px]"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark min-h-[36px] sm:min-h-[32px]"
           >
             <UserPlus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Add member</span>
@@ -112,19 +112,19 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
           <div ref={menuRef} className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#121C28]"
+              className="flex h-9 w-9 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-lg border border-[#C3C6D7]/20 bg-white py-1 shadow-lg">
+              <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-lg border border-border-light bg-surface py-1 shadow-dropdown">
                 <button
                   onClick={() => {
                     dispatch(toggleStarredWorkspace(workspaceId));
                     setShowMenu(false);
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-[#434655] hover:bg-[#F8F9FF]"
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light"
                 >
                   <Star
                     className={clsx(
@@ -137,7 +137,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
                 <Link
                   href={`/w/${workspaceId}/settings`}
                   onClick={() => setShowMenu(false)}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-[#434655] hover:bg-[#F8F9FF]"
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light"
                 >
                   <Settings className="h-3.5 w-3.5" />
                   Settings
@@ -147,7 +147,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
                     setShowMenu(false);
                     setShowDelete(true);
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50"
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-danger hover:bg-danger-bg"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete workspace
@@ -165,7 +165,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
         className="max-w-sm"
       >
         <div className="space-y-4">
-          <p className="text-sm text-[#737686]">
+          <p className="text-sm text-text-tertiary">
             Are you sure you want to delete <strong>{workspace.name}</strong>?
             This will permanently remove all projects, tasks, and member
             associations.
@@ -196,12 +196,12 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
       >
         <form onSubmit={handleInvite} className="space-y-4">
           {inviteSuccess && (
-            <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
+            <div className="rounded-lg bg-success-bg p-3 text-sm text-success">
               {inviteSuccess}
             </div>
           )}
           {inviteError && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+            <div className="rounded-lg bg-danger-bg p-3 text-sm text-danger">
               {inviteError}
             </div>
           )}
@@ -214,13 +214,13 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
             required
           />
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[#434655]">Personal message (optional)</label>
+            <label className="text-xs font-semibold text-text-secondary">Personal message (optional)</label>
             <textarea
               placeholder="Hey, I'd love for you to join our workspace!"
               value={inviteMessage}
               onChange={(e) => setInviteMessage(e.target.value)}
               rows={3}
-              className="w-full resize-none rounded-lg border border-[#C3C6D7] px-3 py-2.5 text-sm text-[#121C28] placeholder:text-[#9CA3AF] focus:border-[#2563EB] focus:outline-none"
+              className="w-full resize-none rounded-lg border border-border-default bg-bg-input px-3 py-2.5 text-sm text-text placeholder:text-text-placeholder focus:border-primary focus:outline-none"
             />
           </div>
           <div className="flex justify-end gap-3 pt-2">

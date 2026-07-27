@@ -28,12 +28,12 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <svg className="mx-auto h-12 w-12 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg className="mx-auto h-12 w-12 text-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <path d="M12 8v8M8 12h8" />
           </svg>
-          <p className="mt-4 text-sm font-medium text-[#737686]">No projects yet</p>
-          <p className="mt-1 text-xs text-[#C3C6D7]">Create a project to start using the board</p>
+          <p className="mt-4 text-sm font-medium text-text-tertiary">No projects yet</p>
+          <p className="mt-1 text-xs text-text-tertiary">Create a project to start using the board</p>
         </div>
       </div>
     );

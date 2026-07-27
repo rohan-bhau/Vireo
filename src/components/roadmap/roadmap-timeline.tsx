@@ -174,15 +174,15 @@ export function RoadmapTimeline({
       {displayedItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 rounded-xl border border-[#C3C6D7]/20 bg-white">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EEF4FF] mb-3">
-            <svg className="h-6 w-6 text-[#2563EB]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h3 className="text-sm font-semibold text-[#121C28]">No timeline items yet</h3>
-          <p className="mt-1 text-sm text-[#737686]">Create an epic to start planning your roadmap.</p>
+          <h3 className="text-sm font-semibold text-text">No timeline items yet</h3>
+          <p className="mt-1 text-sm text-text-tertiary">Create an epic to start planning your roadmap.</p>
         </div>
       ) : (
-        <div ref={scrollRef} className="overflow-x-auto rounded-xl border border-[#C3C6D7]/20 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+        <div ref={scrollRef} className="overflow-x-auto rounded-xl border border-border-light bg-surface shadow-card">
           <div style={{ minWidth: TIMELINE_WIDTH + LABEL_WIDTH }}>
             <div className="flex border-b border-[#C3C6D7]/20">
               <div className="w-[200px] shrink-0 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#737686]">

@@ -146,11 +146,11 @@ export function ProjectSettingsWorkflows() {
       {activeTab === "workflows" && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="lg:col-span-2 space-y-3">
-            <h3 className="text-sm font-semibold text-[#121C28]">All Workflows</h3>
+            <h3 className="text-sm font-semibold text-text">All Workflows</h3>
             {workflows.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#C3C6D7]/30 py-8 text-center">
-                <h3 className="text-sm font-semibold text-[#121C28]">No workflows yet</h3>
-                <p className="mt-1 text-xs text-[#737686]">Create a workflow or seed the default one</p>
+              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border-light py-8 text-center">
+                <h3 className="text-sm font-semibold text-text">No workflows yet</h3>
+                <p className="mt-1 text-xs text-text-tertiary">Create a workflow or seed the default one</p>
               </div>
             ) : (
               <WorkflowList

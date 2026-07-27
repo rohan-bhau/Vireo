@@ -245,7 +245,7 @@ export function ChatView({ conversation, currentUserId, onBack, onStartCall }: C
         )}
         {allMessages.length === 0 && !isFetching && (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-[#A0A3B1]">No messages yet. Start the conversation!</p>
+            <p className="text-sm text-text-tertiary">No messages yet. Start the conversation!</p>
           </div>
         )}
         {allMessages.map((msg, i) => {

@@ -160,7 +160,7 @@ export function EpicPanel({ projectId, workspaceId, allTasks, selectedEpicKey, o
           })}
 
           {epics.length === 0 && !showCreate && (
-            <p className="text-xs text-[#8993A4] text-center py-8">No epics yet</p>
+            <p className="text-xs text-text-tertiary text-center py-8">No epics yet</p>
           )}
         </div>
       </div>

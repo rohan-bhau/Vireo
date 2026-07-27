@@ -247,3 +247,55 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ---- Offline Indicator ---- */
+
+@keyframes offline-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.offline-indicator {
+  animation: offline-pulse 2s ease-in-out infinite;
+}
+
+/* ---- Safe Area Bottom (iOS notch) ---- */
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ---- Focus Visible ---- */
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary-default);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Scrollbar ---- */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border);
+}
+
+/* ---- Selection ---- */
+
+::selection {
+  background: var(--color-primary-bg);
+  color: var(--color-primary-dark);
+}

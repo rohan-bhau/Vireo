@@ -339,12 +339,12 @@ function QuickFiltersTab({ board }: { board: Board }) {
           </div>
         ))}
         {filters.length === 0 && (
-          <p className="text-xs text-[#737686] py-2">No custom quick filters yet. Add one below.</p>
+          <p className="text-xs text-text-tertiary py-2">No custom quick filters yet. Add one below.</p>
         )}
       </div>
 
       {editingIdx !== null && (
-        <div className="border border-[#DFE1E6] rounded-[3px] p-3 mb-4 space-y-2">
+        <div className="border border-border-light rounded-[3px] p-3 mb-4 space-y-2">
           <input
             placeholder="Filter name"
             value={editName}

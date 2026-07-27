@@ -220,12 +220,12 @@ export function ListTab({ workspaceId }: ListTabProps) {
               <tr>
                 <td colSpan={6} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center gap-2">
-                    <svg className="h-8 w-8 text-[#C3C6D7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <svg className="h-8 w-8 text-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <rect x="3" y="3" width="18" height="18" rx="2" />
                       <path d="M9 14l2 2 4-4" />
                     </svg>
-                    <p className="text-sm text-[#737686]">No tasks found</p>
-                    <p className="text-xs text-[#C3C6D7]">
+                    <p className="text-sm text-text-tertiary">No tasks found</p>
+                    <p className="text-xs text-text-tertiary">
                       {searchText || statusFilter !== "all"
                         ? "Try adjusting your filters"
                         : "Create your first task to get started"}

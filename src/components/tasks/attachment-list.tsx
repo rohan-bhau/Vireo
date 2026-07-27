@@ -129,7 +129,7 @@ export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-[#C3C6D7]">No attachments yet.</p>
+        <p className="text-sm text-text-tertiary">No attachments yet.</p>
       )}
     </div>
   );

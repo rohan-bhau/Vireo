@@ -20,19 +20,19 @@ export function DashboardShell({
   return (
     <AppLayout sidebarProps={{ workspaceId, workspaceName }}>
       {breadcrumb && breadcrumb.length > 0 && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-white px-5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+        <div className="mb-6 flex items-center gap-2 rounded-lg bg-surface px-5 py-3 shadow-card">
           {breadcrumb.map((item, i) => (
             <div key={i} className="flex items-center gap-2">
-              {i > 0 && <span className="text-[#C3C6D7]">/</span>}
+              {i > 0 && <span className="text-text-tertiary">/</span>}
               {item.href ? (
                 <Link
                   href={item.href}
-                  className="text-sm font-medium text-[#737686] hover:text-[#121C28] transition-colors"
+                  className="text-sm font-medium text-text-tertiary hover:text-text transition-colors"
                 >
                   {item.label}
                 </Link>
               ) : (
-                <h1 className="text-sm font-semibold text-[#121C28]">
+                <h1 className="text-sm font-semibold text-text">
                   {item.label}
                 </h1>
               )}

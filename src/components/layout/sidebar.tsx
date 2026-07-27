@@ -107,12 +107,12 @@ function WorkspaceMenuItem({
         className={clsx(
           "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
           isActive
-            ? "bg-[#EEF4FF] text-[#004AC6]"
-            : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
+            ? "bg-surface-active text-primary"
+            : "text-text-secondary hover:bg-bg-light hover:text-text"
         )}
         title={collapsed ? name : undefined}
       >
-        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] bg-[#EEF4FF] text-[10px] font-bold text-[#004AC6]">
+        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] bg-primary-bg text-[10px] font-bold text-primary">
           {name.charAt(0).toUpperCase()}
         </div>
         {!collapsed && <span className="truncate flex-1">{name}</span>}
@@ -123,7 +123,8 @@ function WorkspaceMenuItem({
               e.stopPropagation();
               setShowMenu(!showMenu);
             }}
-            className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-[#737686] hover:text-[#121C28] transition-opacity cursor-pointer"
+            className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-text-tertiary hover:text-text transition-opacity cursor-pointer"
+            aria-label="Workspace menu"
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </button>
@@ -132,14 +133,14 @@ function WorkspaceMenuItem({
       {showMenu && !collapsed && (
         <div
           ref={menuRef}
-          className="absolute right-0 top-full z-50 mt-1 w-44 rounded-lg border border-[#C3C6D7]/20 bg-white py-1 shadow-lg"
+          className="absolute right-0 top-full z-50 mt-1 w-44 rounded-lg border border-border-light bg-surface py-1 shadow-dropdown"
         >
           <button
             onClick={() => {
               onStarToggle();
               setShowMenu(false);
             }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-[#434655] hover:bg-[#F8F9FF]"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light"
           >
             <Star
               className={clsx(
@@ -173,7 +174,7 @@ function CollapsibleSection({
   if (collapsed) {
     return (
       <div title={label}>
-        <div className="flex items-center justify-center rounded-lg px-3 py-2 text-[#737686]">
+        <div className="flex items-center justify-center rounded-lg px-3 py-2 text-text-tertiary">
           <Icon className="h-4 w-4" />
         </div>
       </div>
@@ -184,7 +185,7 @@ function CollapsibleSection({
     <div>
       <button
         onClick={onToggle}
-        className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737686] hover:text-[#121C28] transition-colors cursor-pointer"
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-text-tertiary hover:text-text transition-colors cursor-pointer"
       >
         {expanded ? (
           <ChevronDown className="h-3 w-3" />
@@ -208,7 +209,7 @@ function SavedFiltersSection({ workspaceId, onNavigate }: { workspaceId?: string
   ];
 
   if (allFilters.length === 0) {
-    return <p className="px-3 py-1.5 text-xs text-[#737686]">No saved filters</p>;
+    return <p className="px-3 py-1.5 text-xs text-text-tertiary">No saved filters</p>;
   }
 
   return (
@@ -218,9 +219,9 @@ function SavedFiltersSection({ workspaceId, onNavigate }: { workspaceId?: string
           key={f.id}
           href={`/search?q=${encodeURIComponent(f.query)}`}
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[38px]"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-light hover:text-text transition-colors min-h-[38px]"
         >
-          <Filter className="h-4 w-4 shrink-0 text-[#737686]" />
+          <Filter className="h-4 w-4 shrink-0 text-text-tertiary" />
           <span className="truncate">{f.name}</span>
         </Link>
       ))}
@@ -333,8 +334,8 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
         className={clsx(
           "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
           active
-            ? "bg-[#EEF4FF] text-[#004AC6]"
-            : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
+            ? "bg-surface-active text-primary"
+            : "text-text-secondary hover:bg-bg-light hover:text-text"
         )}
         title={collapsed ? label : undefined}
       >
@@ -349,7 +350,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
       <motion.aside
         animate={embedded ? undefined : { width: collapsed ? 64 : 256 }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
-        className={embedded ? "flex flex-col bg-white" : "flex h-full flex-col border-r border-[#C3C6D7]/20 bg-white shrink-0 overflow-hidden"}
+        className={embedded ? "flex flex-col bg-surface" : "flex h-full flex-col border-r border-border-light bg-surface shrink-0 overflow-hidden"}
       >
         <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-2 py-3">
           {/* For You */}
@@ -380,12 +381,12 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                     setForYouMessage("Coming soon!");
                     setTimeout(() => setForYouMessage(null), 2000);
                   }}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-[#737686] hover:bg-[#F8F9FF] cursor-pointer"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs text-text-tertiary hover:bg-bg-light cursor-pointer"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
                   Activity feed
                   {forYouMessage && (
-                    <span className="ml-auto text-[10px] text-[#2563EB] font-medium animate-pulse">
+                    <span className="ml-auto text-[10px] text-primary font-medium animate-pulse">
                       {forYouMessage}
                     </span>
                   )}
@@ -410,7 +411,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                 </>
               )}
               {starredList.length === 0 && !workspacesLoading && (
-                <p className="px-3 py-1.5 text-xs text-[#737686]">
+                <p className="px-3 py-1.5 text-xs text-text-tertiary">
                   Star items for quick access
                 </p>
               )}
@@ -445,7 +446,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                 </>
               )}
               {recentList.length === 0 && !workspacesLoading && (
-                <p className="px-3 py-1.5 text-xs text-[#737686]">
+                <p className="px-3 py-1.5 text-xs text-text-tertiary">
                   No recent workspaces
                 </p>
               )}
@@ -488,7 +489,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                 </>
               )}
               {projects.length === 0 && !projectsLoading && (
-                <p className="px-3 py-1.5 text-xs text-[#737686]">
+                <p className="px-3 py-1.5 text-xs text-text-tertiary">
                   No projects yet
                 </p>
               )}
@@ -498,27 +499,27 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                     onClick={() => toggleProjectExpanded(project.id)}
                     className={clsx(
                       "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[38px]",
-                      "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
+                      "text-text-secondary hover:bg-bg-light hover:text-text"
                     )}
                   >
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] bg-gradient-to-br from-[#2563EB] to-[#7C3AED] text-[9px] font-bold text-white">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] bg-gradient-to-br from-primary to-purple text-[9px] font-bold text-white">
                       {project.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="truncate flex-1 text-left">{project.name}</span>
                     {expandedProjects[project.id] ? (
-                      <ChevronDown className="h-3 w-3 shrink-0 text-[#737686]" />
+                      <ChevronDown className="h-3 w-3 shrink-0 text-text-tertiary" />
                     ) : (
-                      <ChevronRight className="h-3 w-3 shrink-0 text-[#737686]" />
+                      <ChevronRight className="h-3 w-3 shrink-0 text-text-tertiary" />
                     )}
                   </button>
                   {expandedProjects[project.id] && (
-                    <div className="ml-2 space-y-0.5 border-l border-[#C3C6D7]/30 pl-2">
+                    <div className="ml-2 space-y-0.5 border-l border-border-light/30 pl-2">
                       {projectNavItems.map((item) => (
                         <Link
                           key={item.key}
                           href={`/w/${workspaceId}/${item.key}`}
                           onClick={onNavigate}
-                          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-[#737686] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[32px]"
+                          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-text-tertiary hover:bg-bg-light hover:text-text transition-colors min-h-[32px]"
                         >
                           <item.icon className="h-3.5 w-3.5 shrink-0" />
                           {item.label}
@@ -545,9 +546,9 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                   key={db.label}
                   href={db.href}
                   onClick={onNavigate}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[38px]"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-light hover:text-text transition-colors min-h-[38px]"
                 >
-                  <LayoutDashboard className="h-4 w-4 shrink-0 text-[#737686]" />
+                  <LayoutDashboard className="h-4 w-4 shrink-0 text-text-tertiary" />
                   <span className="truncate">{db.label}</span>
                 </Link>
               ))}
@@ -592,11 +593,11 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
           )}
         </nav>
 
-        <div className="border-t border-[#C3C6D7]/20 px-2 py-2 space-y-1">
+        <div className="border-t border-border-light px-2 py-2 space-y-1">
           {!collapsed && (
             <button
               onClick={() => setShowCustomize(true)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#737686] hover:bg-[#F8F9FF] hover:text-[#121C28] transition-colors min-h-[44px] cursor-pointer"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-tertiary hover:bg-bg-light hover:text-text transition-colors min-h-[44px] cursor-pointer"
             >
               <Settings2 className="h-4 w-4 shrink-0" />
               <span>Customize</span>
@@ -606,7 +607,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
           <button
             onClick={() => setShowCreate(true)}
             className={clsx(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-[#2563EB] hover:bg-[#EEF4FF] min-h-[44px] cursor-pointer",
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-primary hover:bg-primary-bg min-h-[44px] cursor-pointer",
               collapsed && "justify-center"
             )}
             title={collapsed ? "Create workspace" : undefined}
@@ -624,7 +625,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
       >
         <form onSubmit={handleCreate} className="space-y-4">
           {createError && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+            <div className="rounded-lg bg-danger-bg p-3 text-sm text-danger">
               {createError}
             </div>
           )}

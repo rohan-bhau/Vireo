@@ -68,9 +68,9 @@ export function ConversationList({
   if (sorted.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <MessageSquare className="h-8 w-8 text-[#C3C6D7] mb-2" />
-        <p className="text-sm text-[#737686]">No conversations yet</p>
-        <p className="text-xs text-[#A0A3B1] mt-1">Start a chat with a team member</p>
+        <MessageSquare className="h-8 w-8 text-text-tertiary mb-2" />
+        <p className="text-sm text-text-tertiary">No conversations yet</p>
+        <p className="text-xs text-text-tertiary mt-1">Start a chat with a team member</p>
       </div>
     );
   }

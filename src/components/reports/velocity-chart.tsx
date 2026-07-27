@@ -23,12 +23,12 @@ export function VelocityChart({ data, isLoading }: VelocityChartProps) {
 
   if (!data || data.sprints.length === 0) {
     return (
-      <div className="rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-        <h3 className="text-sm font-semibold text-[#121C28] mb-4">Velocity Chart</h3>
+      <div className="rounded-xl bg-surface p-5 shadow-card">
+        <h3 className="text-sm font-semibold text-text mb-4">Velocity Chart</h3>
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <BarChart3 className="mb-3 h-10 w-10 text-[#C3C6D7]" />
-          <p className="text-sm text-[#737686]">No sprint data yet</p>
-          <p className="text-xs text-[#C3C6D7] mt-1">Complete some sprints to see velocity</p>
+          <BarChart3 className="mb-3 h-10 w-10 text-text-tertiary" />
+          <p className="text-sm text-text-tertiary">No sprint data yet</p>
+          <p className="text-xs text-text-tertiary mt-1">Complete some sprints to see velocity</p>
         </div>
       </div>
     );

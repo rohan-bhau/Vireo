@@ -96,7 +96,7 @@ export function EpicSidebar({ projectId, workspaceId }: EpicSidebarProps) {
           <EpicItem key={epic._id} epic={epic} />
         ))}
         {epics.length === 0 && !showCreate && (
-          <p className="text-xs text-[#C3C6D7] text-center py-4">No epics yet</p>
+          <p className="text-xs text-text-tertiary text-center py-4">No epics yet</p>
         )}
       </div>
     </div>
