@@ -86,3 +86,15 @@ export function onTaskUpdated(callback: (data: any) => void): () => void {
   s.on("task-updated", callback);
   return () => { s.off("task-updated", callback); };
 }
+
+export function onNewNotification(callback: (data: any) => void): () => void {
+  const s = connectSocket();
+  s.on("new-notification", callback);
+  return () => { s.off("new-notification", callback); };
+}
+
+export function onNotificationCount(callback: (data: { count: number }) => void): () => void {
+  const s = connectSocket();
+  s.on("notification-count", callback);
+  return () => { s.off("notification-count", callback); };
+}

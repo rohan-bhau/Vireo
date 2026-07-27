@@ -13,6 +13,8 @@ import { SkeletonTaskDetail } from "@/components/ui/skeleton";
 import { IssueDetailMain } from "@/components/tasks/issue-detail-main";
 import { IssueDetailDetailsPanel } from "@/components/tasks/issue-detail-details-panel";
 import { LinkIssueDialog } from "@/components/tasks/link-issue-dialog";
+import { WatchToggle } from "@/components/notifications/watch-toggle";
+import { WatcherList } from "@/components/notifications/watcher-list";
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -84,6 +86,8 @@ export default function TaskDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <WatchToggle taskKey={taskKey} />
+
           <button
             onClick={handleCopyLink}
             className="flex items-center gap-1.5 rounded-[3px] border border-border-light px-2.5 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-light transition-colors"
@@ -149,6 +153,10 @@ export default function TaskDetailPage() {
       <div className="flex flex-col gap-6 lg:flex-row">
         <IssueDetailMain task={task} workspaceId={workspaceId || task.workspaceId} />
         <IssueDetailDetailsPanel task={task} workspaceId={workspaceId || task.workspaceId} />
+      </div>
+
+      <div className="mb-4">
+        <WatcherList taskKey={taskKey} />
       </div>
 
       <LinkIssueDialog

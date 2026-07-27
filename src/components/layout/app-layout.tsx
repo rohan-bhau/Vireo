@@ -5,6 +5,7 @@ import { Sidebar } from "./sidebar";
 import { AppNavbar } from "./app-navbar";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { NotificationListener } from "@/components/notifications/notification-listener";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -108,6 +109,7 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
 
   return (
     <AuthGuard>
+      <NotificationListener />
       <div className="flex min-h-screen flex-col bg-[#F8F9FF]">
         <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} />
         <div className="flex flex-1 min-h-0">

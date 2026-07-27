@@ -1,10 +1,23 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useGetUnreadCountQuery, useGetNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation } from "@/store/notificationApi";
-import { Bell } from "lucide-react";
+import { useGetUnreadCountQuery, useGetNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation, type Notification, type NotificationType } from "@/store/notificationApi";
+import { connectSocket } from "@/lib/socket";
+import { Bell, UserPlus, AtSign, ArrowRightLeft, MessageSquare, Plus, RefreshCw, Trash2, Play, CheckSquare } from "lucide-react";
 import { clsx } from "clsx";
+
+const typeIcons: Record<NotificationType, { icon: typeof Bell; color: string }> = {
+  assigned: { icon: UserPlus, color: "text-[#2563EB]" },
+  mentioned: { icon: AtSign, color: "text-[#7C3AED]" },
+  status_changed: { icon: ArrowRightLeft, color: "text-[#D97706]" },
+  commented: { icon: MessageSquare, color: "text-[#059669]" },
+  issue_created: { icon: Plus, color: "text-[#2563EB]" },
+  issue_updated: { icon: RefreshCw, color: "text-[#737686]" },
+  issue_deleted: { icon: Trash2, color: "text-[#EF4444]" },
+  sprint_started: { icon: Play, color: "text-[#059669]" },
+  sprint_completed: { icon: CheckSquare, color: "text-[#7C3AED]" },
+};
 
 function timeAgo(date: Date): string {
   const now = Date.now();
@@ -21,7 +34,7 @@ function timeAgo(date: Date): string {
 
 export function NotificationBell() {
   const { data: unreadCount = 0 } = useGetUnreadCountQuery();
-  const { data: notifData } = useGetNotificationsQuery();
+  const { data: notifData } = useGetNotificationsQuery({ limit: 10 });
   const [markRead] = useMarkNotificationReadMutation();
   const [markAllRead] = useMarkAllNotificationsReadMutation();
   const [open, setOpen] = useState(false);
@@ -82,33 +95,40 @@ export function NotificationBell() {
                 </p>
               </div>
             ) : (
-              notifications.slice(0, 20).map((notif) => (
-                <Link
-                  key={notif._id}
-                  href={`/task/${notif.taskId}`}
-                  onClick={() => {
-                    if (!notif.read) markRead(notif._id);
-                    setOpen(false);
-                  }}
-                  className={clsx(
-                    "flex items-start gap-3 border-b border-border-light px-4 py-3 transition-colors hover:bg-bg-light",
-                    !notif.read && "bg-[#F0F7FF]"
-                  )}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-text">
-                      <span className="font-semibold">{notif.actorName}</span>{" "}
-                      {notif.message}
-                    </p>
-                    <p className="mt-0.5 text-xs text-text-tertiary">
-                      {timeAgo(new Date(notif.createdAt))}
-                    </p>
-                  </div>
-                  {!notif.read && (
-                    <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#2563EB]" />
-                  )}
-                </Link>
-              ))
+              notifications.map((notif) => {
+                const config = typeIcons[notif.type] || typeIcons.assigned;
+                const Icon = config.icon;
+                return (
+                  <Link
+                    key={notif._id}
+                    href={`/task/${notif.taskId}`}
+                    onClick={() => {
+                      if (!notif.read) markRead(notif._id);
+                      setOpen(false);
+                    }}
+                    className={clsx(
+                      "flex items-start gap-3 border-b border-border-light px-4 py-3 transition-colors hover:bg-bg-light",
+                      !notif.read && "bg-[#F0F7FF]"
+                    )}
+                  >
+                    <div className={clsx("flex h-7 w-7 shrink-0 items-center justify-center rounded", config.color)}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-text">
+                        <span className="font-semibold">{notif.actorName}</span>{" "}
+                        {notif.message}
+                      </p>
+                      <p className="mt-0.5 text-xs text-text-tertiary">
+                        {timeAgo(new Date(notif.createdAt))}
+                      </p>
+                    </div>
+                    {!notif.read && (
+                      <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#2563EB]" />
+                    )}
+                  </Link>
+                );
+              })
             )}
           </div>
 

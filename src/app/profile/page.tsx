@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { AppDispatch, RootState } from "@/store";
 import { useUpdateProfileMutation, useLogoutMutation } from "@/store/authApi";
 import { setUser, logout } from "@/store/authSlice";
@@ -10,6 +11,7 @@ import { clearTokens } from "@/lib/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/layout/app-layout";
+import { Bell, User } from "lucide-react";
 
 export default function ProfilePage() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -56,6 +58,23 @@ export default function ProfilePage() {
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-[#121C28]">Profile</h1>
           <p className="mt-1 text-sm text-[#737686]">Manage your account settings</p>
+        </div>
+
+        <div className="mb-6 flex gap-2">
+          <Link
+            href="/profile"
+            className="flex items-center gap-2 rounded-[3px] bg-[#2563EB] px-4 py-2 text-xs font-medium text-white"
+          >
+            <User className="h-3.5 w-3.5" />
+            Profile
+          </Link>
+          <Link
+            href="/profile/notifications"
+            className="flex items-center gap-2 rounded-[3px] bg-bg-light px-4 py-2 text-xs font-medium text-text-secondary hover:bg-border-light transition-colors"
+          >
+            <Bell className="h-3.5 w-3.5" />
+            Notifications
+          </Link>
         </div>
 
         <div className="rounded-xl bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
