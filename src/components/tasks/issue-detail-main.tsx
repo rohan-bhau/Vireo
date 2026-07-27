@@ -74,6 +74,7 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
             </div>
           ) : (
             <h1
+              data-shortcut="edit-summary"
               className="text-lg font-bold text-text cursor-pointer hover:bg-bg-light rounded-[3px] -ml-2 px-2 py-1 transition-colors"
               onClick={() => { setSummaryValue(task.title); setEditingSummary(true); }}
             >

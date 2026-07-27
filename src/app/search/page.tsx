@@ -81,7 +81,16 @@ export default function SearchPage() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const isInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+
+      if (e.key === "s" && !isInput && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        const jqlInput = document.querySelector("[data-shortcut='jql-input']") as HTMLTextAreaElement;
+        jqlInput?.focus();
+        return;
+      }
+
+      if (isInput) return;
       const tasksList = data?.tasks || [];
       if (tasksList.length === 0) return;
 

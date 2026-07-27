@@ -162,7 +162,8 @@ export function JqlInput({ value, onChange, onSubmit, onClear, error, loading }:
           onSelect={handleCursorMove}
           onScroll={syncScroll}
           onClick={handleCursorMove}
-          className="relative w-full resize-none border-0 bg-transparent px-3 py-2 text-sm font-mono text-transparent caret-[#121C28] outline-none"
+          data-shortcut="jql-input"
+          className="relative w-full resize-none border-0 bg-transparent px-3 py-2 text-sm font-mono text-transparent caret-text outline-none"
           rows={1}
           style={{ minHeight: "36px" }}
           spellCheck={false}

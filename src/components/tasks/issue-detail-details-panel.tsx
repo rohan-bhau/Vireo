@@ -152,7 +152,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         </h3>
 
         <DetailRow label="Status" field="status">
-          <StatusEditor />
+          <div data-shortcut="status"><StatusEditor /></div>
         </DetailRow>
 
         <DetailRow label="Issue type" field="type">
@@ -163,13 +163,14 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         </DetailRow>
 
         <DetailRow label="Priority" field="priority">
-          <PriorityEditor />
+          <div data-shortcut="priority"><PriorityEditor /></div>
         </DetailRow>
 
         <DetailRow
           label="Assignee"
           field="assignee"
           onEdit={() => startEdit("assignee", task.assignee)}
+          data-shortcut="assignee"
         >
           {editingField === "assignee" ? (
             <AssigneePicker
@@ -190,6 +191,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           label="Labels"
           field="labels"
           onEdit={() => startEdit("labels", task.labels)}
+          data-shortcut="labels"
         >
           {editingField === "labels" ? (
             <LabelEditor

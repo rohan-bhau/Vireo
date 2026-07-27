@@ -129,9 +129,14 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
     }
   });
 
-  useHotkey("m", () => {
-    dispatch(toggleSidebar());
-  });
+  // N/P - next/previous issue navigation
+  useHotkey("n", () => {
+    document.dispatchEvent(new CustomEvent("vireo:next-issue"));
+  }, { ignoreInputs: false });
+
+  useHotkey("p", () => {
+    document.dispatchEvent(new CustomEvent("vireo:prev-issue"));
+  }, { ignoreInputs: false });
 
   // G+ sequence shortcuts
   useHotkeySequence(["g", "d"], () => router.push("/dashboard"));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
@@ -31,6 +31,43 @@ export default function TaskDetailPage() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!task) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      const tag = document.activeElement?.tagName;
+      const isInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+      if (e.ctrlKey || e.metaKey) return;
+
+      if (e.key === "e" && !isInput) {
+        e.preventDefault();
+        const titleEl = document.querySelector("[data-shortcut='edit-summary']");
+        (titleEl as HTMLElement)?.click();
+      } else if (e.key === "m" && !isInput) {
+        e.preventDefault();
+        const statusBtn = document.querySelector("[data-shortcut='status']");
+        (statusBtn as HTMLElement)?.click();
+      } else if (e.key === "a" && !isInput) {
+        e.preventDefault();
+        const assigneeRow = document.querySelector("[data-shortcut='assignee']");
+        (assigneeRow as HTMLElement)?.click();
+      } else if (e.key === "." && !isInput) {
+        e.preventDefault();
+        const priorityBtn = document.querySelector("[data-shortcut='priority']");
+        (priorityBtn as HTMLElement)?.click();
+      } else if (e.key === "I" && e.shiftKey && !isInput) {
+        e.preventDefault();
+        const labelsRow = document.querySelector("[data-shortcut='labels']");
+        (labelsRow as HTMLElement)?.click();
+      } else if (e.key === "F" && e.shiftKey && !isInput) {
+        e.preventDefault();
+        const commentInput = document.querySelector("[data-shortcut='comment-input']") as HTMLTextAreaElement;
+        commentInput?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [task]);
 
   if (isLoading) {
     return <SkeletonTaskDetail />;

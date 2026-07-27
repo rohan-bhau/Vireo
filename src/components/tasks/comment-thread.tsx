@@ -157,6 +157,7 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
           <div>
             <textarea
               ref={inputRef}
+              data-shortcut="comment-input"
               value={newComment}
               onChange={(e) => handleInputChange(e.target.value)}
               placeholder="Write a comment... Use @ to mention someone"

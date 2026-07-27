@@ -17,10 +17,12 @@ export default function RoadmapPage() {
   const router = useRouter();
   const projectId = params.projectId as string;
 
-  const { data: project } = useGetProjectQuery(projectId);
-  const { data: tasks = [] } = useGetProjectTasksQuery(projectId);
-  const { data: epics = [] } = useGetProjectEpicsQuery(projectId);
-  const { data: sprints = [] } = useGetProjectSprintsQuery(projectId);
+  const { data: project, isLoading: projectLoading } = useGetProjectQuery(projectId);
+  const { data: tasks = [], isLoading: tasksLoading } = useGetProjectTasksQuery(projectId);
+  const { data: epics = [], isLoading: epicsLoading } = useGetProjectEpicsQuery(projectId);
+  const { data: sprints = [], isLoading: sprintsLoading } = useGetProjectSprintsQuery(projectId);
+
+  const loading = projectLoading || tasksLoading || epicsLoading || sprintsLoading;
 
   const [zoom, setZoom] = useState<"quarter" | "month" | "week">("month");
   const [showEpics, setShowEpics] = useState(true);
@@ -122,6 +124,15 @@ export default function RoadmapPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="space-y-4 p-6">
+        <div className="h-8 w-48 animate-pulse rounded bg-bg-neutral" />
+        <div className="h-64 animate-pulse rounded-xl bg-bg-neutral" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col">
       <RoadmapTimeline
@@ -138,7 +149,7 @@ export default function RoadmapPage() {
 
       <Dialog open={showCreateEpic} onClose={() => setShowCreateEpic(false)}>
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-[#121C28] mb-4">Create Epic</h3>
+          <h3 className="text-lg font-semibold text-text mb-4">Create Epic</h3>
           <Input
             label="Epic name"
             placeholder="Enter epic name..."
