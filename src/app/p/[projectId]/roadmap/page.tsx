@@ -27,11 +27,10 @@ export default function RoadmapPage() {
   const [zoom, setZoom] = useState<"quarter" | "month" | "week">("month");
   const [showEpics, setShowEpics] = useState(true);
   const [selectedEpic, setSelectedEpic] = useState<string | null>(null);
+  const now = useMemo(() => new Date(), []);
   const [showCreateEpic, setShowCreateEpic] = useState(false);
   const [newEpicName, setNewEpicName] = useState("");
   const [createEpic, { isLoading: isCreating }] = useCreateEpicMutation();
-
-  const now = new Date();
 
   const roadmapItems = useMemo(() => {
     const items: {

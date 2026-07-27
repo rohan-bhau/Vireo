@@ -6,7 +6,7 @@ import { useGetWorkspacesQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
-import { Plus, Trash2, UserPlus, Users, X } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 
 export default function AdminGroupsPage() {
   const { data: groups = [], isLoading } = useGetAdminGroupsQuery();
@@ -33,7 +33,7 @@ export default function AdminGroupsPage() {
       setGroupName("");
       setGroupDesc("");
       setSelectedWs("");
-    } catch (err: any) { setCreateError(err?.data?.message || "Failed"); }
+    } catch (err: unknown) { setCreateError((err as { data?: { message?: string } })?.data?.message || "Failed"); }
   }
 
   async function handleDelete(id: string) {

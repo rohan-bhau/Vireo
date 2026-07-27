@@ -26,8 +26,6 @@ export default function AdminUsersPage() {
 
   const [updateRole, { isLoading: isUpdating }] = useUpdateUserRoleMutation();
 
-  const authApi = "authApi" as any;
-
   function handleSearch(value: string) {
     setSearch(value);
     const timer = setTimeout(() => {
@@ -51,7 +49,6 @@ export default function AdminUsersPage() {
     }
     setIsCreating(true);
     try {
-      const { useRegisterMutation } = await import("@/store/authApi");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -63,8 +60,8 @@ export default function AdminUsersPage() {
       setNewName("");
       setNewEmail("");
       setNewPassword("");
-    } catch (err: any) {
-      setCreateError(err.message || "Failed to create user");
+    } catch (err: unknown) {
+      setCreateError((err as Error).message || "Failed to create user");
     } finally {
       setIsCreating(false);
     }

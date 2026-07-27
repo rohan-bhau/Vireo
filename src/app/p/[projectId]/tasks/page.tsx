@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useGetProjectTasksQuery } from "@/store/taskApi";
 import { useGetProjectQuery } from "@/store/projectApi";
 import { useGetWorkspaceFiltersQuery, useCreateSavedFilterMutation, useDeleteSavedFilterMutation } from "@/store/savedFilterApi";
-import type { Task } from "@/store/taskApi";
 import { clsx } from "clsx";
 
 type SortField = "taskKey" | "title" | "status" | "priority" | "assignee" | "updatedAt";
@@ -72,14 +71,14 @@ export default function TasksPage() {
     }
   }
 
-  function SortIcon({ field }: { field: SortField }) {
+  function renderSortIcon(field: SortField) {
     if (sortField !== field) return <ArrowUpDownIcon className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-50" />;
     return sortDir === "asc" ? <ArrowUpIcon className="ml-1 h-3 w-3 text-[#2563EB]" /> : <ArrowDownIcon className="ml-1 h-3 w-3 text-[#2563EB]" />;
   }
 
   async function handleSaveFilter() {
     if (!filterName.trim() || !project) return;
-    const conditions: any[] = [];
+    const conditions: { field: string; operator: string; value: string }[] = [];
     if (statusFilter !== "all") conditions.push({ field: "status", operator: "equals", value: statusFilter });
     if (priorityFilter !== "all") conditions.push({ field: "priority", operator: "equals", value: priorityFilter });
     if (typeFilter !== "all") conditions.push({ field: "type", operator: "equals", value: typeFilter });
@@ -172,12 +171,12 @@ export default function TasksPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-[#C3C6D7]/20 text-xs font-semibold uppercase tracking-wider text-[#737686]">
-                <Th sortable field="taskKey" onClick={toggleSort}><SortIcon field="taskKey" />Key</Th>
-                <Th sortable field="title" onClick={toggleSort}><SortIcon field="title" />Title</Th>
-                <Th sortable field="status" onClick={toggleSort}><SortIcon field="status" />Status</Th>
-                <Th sortable field="priority" onClick={toggleSort}><SortIcon field="priority" />Priority</Th>
-                <Th sortable field="assignee" onClick={toggleSort}><SortIcon field="assignee" />Assignee</Th>
-                <Th sortable field="updatedAt" onClick={toggleSort}><SortIcon field="updatedAt" />Updated</Th>
+                <Th sortable field="taskKey" onClick={toggleSort}>{renderSortIcon("taskKey")}Key</Th>
+                <Th sortable field="title" onClick={toggleSort}>{renderSortIcon("title")}Title</Th>
+                <Th sortable field="status" onClick={toggleSort}>{renderSortIcon("status")}Status</Th>
+                <Th sortable field="priority" onClick={toggleSort}>{renderSortIcon("priority")}Priority</Th>
+                <Th sortable field="assignee" onClick={toggleSort}>{renderSortIcon("assignee")}Assignee</Th>
+                <Th sortable field="updatedAt" onClick={toggleSort}>{renderSortIcon("updatedAt")}Updated</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#C3C6D7]/10">

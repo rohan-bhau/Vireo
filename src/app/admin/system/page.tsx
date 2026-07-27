@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Globe, Palette, Mail, Save } from "lucide-react";
-import Link from "next/link";
 
 export default function AdminSystemPage() {
   const [siteName, setSiteName] = useState("Vireo");

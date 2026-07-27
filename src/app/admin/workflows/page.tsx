@@ -59,7 +59,7 @@ export default function AdminWorkflowsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {workflows.map((workflow: any) => (
+          {workflows.map((workflow) => (
             <div
               key={workflow._id}
               className="flex items-center justify-between rounded-xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"

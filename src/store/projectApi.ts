@@ -56,6 +56,8 @@ export interface Project {
   template: ProjectTemplate;
   avatar: string | null;
   isTeamManaged: boolean;
+  permissionSchemeId?: string;
+  issueSecuritySchemeId?: string;
   createdAt: string;
   updatedAt: string;
   boards: Board[];

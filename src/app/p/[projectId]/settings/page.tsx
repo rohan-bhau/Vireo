@@ -14,6 +14,10 @@ import { ProjectSettingsWorkflows } from "@/components/projects/project-settings
 import { ProjectSettingsVersions } from "@/components/projects/project-settings-versions";
 import { ProjectSettingsComponents } from "@/components/projects/project-settings-components";
 import { ProjectSettingsAutomation } from "@/components/projects/project-settings-automation";
+import { ProjectSettingsScreens } from "@/components/projects/project-settings-screens";
+import { ProjectSettingsFields } from "@/components/projects/project-settings-fields";
+import { ProjectSettingsRoles } from "@/components/projects/project-settings-roles";
+import { ProjectSettingsDevTools } from "@/components/projects/project-settings-dev-tools";
 
 type SettingsSection =
   | "details"
@@ -104,13 +108,13 @@ export default function ProjectSettingsPage() {
         {activeSection === "notifications" && <ProjectSettingsNotifications project={project} />}
         {activeSection === "issue-types" && <ProjectSettingsIssueTypes project={project} />}
         {activeSection === "workflows" && <ProjectSettingsWorkflows />}
-        {activeSection === "screens" && <PlaceholderSection title="Screens" description="Configure which fields appear on create, edit, and view screens" />}
-        {activeSection === "fields" && <PlaceholderSection title="Fields" description="Manage custom fields available in this project" />}
-        {activeSection === "roles" && <PlaceholderSection title="Roles" description="Define project roles and their permissions" />}
+        {activeSection === "screens" && <ProjectSettingsScreens project={project} />}
+        {activeSection === "fields" && <ProjectSettingsFields project={project} />}
+        {activeSection === "roles" && <ProjectSettingsRoles project={project} />}
         {activeSection === "versions" && <ProjectSettingsVersions project={project} />}
         {activeSection === "components" && <ProjectSettingsComponents project={project} />}
         {activeSection === "automation" && <ProjectSettingsAutomation project={project} />}
-        {activeSection === "dev-tools" && <PlaceholderSection title="Development tools" description="Connect your project to version control and CI/CD tools" />}
+        {activeSection === "dev-tools" && <ProjectSettingsDevTools project={project} />}
       </div>
     </div>
   );

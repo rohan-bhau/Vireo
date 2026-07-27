@@ -32,8 +32,8 @@ export default function DashboardPage() {
       setName("");
       setDescription("");
       window.location.href = `/w/${ws.id}`;
-    } catch (err: any) {
-      setError(err?.data?.message || "Failed to create workspace");
+    } catch (err: unknown) {
+      setError((err as { data?: { message?: string } })?.data?.message || "Failed to create workspace");
     }
   }
 

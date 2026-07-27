@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/store";
 import { useGetWorkspacesQuery } from "@/store/workspaceApi";
 import {
   useGetIssueSecuritySchemesQuery,
@@ -12,8 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Plus, Lock, Trash2, CheckCircle } from "lucide-react";
-import Link from "next/link";
+import { Plus, Lock, Trash2 } from "lucide-react";
 
 export default function AdminIssueSecurityPage() {
   const { data: workspaces = [] } = useGetWorkspacesQuery();
@@ -44,7 +41,7 @@ export default function AdminIssueSecurityPage() {
       setShowCreate(false);
       setSchemeName("");
       setSchemeDesc("");
-    } catch (err: any) { setCreateError(err?.data?.message || "Failed"); }
+    } catch (err: unknown) { setCreateError((err as { data?: { message?: string } })?.data?.message || "Failed"); }
   }
 
   async function handleDelete(id: string) {

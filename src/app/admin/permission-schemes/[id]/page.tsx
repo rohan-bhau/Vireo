@@ -5,17 +5,16 @@ import { useParams, useRouter } from "next/navigation";
 import {
   useGetPermissionSchemeQuery,
   useUpdatePermissionSchemeMutation,
+  type PermissionMapping,
 } from "@/store/permissionApi";
-import { useGetProjectRolesQuery } from "@/store/permissionApi";
 import { PermissionSchemeEditor } from "@/components/admin/permission-scheme-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 import Link from "next/link";
 
 export default function PermissionSchemeDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
 
   const { data: scheme, isLoading } = useGetPermissionSchemeQuery(id);
@@ -23,7 +22,7 @@ export default function PermissionSchemeDetailPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [mappings, setMappings] = useState<any[]>([]);
+  const [mappings, setMappings] = useState<PermissionMapping[]>([]);
   const [initialized, setInitialized] = useState(false);
 
   if (scheme && !initialized) {

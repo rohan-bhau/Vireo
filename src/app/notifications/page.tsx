@@ -21,17 +21,15 @@ export default function NotificationsPage() {
   const workspaceId = useSelector((state: RootState) => state.workspace.activeWorkspaceId);
   const { data: projects } = useGetWorkspaceProjectsQuery(workspaceId || "", { skip: !workspaceId });
 
+  const [offset, setOffset] = useState(0);
   const [filters, setFilters] = useState({
     filterTab: "all" as FilterTab,
     typeFilter: "" as NotificationType | "",
     projectFilter: "",
   });
 
-  const [offset, setOffset] = useState(0);
-  const [allNotifications, setAllNotifications] = useState<any[]>([]);
-
   const queryParams = useMemo(() => {
-    const params: any = { limit: PAGE_SIZE, offset: 0 };
+    const params: Record<string, string | number | boolean> = { limit: PAGE_SIZE, offset: 0 };
     if (filters.filterTab === "unread") params.read = false;
     if (filters.filterTab === "read") params.read = true;
     if (filters.typeFilter) params.type = filters.typeFilter;

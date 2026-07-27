@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,7 @@ import { SearchBar } from "@/components/nav/search-bar";
 import { NotificationBell } from "@/components/nav/notification-bell";
 import { UserAvatarMenu } from "@/components/nav/user-avatar-menu";
 import { KeyboardShortcutsModal } from "@/components/nav/keyboard-shortcuts-modal";
+import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 import { useHotkey } from "@/hooks/use-hotkeys";
 
 interface AppNavbarProps {
@@ -25,11 +26,21 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
   const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const isInWorkspace = pathname.startsWith("/w/");
-  const workspaceId = isInWorkspace ? pathname.split("/")[2] : null;
+  const pathWorkspaceId = isInWorkspace ? pathname.split("/")[2] : null;
+  const activeWorkspaceId = useSelector((state: RootState) => state.workspace.activeWorkspaceId);
+  const workspaceId = pathWorkspaceId || activeWorkspaceId;
 
   useHotkey("?", () => setShortcutsOpen(true));
+  useHotkey("c", () => setCreateDialogOpen(true));
+
+  useEffect(() => {
+    function handle(event: CustomEvent) { setCreateDialogOpen(true); }
+    window.addEventListener("vireo:create-issue", handle as EventListener);
+    return () => window.removeEventListener("vireo:create-issue", handle as EventListener);
+  }, []);
 
   return (
     <>
@@ -77,7 +88,10 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
           <div className="w-full max-w-md">
             <SearchBar />
           </div>
-          <button className="flex items-center gap-1.5 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark transition-colors shadow-sm whitespace-nowrap cursor-pointer">
+          <button
+            onClick={() => setCreateDialogOpen(true)}
+            className="flex items-center gap-1.5 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark transition-colors shadow-sm whitespace-nowrap cursor-pointer"
+          >
             <span className="text-base leading-none">+</span>
             <span>Create</span>
           </button>
@@ -105,7 +119,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
             <HelpCircle className="h-5 w-5" />
           </button>
 
-          {workspaceId ? (
+          {pathWorkspaceId ? (
             <Link
               href={`/w/${workspaceId}/admin`}
               className="hidden md:flex h-8 w-8 items-center justify-center rounded-[3px] text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
@@ -136,7 +150,11 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
         <div className="flex-1">
           <SearchBar />
         </div>
-        <button className="flex items-center gap-1 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark transition-colors shadow-sm cursor-pointer" aria-label="Create">
+        <button
+          onClick={() => setCreateDialogOpen(true)}
+          className="flex items-center gap-1 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark transition-colors shadow-sm cursor-pointer"
+          aria-label="Create"
+        >
           <span className="text-base leading-none">+</span>
         </button>
       </div>
@@ -145,6 +163,14 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
         open={shortcutsOpen}
         onClose={() => setShortcutsOpen(false)}
       />
+
+      {workspaceId && (
+        <CreateTaskDialog
+          open={createDialogOpen}
+          onClose={() => setCreateDialogOpen(false)}
+          workspaceId={workspaceId}
+        />
+      )}
     </>
   );
 }
