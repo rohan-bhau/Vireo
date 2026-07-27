@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
   useGetIntegrationsQuery,
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
+import { WebhookConfig } from "@/components/integrations/webhook-config";
 import {
   ExternalLink,
   MessageSquare,
@@ -24,7 +25,15 @@ import {
   XCircle,
   Plug,
   TestTube,
+  Webhook,
+  Puzzle,
+  Globe,
+  Frame,
+  GitBranch as GitlabIcon,
+  Cloud,
 } from "lucide-react";
+
+type FilterType = "all" | "slack" | "github" | "webhook";
 
 interface IntegrationConfigProps {
   type: "slack" | "github";
@@ -36,6 +45,63 @@ interface IntegrationConfigProps {
   testing: boolean;
   saving: boolean;
 }
+
+const INTEGRATION_CATALOG = [
+  {
+    id: "slack",
+    name: "Slack",
+    description: "Send notifications to your Slack workspace when tasks are created, updated, or completed.",
+    icon: MessageSquare,
+    color: "#4A154B",
+    bgClass: "bg-[#4A154B]/10",
+    status: "connected" as const,
+  },
+  {
+    id: "github",
+    name: "GitHub",
+    description: "Link repositories to track commits, pull requests, and deployments alongside your tasks.",
+    icon: GitBranch,
+    color: "#24292F",
+    bgClass: "bg-[#24292F]/10",
+    status: "connected" as const,
+  },
+  {
+    id: "webhook",
+    name: "Webhooks",
+    description: "Send custom HTTP callbacks when issue events occur in your workspace.",
+    icon: Webhook,
+    color: "#2563EB",
+    bgClass: "bg-[#2563EB]/10",
+    status: "available" as const,
+  },
+  {
+    id: "gitlab",
+    name: "GitLab",
+    description: "Connect GitLab repositories to track merge requests and pipelines.",
+    icon: GitlabIcon,
+    color: "#E24329",
+    bgClass: "bg-[#E24329]/10",
+    status: "coming-soon" as const,
+  },
+  {
+    id: "figma",
+    name: "Figma",
+    description: "Embed Figma designs and prototypes directly on your issues.",
+    icon: Frame,
+    color: "#1ABCFE",
+    bgClass: "bg-[#1ABCFE]/10",
+    status: "coming-soon" as const,
+  },
+  {
+    id: "jira",
+    name: "Jira",
+    description: "Sync issues and projects with your Jira instance.",
+    icon: Cloud,
+    color: "#0052CC",
+    bgClass: "bg-[#0052CC]/10",
+    status: "coming-soon" as const,
+  },
+];
 
 function SlackConfig({ integration, onSave, onDelete, onToggle, onTest, testing, saving }: IntegrationConfigProps) {
   const [webhookUrl, setWebhookUrl] = useState(
@@ -235,6 +301,13 @@ function GitHubConfig({ integration, onSave, onDelete, onToggle, onTest, testing
   );
 }
 
+const FILTERS: { key: FilterType; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "slack", label: "Slack" },
+  { key: "github", label: "GitHub" },
+  { key: "webhook", label: "Webhook" },
+];
+
 export default function IntegrationsPage() {
   const params = useParams();
   const workspaceId = params.workspaceId as string;
@@ -243,13 +316,20 @@ export default function IntegrationsPage() {
   const [deleteIntegration] = useDeleteIntegrationMutation();
   const [toggleIntegration] = useToggleIntegrationMutation();
   const [testIntegration, { isLoading: isTesting }] = useTestIntegrationMutation();
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [showCatalog, setShowCatalog] = useState(false);
 
   const slackIntegration = integrations.find((i) => i.type === "slack");
   const githubIntegration = integrations.find((i) => i.type === "github");
 
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  async function handleSave(type: "slack" | "github", config: Record<string, unknown>, name: string) {
+  const filteredCatalog = useMemo(() => {
+    if (activeFilter === "all") return INTEGRATION_CATALOG;
+    return INTEGRATION_CATALOG.filter((item) => item.id === activeFilter);
+  }, [activeFilter]);
+
+  async function handleSave(type: "slack" | "github" | "webhook", config: Record<string, unknown>, name: string) {
     setSaveError(null);
     try {
       await saveIntegration({
@@ -265,22 +345,43 @@ export default function IntegrationsPage() {
     }
   }
 
-  async function handleDelete(type: "slack" | "github") {
-    try {
-      await deleteIntegration({ workspaceId, type }).unwrap();
-    } catch {}
+  async function handleDelete(idOrType: string) {
+    const types = ["slack", "github"] as const;
+    if (types.includes(idOrType as "slack" | "github")) {
+      try {
+        await deleteIntegration({ workspaceId, type: idOrType as "slack" | "github" }).unwrap();
+      } catch {}
+    } else {
+      try {
+        await deleteIntegration({ workspaceId, type: idOrType }).unwrap();
+      } catch {}
+    }
   }
 
-  async function handleToggle(type: "slack" | "github", enabled: boolean) {
-    try {
-      await toggleIntegration({ workspaceId, type, enabled }).unwrap();
-    } catch {}
+  async function handleToggle(idOrType: string, enabled: boolean) {
+    const types = ["slack", "github"] as const;
+    if (types.includes(idOrType as "slack" | "github")) {
+      try {
+        await toggleIntegration({ workspaceId, type: idOrType as "slack" | "github", enabled }).unwrap();
+      } catch {}
+    } else {
+      try {
+        await toggleIntegration({ workspaceId, type: idOrType, enabled }).unwrap();
+      } catch {}
+    }
   }
 
-  async function handleTest(type: "slack" | "github") {
-    try {
-      await testIntegration({ workspaceId, type }).unwrap();
-    } catch {}
+  async function handleTest(idOrType: string) {
+    const types = ["slack", "github"] as const;
+    if (types.includes(idOrType as "slack" | "github")) {
+      try {
+        await testIntegration({ workspaceId, type: idOrType as "slack" | "github" }).unwrap();
+      } catch {}
+    } else {
+      try {
+        await testIntegration({ workspaceId, type: idOrType }).unwrap();
+      } catch {}
+    }
   }
 
   if (isLoading) {
@@ -307,44 +408,121 @@ export default function IntegrationsPage() {
         <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{saveError}</div>
       )}
 
-      {integrations.length === 0 && (
-        <div className="mb-6 rounded-xl bg-[#F8F9FF] p-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-            <Plug className="h-7 w-7 text-[#2563EB]" />
-          </div>
-          <h2 className="text-base font-semibold text-[#121C28]">No integrations yet</h2>
-          <p className="mt-1 text-sm text-[#737686]">
-            Connect Slack for notifications or GitHub for repo tracking.
-          </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex gap-1 rounded-lg bg-[#F3F4F6] p-1">
+          {FILTERS.map((filter) => (
+            <button
+              key={filter.key}
+              onClick={() => setActiveFilter(filter.key)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                activeFilter === filter.key
+                  ? "bg-white text-[#121C28] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+                  : "text-[#737686] hover:text-[#121C28]"
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowCatalog(!showCatalog)}
+          className="flex items-center gap-1.5 text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors"
+        >
+          <Puzzle className="h-3.5 w-3.5" />
+          {showCatalog ? "Hide catalog" : "Browse all"}
+        </button>
+      </div>
+
+      {showCatalog && (
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filteredCatalog.map((item) => {
+            const isConnected = integrations.some((i) => i.type === item.id);
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveFilter(item.id as FilterType);
+                  setShowCatalog(false);
+                }}
+                className={`relative flex flex-col items-start gap-3 rounded-xl border p-4 text-left transition-all ${
+                  item.status === "coming-soon"
+                    ? "border-dashed border-[#E2E4E9] opacity-60 cursor-not-allowed"
+                    : "border-[#E2E4E9] bg-white hover:border-[#2563EB] hover:shadow-[0_2px_8px_rgba(37,99,235,0.08)] cursor-pointer"
+                }`}
+              >
+                {isConnected && (
+                  <span className="absolute right-3 top-3 flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#059669] opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#059669]" />
+                  </span>
+                )}
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${item.bgClass}`}>
+                  <item.icon className="h-5 w-5" style={{ color: item.color }} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#121C28]">{item.name}</h3>
+                  <p className="mt-0.5 text-xs text-[#737686] leading-relaxed">{item.description}</p>
+                </div>
+                {item.status === "coming-soon" && (
+                  <span className="mt-1 inline-flex items-center rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-medium text-[#737686]">
+                    Coming soon
+                  </span>
+                )}
+                {isConnected && (
+                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2 py-0.5 text-[10px] font-medium text-[#059669]">
+                    <CheckCircle2 className="h-3 w-3" /> Connected
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
       <div className="space-y-6">
-        <div className="rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-          <SlackConfig
-            type="slack"
-            integration={slackIntegration}
-            onSave={(config, name) => handleSave("slack", config, name)}
-            onDelete={() => handleDelete("slack")}
-            onToggle={(enabled) => handleToggle("slack", enabled)}
-            onTest={() => handleTest("slack")}
-            testing={isTesting}
-            saving={isSaving}
-          />
-        </div>
+        {(activeFilter === "all" || activeFilter === "slack") && (
+          <div className="rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+            <SlackConfig
+              type="slack"
+              integration={slackIntegration}
+              onSave={(config, name) => handleSave("slack", config, name)}
+              onDelete={() => handleDelete("slack")}
+              onToggle={(enabled) => handleToggle("slack", enabled)}
+              onTest={() => handleTest("slack")}
+              testing={isTesting}
+              saving={isSaving}
+            />
+          </div>
+        )}
 
-        <div className="rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-          <GitHubConfig
-            type="github"
-            integration={githubIntegration}
-            onSave={(config, name) => handleSave("github", config, name)}
-            onDelete={() => handleDelete("github")}
-            onToggle={(enabled) => handleToggle("github", enabled)}
-            onTest={() => handleTest("github")}
-            testing={isTesting}
-            saving={isSaving}
-          />
-        </div>
+        {(activeFilter === "all" || activeFilter === "github") && (
+          <div className="rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+            <GitHubConfig
+              type="github"
+              integration={githubIntegration}
+              onSave={(config, name) => handleSave("github", config, name)}
+              onDelete={() => handleDelete("github")}
+              onToggle={(enabled) => handleToggle("github", enabled)}
+              onTest={() => handleTest("github")}
+              testing={isTesting}
+              saving={isSaving}
+            />
+          </div>
+        )}
+
+        {(activeFilter === "all" || activeFilter === "webhook") && (
+          <div className="rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+            <WebhookConfig
+              integrations={integrations}
+              onSave={(config, name) => handleSave("webhook", config, name)}
+              onDelete={(id) => handleDelete(id)}
+              onToggle={(id, enabled) => handleToggle(id, enabled)}
+              onTest={(id) => handleTest(id)}
+              testing={isTesting}
+              saving={isSaving}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

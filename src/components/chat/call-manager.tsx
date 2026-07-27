@@ -20,6 +20,8 @@ export function CallManager() {
     acceptingRef.current = true;
     try {
       await acceptCall(callState.type);
+    } catch {
+      // error handled in use-call
     } finally {
       acceptingRef.current = false;
     }
@@ -30,13 +32,16 @@ export function CallManager() {
     callState.status === "calling" ||
     callState.status === "ongoing" ||
     callState.status === "connecting" ||
-    callState.status === "declined";
+    callState.status === "declined" ||
+    callState.status === "failed";
 
   return (
     <CallDialog
       open={isActive}
+      status={callState.status}
       type={callState.type}
       direction={callState.direction || "incoming"}
+      error={callState.error}
       onAccept={handleAccept}
       onReject={rejectCall}
       onEnd={endCall}

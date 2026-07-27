@@ -13,6 +13,7 @@ interface ConversationListProps {
   onlineUsers: string[];
   currentUserId: string;
   loading?: boolean;
+  userLastSeen?: Record<string, string>;
 }
 
 function formatDate(dateString: string) {
@@ -38,6 +39,7 @@ export function ConversationList({
   onlineUsers,
   currentUserId,
   loading,
+  userLastSeen = {},
 }: ConversationListProps) {
   const sorted = useMemo(
     () =>
@@ -114,7 +116,13 @@ export function ConversationList({
                   <Users className="h-4 w-4" />
                 )}
               </div>
-              {isDM && <PresenceIndicator isOnline={isOnline} />}
+              {isDM && (
+                <PresenceIndicator
+                  isOnline={isOnline}
+                  lastSeen={otherParticipantId ? userLastSeen[otherParticipantId] : undefined}
+                  showText={false}
+                />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
@@ -135,7 +143,7 @@ export function ConversationList({
               <div className="flex items-center justify-between gap-2 mt-0.5">
                 <span className="truncate text-xs text-[#A0A3B1]">
                   {conv.lastMessage
-                    ? `${conv.lastMessage.senderName}: ${conv.lastMessage.content}`
+                    ? `${conv.lastMessage.senderName?.length > 12 ? conv.lastMessage.senderName.slice(0, 12) + "…" : conv.lastMessage.senderName}: ${conv.lastMessage.content?.length > 40 ? conv.lastMessage.content.slice(0, 40) + "…" : conv.lastMessage.content}`
                     : "No messages yet"}
                 </span>
                 {hasUnread && (

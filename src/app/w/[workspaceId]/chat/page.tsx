@@ -21,6 +21,7 @@ export default function ChatPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [userLastSeen, setUserLastSeen] = useState<Record<string, string>>({});
   const [showMobileList, setShowMobileList] = useState(true);
   const { data: members } = useGetMembersQuery(workspaceId, { skip: !workspaceId });
   const { startCall, callState } = useCall();
@@ -35,15 +36,37 @@ export default function ChatPage() {
 
     socket.on("presence-online", (data: { userId: string }) => {
       setOnlineUsers((prev) => (prev.includes(data.userId) ? prev : [...prev, data.userId]));
+      setUserLastSeen((prev) => {
+        const next: Record<string, string> = {};
+        for (const key of Object.keys(prev)) {
+          if (key !== data.userId) next[key] = prev[key];
+        }
+        return next;
+      });
     });
 
-    socket.on("presence-offline", (data: { userId: string }) => {
+    socket.on("presence-offline", (data: { userId: string; lastSeen?: string }) => {
       setOnlineUsers((prev) => prev.filter((id) => id !== data.userId));
+      if (data.lastSeen) {
+        const ls = data.lastSeen;
+        setUserLastSeen((prev) => Object.assign({}, prev, { [data.userId]: ls }));
+      }
+    });
+
+    socket.on("presence-status-response", (data: { userId: string; online: boolean; lastSeen: string | null }) => {
+      const lastSeenVal = data.lastSeen;
+      if (lastSeenVal) {
+        setUserLastSeen((prev) => Object.assign({}, prev, { [data.userId]: lastSeenVal! }));
+      }
+      if (data.online) {
+        setOnlineUsers((prev) => (prev.includes(data.userId) ? prev : [...prev, data.userId]));
+      }
     });
 
     return () => {
       socket.off("presence-online");
       socket.off("presence-offline");
+      socket.off("presence-status-response");
     };
   }, []);
 
@@ -84,6 +107,7 @@ export default function ChatPage() {
               onlineUsers={onlineUsers}
               currentUserId={user?.id || ""}
               loading={isLoading}
+              userLastSeen={userLastSeen}
             />
           </div>
         </div>

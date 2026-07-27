@@ -1,9 +1,22 @@
 import { api } from "./api";
 
+export interface WebhookDelivery {
+  event: string;
+  status: "success" | "failure";
+  timestamp: string;
+}
+
+export interface WebhookConfig {
+  url: string;
+  events: string[];
+  secret?: string;
+  lastDelivery?: WebhookDelivery | null;
+}
+
 export interface Integration {
   _id: string;
   workspaceId: string;
-  type: "slack" | "github";
+  type: "slack" | "github" | "webhook";
   name: string;
   enabled: boolean;
   config: Record<string, unknown>;
@@ -12,6 +25,10 @@ export interface Integration {
   lastTestStatus: "success" | "failure" | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export function isWebhookIntegration(integration?: Integration): integration is Integration & { config: WebhookConfig } {
+  return integration?.type === "webhook";
 }
 
 interface IntegrationsResponse {

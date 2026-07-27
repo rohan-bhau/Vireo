@@ -4,12 +4,13 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { getSocket } from "@/lib/socket";
 
 interface CallState {
-  status: "idle" | "calling" | "ringing" | "connecting" | "ongoing" | "ended" | "missed" | "declined";
+  status: "idle" | "calling" | "ringing" | "connecting" | "ongoing" | "ended" | "missed" | "declined" | "failed";
   direction: "incoming" | "outgoing" | null;
   type: "audio" | "video";
   callerId?: string;
   calleeId?: string;
   conversationId?: string;
+  error?: string;
 }
 
 const iceServers = {
@@ -53,6 +54,16 @@ export function useCall() {
           }
         };
 
+        peer.oniceconnectionstatechange = () => {
+          if (peer.iceConnectionState === "failed" || peer.iceConnectionState === "disconnected") {
+            setCallState((prev) => ({
+              ...prev,
+              status: "failed",
+              error: "Connection lost",
+            }));
+          }
+        };
+
         peer.ontrack = (e) => {
           setRemoteStream(e.streams[0]);
         };
@@ -77,10 +88,18 @@ export function useCall() {
       } catch (err) {
         console.error("Failed to start call:", err);
         setCallState({
-          status: "idle",
+          status: "failed",
           direction: null,
           type: "audio",
+          error: err instanceof Error ? err.message : "Failed to start call",
         });
+        setTimeout(() => {
+          setCallState({
+            status: "idle",
+            direction: null,
+            type: "audio",
+          });
+        }, 3000);
       }
     },
     []
@@ -105,6 +124,16 @@ export function useCall() {
             targetUserId: callState.callerId,
             candidate: e.candidate,
           });
+        }
+      };
+
+      peer.oniceconnectionstatechange = () => {
+        if (peer.iceConnectionState === "failed" || peer.iceConnectionState === "disconnected") {
+          setCallState((prev) => ({
+            ...prev,
+            status: "failed",
+            error: "Connection lost",
+          }));
         }
       };
 
@@ -182,6 +211,16 @@ export function useCall() {
           targetUserId: callState.callerId,
           candidate: e.candidate,
         });
+      }
+    };
+
+    peer.oniceconnectionstatechange = () => {
+      if (peer.iceConnectionState === "failed" || peer.iceConnectionState === "disconnected") {
+        setCallState((prev) => ({
+          ...prev,
+          status: "failed",
+          error: "Connection lost",
+        }));
       }
     };
 

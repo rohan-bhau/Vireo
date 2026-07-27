@@ -8,6 +8,7 @@ interface PresenceIndicatorProps {
   lastSeen?: string | null;
   showText?: boolean;
   className?: string;
+  dotClassName?: string;
 }
 
 function formatLastSeen(dateString: string): string {
@@ -25,7 +26,13 @@ function formatLastSeen(dateString: string): string {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-export function PresenceIndicator({ isOnline, lastSeen, showText, className }: PresenceIndicatorProps) {
+export function PresenceIndicator({
+  isOnline,
+  lastSeen,
+  showText,
+  className,
+  dotClassName,
+}: PresenceIndicatorProps) {
   const lastSeenText = useMemo(
     () => (lastSeen ? formatLastSeen(lastSeen) : null),
     [lastSeen]
@@ -35,13 +42,14 @@ export function PresenceIndicator({ isOnline, lastSeen, showText, className }: P
     <div className={clsx("flex items-center gap-1.5", className)}>
       <span
         className={clsx(
-          "h-2.5 w-2.5 rounded-full border-2 border-white",
-          isOnline ? "bg-green-500" : "bg-[#A0A3B1]",
+          "h-2 w-2 rounded-full",
+          isOnline ? "bg-green-500" : "bg-gray-400",
+          dotClassName
         )}
       />
       {showText && (
-        <span className="text-[10px] text-[#A0A3B1] whitespace-nowrap">
-          {isOnline ? "Online" : lastSeenText ? `Seen ${lastSeenText}` : "Offline"}
+        <span className="text-[11px] text-[#A0A3B1]">
+          {isOnline ? "Online" : lastSeenText ? `Last seen ${lastSeenText}` : "Offline"}
         </span>
       )}
     </div>

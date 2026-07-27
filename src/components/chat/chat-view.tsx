@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Phone, Video, MoreHorizontal, ArrowLeft } from "lucide-react";
+import { useSelector } from "react-redux";
 import type { Conversation, Message } from "@/store/chatApi";
 import { useGetMessagesQuery, useMarkConversationReadMutation } from "@/store/chatApi";
+import type { RootState } from "@/store";
 import { ChatMessage } from "./chat-message";
 import { MessageInput } from "./message-input";
 import { getSocket } from "@/lib/socket";
@@ -16,11 +18,15 @@ interface ChatViewProps {
 }
 
 export function ChatView({ conversation, currentUserId, onBack, onStartCall }: ChatViewProps) {
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const currentUserName = currentUser?.name || "You";
+
   const [page, setPage] = useState(1);
   const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const prevMessageCountRef = useRef(0);
 
   const { data, isFetching } = useGetMessagesQuery({
     conversationId: conversation._id,
@@ -44,11 +50,24 @@ export function ChatView({ conversation, currentUserId, onBack, onStartCall }: C
     setTypingUsers({});
   }, [conversation._id]);
 
+  const isNearBottom = useCallback(() => {
+    if (!scrollRef.current) return true;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    return scrollHeight - scrollTop - clientHeight < 150;
+  }, []);
+
   useEffect(() => {
-    if (page === 1) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (page !== 1) return;
+    const count = allMessages.length;
+    if (count > prevMessageCountRef.current && count > 0) {
+      if (prevMessageCountRef.current === 0 || isNearBottom()) {
+        requestAnimationFrame(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        });
+      }
     }
-  }, [allMessages.length, page]);
+    prevMessageCountRef.current = count;
+  }, [allMessages.length, page, isNearBottom]);
 
   useEffect(() => {
     markRead(conversation._id);
@@ -57,10 +76,12 @@ export function ChatView({ conversation, currentUserId, onBack, onStartCall }: C
     if (!socket) return;
 
     socket.emit("join-conversation", conversation._id);
+    socket.emit("mark-read", { conversationId: conversation._id, userId: currentUserId });
 
     const handleNewMessage = (message: Message) => {
       if (message.conversationId === conversation._id) {
         setAllMessages((prev) => [...prev, message]);
+        socket.emit("mark-read", { conversationId: conversation._id, userId: currentUserId });
         markRead(conversation._id);
       }
     };
@@ -81,15 +102,29 @@ export function ChatView({ conversation, currentUserId, onBack, onStartCall }: C
       }
     };
 
+    const handleReadReceipt = (data: { messageId: string; conversationId: string; userId: string }) => {
+      if (data.conversationId === conversation._id) {
+        setAllMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === data.messageId && !msg.readBy.includes(data.userId)
+              ? { ...msg, readBy: [...msg.readBy, data.userId] }
+              : msg
+          )
+        );
+      }
+    };
+
     socket.on("new-message", handleNewMessage);
     socket.on("typing", handleTyping);
     socket.on("stop-typing", handleStopTyping);
+    socket.on("read-receipt", handleReadReceipt);
 
     return () => {
       socket.emit("leave-conversation", conversation._id);
       socket.off("new-message", handleNewMessage);
       socket.off("typing", handleTyping);
       socket.off("stop-typing", handleStopTyping);
+      socket.off("read-receipt", handleReadReceipt);
     };
   }, [conversation._id, currentUserId, markRead]);
 
@@ -116,9 +151,9 @@ export function ChatView({ conversation, currentUserId, onBack, onStartCall }: C
     socket.emit("typing", {
       conversationId: conversation._id,
       userId: currentUserId,
-      userName: "You",
+      userName: currentUserName,
     });
-  }, [conversation._id, currentUserId]);
+  }, [conversation._id, currentUserId, currentUserName]);
 
   const handleStopTyping = useCallback(() => {
     const socket = getSocket();
@@ -145,6 +180,14 @@ export function ChatView({ conversation, currentUserId, onBack, onStartCall }: C
     : conversation.name || "Group Chat";
   const isTyping = Object.keys(typingUsers).length > 0;
 
+  const typingLabel = useMemo(() => {
+    const names = Object.values(typingUsers);
+    if (names.length === 0) return null;
+    if (names.length === 1) return `${names[0]} is typing...`;
+    if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
+    return `${names[0]} and ${names.length - 1} others are typing...`;
+  }, [typingUsers]);
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-[#C3C6D7]/20 bg-white px-4 py-3 shrink-0">
@@ -162,9 +205,9 @@ export function ChatView({ conversation, currentUserId, onBack, onStartCall }: C
           </div>
           <div className="min-w-0">
             <h3 className="truncate text-sm font-semibold text-[#121C28]">{displayName}</h3>
-            {isTyping && (
-              <p className="text-[11px] text-[#004AC6]">
-                {Object.values(typingUsers).join(", ")} typing...
+            {typingLabel && (
+              <p className="text-[11px] text-[#004AC6] animate-pulse">
+                {typingLabel}
               </p>
             )}
           </div>

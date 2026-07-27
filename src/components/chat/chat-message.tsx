@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { clsx } from "clsx";
 import { Check, CheckCheck, FileText, Mic } from "lucide-react";
 import type { Message } from "@/store/chatApi";
@@ -15,8 +16,32 @@ function formatTime(dateString: string) {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function renderContent(text: string) {
+  const parts = text.split(/(@\w+)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("@")) {
+      return (
+        <span
+          key={i}
+          className="rounded bg-[#EEF4FF] px-1 text-[#004AC6] font-medium"
+        >
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
 export function ChatMessage({ message, isOwn, showSender }: ChatMessageProps) {
   const isRead = message.readBy && message.readBy.length > 0;
+
+  const content = useMemo(() => {
+    if (message.type === "text" && message.content) {
+      return renderContent(message.content);
+    }
+    return null;
+  }, [message.content, message.type]);
 
   return (
     <div className={clsx("flex gap-2", isOwn ? "justify-end" : "justify-start")}>
@@ -55,7 +80,7 @@ export function ChatMessage({ message, isOwn, showSender }: ChatMessageProps) {
               <span className="truncate">{message.fileName || "File"}</span>
             </a>
           ) : (
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+            <p className="whitespace-pre-wrap break-words">{content}</p>
           )}
         </div>
         <div

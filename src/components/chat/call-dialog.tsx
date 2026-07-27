@@ -4,14 +4,16 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { getSocket } from "@/lib/socket";
 
-type CallStatus = "ringing" | "connecting" | "ongoing" | "ended" | "missed" | "declined";
+type CallStatus = "idle" | "calling" | "ringing" | "connecting" | "ongoing" | "ended" | "missed" | "declined" | "failed";
 
 interface CallDialogProps {
   open: boolean;
+  status?: CallStatus;
   type: "audio" | "video";
   direction: "incoming" | "outgoing";
   callerId?: string;
   calleeId?: string;
+  error?: string;
   onAccept?: () => void;
   onReject?: () => void;
   onEnd?: () => void;
@@ -21,23 +23,29 @@ interface CallDialogProps {
 
 export function CallDialog({
   open,
+  status: externalStatus,
   type,
   direction,
   callerId,
   calleeId,
+  error,
   onAccept,
   onReject,
   onEnd,
   remoteStream,
   localStream,
 }: CallDialogProps) {
-  const [status, setStatus] = useState<CallStatus>("ringing");
+  const [status, setStatus] = useState<CallStatus>(externalStatus || "ringing");
   const [muted, setMuted] = useState(false);
   const [videoOff, setVideoOff] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (externalStatus) setStatus(externalStatus);
+  }, [externalStatus]);
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -90,6 +98,8 @@ export function CallDialog({
 
   const isRinging = status === "ringing";
   const isOngoing = status === "ongoing";
+  const isFailed = status === "failed";
+  const isConnecting = status === "connecting";
   const isVideo = type === "video";
 
   return (
@@ -118,19 +128,19 @@ export function CallDialog({
           )}
 
           <div className={`flex h-20 w-20 items-center justify-center rounded-full ${
-            isRinging ? "bg-green-500/20" : "bg-white/10"
+            isRinging ? "bg-green-500/20" : isFailed ? "bg-red-500/20" : "bg-white/10"
           }`}>
             <Phone className={`h-8 w-8 ${
-              isRinging ? "text-green-500" : "text-white"
+              isRinging ? "text-green-500" : isFailed ? "text-red-500" : "text-white"
             }`} />
           </div>
 
           <div>
             <h3 className="text-lg font-semibold text-white">
-              {direction === "incoming" ? "Incoming Call" : "Calling..."}
+              {isFailed ? "Call Failed" : isConnecting ? "Connecting..." : direction === "incoming" ? "Incoming Call" : "Calling..."}
             </h3>
             <p className="text-sm text-white/60">
-              {isOngoing ? formatDuration(callDuration) : type === "audio" ? "Audio call" : "Video call"}
+              {isFailed ? (error || "Connection lost") : isOngoing ? formatDuration(callDuration) : isConnecting ? "Please wait..." : type === "audio" ? "Audio call" : "Video call"}
             </p>
           </div>
 
@@ -182,12 +192,21 @@ export function CallDialog({
                 <PhoneOff className="h-6 w-6" />
               </button>
             )}
-            {isOngoing && (
+            {(isOngoing || isConnecting) && (
               <button
                 onClick={onEnd}
                 className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
               >
                 <PhoneOff className="h-6 w-6" />
+              </button>
+            )}
+            {isFailed && (
+              <button
+                onClick={onEnd}
+                className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors"
+              >
+                <PhoneOff className="h-4 w-4" />
+                Dismiss
               </button>
             )}
           </div>
