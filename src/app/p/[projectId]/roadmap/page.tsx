@@ -102,6 +102,36 @@ export default function RoadmapPage() {
     [sprints]
   );
 
+  const dependencies = useMemo(() => {
+    const deps: { from: string; to: string; type: "blocks" | "depends-on" }[] = [];
+    for (const task of tasks) {
+      if (task.linkedTasks && task.linkedTasks.length > 0) {
+        for (const link of task.linkedTasks) {
+          const sourceEpic = epics.find((e) => e.epicKey === task.parentTask);
+          const targetEpic = epics.find((e) => e.epicKey === link.taskId);
+          if (sourceEpic && targetEpic) {
+            deps.push({
+              from: targetEpic.epicKey,
+              to: sourceEpic.epicKey,
+              type: "depends-on",
+            });
+          }
+        }
+      }
+      if (task.parentTask) {
+        const parentEpic = epics.find((e) => e.epicKey === task.parentTask);
+        if (parentEpic && task.type === "epic") {
+          deps.push({
+            from: task.taskKey,
+            to: parentEpic.epicKey,
+            type: "depends-on",
+          });
+        }
+      }
+    }
+    return deps;
+  }, [tasks, epics]);
+
   async function handleCreateEpic() {
     if (!newEpicName.trim() || !project) return;
     try {
@@ -144,6 +174,7 @@ export default function RoadmapPage() {
         onAddEpic={() => setShowCreateEpic(true)}
         onEpicClick={handleEpicClick}
         selectedEpic={selectedEpic}
+        dependencies={dependencies}
       />
 
       <Dialog open={showCreateEpic} onClose={() => setShowCreateEpic(false)}>

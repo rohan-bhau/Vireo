@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   useCreateTaskMutation,
   useUpdateTaskMutation,
+  useGetWorkspaceTasksQuery,
   type TaskType,
   type TaskStatus,
   type TaskPriority,
   type Task,
 } from "@/store/taskApi";
 import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
+import { useGetProjectEpicsQuery } from "@/store/epicApi";
 import { RichTextEditor } from "./rich-text-editor";
 import { IssueTypeIcon } from "./issue-type-icon";
 import { PriorityIcon } from "./priority-icon";
@@ -65,6 +69,11 @@ export function CreateTaskDialog({
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
   const { data: projects } = useGetWorkspaceProjectsQuery(workspaceId);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
+  const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId || "");
+  const { data: epics = [] } = useGetProjectEpicsQuery(selectedProjectId, { skip: !selectedProjectId });
+  const { data: allTasks = [] } = useGetWorkspaceTasksQuery(workspaceId, { skip: !workspaceId });
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -72,12 +81,13 @@ export function CreateTaskDialog({
   const [status, setStatus] = useState<TaskStatus>("todo");
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [assignee, setAssignee] = useState<string | null>(null);
+  const [reporter, setReporter] = useState<string | null>(currentUser?.id || null);
+  const [parentTask, setParentTask] = useState<string>("");
   const [labels, setLabels] = useState<string[]>([]);
   const [components, setComponents] = useState<string[]>([]);
   const [fixVersion, setFixVersion] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [storyPoints, setStoryPoints] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId || "");
   const [showMore, setShowMore] = useState(false);
   const [createAnother, setCreateAnother] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -94,6 +104,8 @@ export function CreateTaskDialog({
         setStatus(editTask.status);
         setPriority(editTask.priority);
         setAssignee(editTask.assignee);
+        setReporter(editTask.reporter || currentUser?.id || null);
+        setParentTask(editTask.parentTask || "");
         setLabels(editTask.labels || []);
         setComponents(editTask.components || []);
         setFixVersion(editTask.fixVersion || "");
@@ -107,6 +119,8 @@ export function CreateTaskDialog({
         setStatus("todo");
         setPriority("medium");
         setAssignee(null);
+        setReporter(currentUser?.id || null);
+        setParentTask("");
         setLabels([]);
         setComponents([]);
         setFixVersion("");
@@ -117,7 +131,7 @@ export function CreateTaskDialog({
         setCreateAnother(false);
       }
     }
-  }, [editTask, open, defaultProjectId, projects]);
+  }, [editTask, open, defaultProjectId, projects, currentUser]);
 
   async function handleSubmit() {
     if (!title.trim() || submitting) return;
@@ -130,6 +144,8 @@ export function CreateTaskDialog({
         status,
         priority,
         assignee: assignee || undefined,
+        reporter: reporter || currentUser?.id || undefined,
+        parentTask: parentTask || undefined,
         labels,
         components: components.length > 0 ? components : undefined,
         fixVersion: fixVersion || undefined,
@@ -293,6 +309,11 @@ export function CreateTaskDialog({
             </div>
 
             <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-text-secondary">Reporter</label>
+              <AssigneePicker workspaceId={workspaceId} value={reporter} onChange={setReporter} />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-text-secondary">Labels</label>
               <LabelEditor value={labels} onChange={setLabels} workspaceId={workspaceId} projectId={selectedProjectId} />
             </div>
@@ -330,6 +351,29 @@ export function CreateTaskDialog({
                 />
               </div>
             )}
+
+            <div className="flex flex-col gap-1.5 col-span-2">
+              <label className="text-xs font-semibold text-text-secondary">Parent</label>
+              <select
+                value={parentTask}
+                onChange={(e) => setParentTask(e.target.value)}
+                className="rounded-[3px] border border-border-input bg-surface px-3 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">None</option>
+                {epics.map((epic) => (
+                  <option key={epic._id || epic.epicKey} value={epic.epicKey}>
+                    {epic.epicKey}: {epic.name}
+                  </option>
+                ))}
+                {allTasks
+                  .filter((t) => t.projectId === selectedProjectId && t.type !== "subtask" && t.taskKey !== parentTask)
+                  .map((t) => (
+                    <option key={t.taskKey} value={t.taskKey}>
+                      {t.taskKey}: {t.title}
+                    </option>
+                  ))}
+              </select>
+            </div>
           </div>
         )}
 

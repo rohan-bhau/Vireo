@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { EpicBar } from "./epic-bar";
 import { SprintOverlay } from "./sprint-overlay";
 import { RoadmapZoomControls } from "./roadmap-zoom-controls";
+import { DependencyArrow } from "./dependency-arrow";
 
 interface RoadmapItem {
   id: string;
@@ -16,6 +17,12 @@ interface RoadmapItem {
   status: string;
   progress?: number;
   epicKey?: string;
+}
+
+interface Dependency {
+  from: string;
+  to: string;
+  type: "blocks" | "depends-on";
 }
 
 interface SprintData {
@@ -35,6 +42,7 @@ interface RoadmapTimelineProps {
   onAddEpic?: () => void;
   onEpicClick?: (epicKey: string) => void;
   selectedEpic?: string | null;
+  dependencies?: Dependency[];
 }
 
 export function RoadmapTimeline({
@@ -47,6 +55,7 @@ export function RoadmapTimeline({
   onAddEpic,
   onEpicClick,
   selectedEpic,
+  dependencies = [],
 }: RoadmapTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const now = new Date();
@@ -139,6 +148,18 @@ export function RoadmapTimeline({
     if (!showEpics) return taskItems;
     return items;
   }, [items, showEpics, taskItems]);
+
+  const epicPositions = useMemo(() => {
+    const pos: Record<string, { x: number; y: number; width: number }> = {};
+    const epicRows = displayedItems.filter((i) => i.type === "epic");
+    epicRows.forEach((item, idx) => {
+      const left = getLeft(item.start);
+      const width = getWidth(item.start, item.end);
+      const top = idx * ROW_HEIGHT + 4;
+      pos[item.id] = { x: left, y: top, width };
+    });
+    return pos;
+  }, [displayedItems, timelineStart, totalMs]);
 
   const ROW_HEIGHT = 36;
   const LABEL_WIDTH = 200;
@@ -240,6 +261,25 @@ export function RoadmapTimeline({
                   totalMs={totalMs}
                   pixelsPerMs={TIMELINE_WIDTH / totalMs}
                 />
+
+                <svg
+                  className="absolute inset-0 pointer-events-none z-[1]"
+                  style={{ overflow: "visible" }}
+                >
+                  {dependencies.map((dep) => {
+                    const from = epicPositions[dep.from];
+                    const to = epicPositions[dep.to];
+                    if (!from || !to) return null;
+                    return (
+                      <DependencyArrow
+                        key={`${dep.from}-${dep.to}`}
+                        from={from}
+                        to={to}
+                        type={dep.type}
+                      />
+                    );
+                  })}
+                </svg>
 
                 <div className="absolute left-0 right-0 top-2">
                   {displayedItems.map((item, idx) => {

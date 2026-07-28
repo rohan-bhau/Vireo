@@ -81,10 +81,10 @@ export function BoardFilterBar({
         <button
           onClick={() => setShowAssigneeDropdown(!showAssigneeDropdown)}
           className={clsx(
-            "flex items-center gap-1 rounded-[3px] px-2.5 py-1 text-[11px] font-medium transition-colors",
+            "flex items-center gap-1 rounded-sm px-2.5 py-1 text-[11px] font-medium transition-colors",
             assigneeFilter.length > 0
-              ? "bg-[#0052CC] text-white"
-              : "bg-[#F1F2F6] text-[#42526E] hover:bg-[#DFE1E6]"
+              ? "bg-primary text-white"
+              : "bg-bg-light text-text-secondary hover:bg-bg-neutral"
           )}
         >
           <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -93,12 +93,12 @@ export function BoardFilterBar({
           {assigneeFilter.length > 0 ? `Assignee (${assigneeFilter.length})` : "Assignee"}
         </button>
         {showAssigneeDropdown && (
-          <div className="absolute top-full left-0 mt-1 w-48 rounded-[3px] bg-white shadow-modal border border-[#DFE1E6] z-50 py-1">
-            <div className="px-3 py-1.5 text-[11px] font-medium text-[#737686] uppercase tracking-wide">
+          <div className="absolute top-full left-0 mt-1 w-48 rounded-lg bg-surface shadow-dropdown border border-border-light z-50 py-1">
+            <div className="px-3 py-1.5 text-[11px] font-medium text-text-tertiary uppercase tracking-wide">
               Filter by assignee
             </div>
             {members.length === 0 && (
-              <div className="px-3 py-2 text-xs text-[#737686]">No members</div>
+              <div className="px-3 py-2 text-xs text-text-tertiary">No members</div>
             )}
             {members.map((m) => (
               <button
@@ -107,16 +107,16 @@ export function BoardFilterBar({
                 className={clsx(
                   "flex w-full items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors",
                   assigneeFilter.includes(m.id)
-                    ? "bg-[#EEF4FF] text-[#2563EB]"
-                    : "text-[#121C28] hover:bg-[#F1F2F6]"
+                    ? "bg-primary-bg text-primary"
+                    : "text-text-primary hover:bg-bg-light"
                 )}
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2563EB] text-[9px] font-semibold text-white flex-shrink-0">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-white flex-shrink-0">
                   {m.name.charAt(0).toUpperCase()}
                 </span>
                 <span className="flex-1">{m.name}</span>
                 {assigneeFilter.includes(m.id) && (
-                  <svg className="h-3 w-3 text-[#2563EB]" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="h-3 w-3 text-primary" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                   </svg>
                 )}
@@ -130,7 +130,7 @@ export function BoardFilterBar({
         <select
           value={swimlaneType || "none"}
           onChange={(e) => onSwimlaneChange(e.target.value)}
-          className="rounded-[3px] border border-[#DFE1E6] bg-white px-2.5 py-1 text-[11px] font-medium text-[#42526E] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+          className="rounded-sm border border-border-input bg-surface px-2.5 py-1 text-[11px] font-medium text-text-secondary focus:outline-none focus:ring-1 focus:ring-primary"
         >
           <option value="none">No swimlanes</option>
           <option value="assignee">By assignee</option>
@@ -140,7 +140,7 @@ export function BoardFilterBar({
       )}
 
       <div className="relative flex-1 min-w-[160px] max-w-[240px]">
-        <svg className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
         </svg>
         <input
@@ -148,14 +148,14 @@ export function BoardFilterBar({
           value={jqlInput}
           onChange={(e) => setJqlInput(e.target.value)}
           onKeyDown={handleJqlKeyDown}
-          className="w-full rounded-[3px] border border-[#DFE1E6] bg-white py-1.5 pl-7 pr-2 text-[11px] text-[#121C28] placeholder:text-[#737686] focus:outline-none focus:ring-1 focus:ring-[#2563EB] focus:border-transparent"
+          className="w-full rounded-sm border border-border-input bg-surface py-1.5 pl-7 pr-2 text-[11px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent"
         />
       </div>
 
       {hasActiveFilters && (
         <button
           onClick={onClearFilters}
-          className="text-[11px] font-medium text-[#737686] hover:text-[#121C28] transition-colors whitespace-nowrap"
+          className="text-[11px] font-medium text-text-tertiary hover:text-text-primary transition-colors whitespace-nowrap"
         >
           Clear filters ({activeFilters.length + assigneeFilter.length})
         </button>

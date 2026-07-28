@@ -123,10 +123,12 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   const columnIds = columns.map((c) => c.id);
 
   function getColumnTasks(columnId: string): Task[] {
-    return tasks.filter((t) => {
-      const taskColId = t.columnId || defaultColumnId(t.status);
-      return taskColId === columnId;
-    });
+    return tasks
+      .filter((t) => {
+        const taskColId = t.columnId || defaultColumnId(t.status);
+        return taskColId === columnId;
+      })
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }
 
   function defaultColumnId(status: string): string {
@@ -289,32 +291,32 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   return (
     <div className="flex flex-1 flex-col h-full">
       {sprint && (
-        <div className="flex items-center justify-between mb-4 px-1 max-sm:flex-col max-sm:items-start max-sm:gap-2">
+        <div className="flex items-center justify-between mb-4 px-1 max-sm:flex-col max-sm:items-start max-sm:gap-2 bg-surface rounded-lg border border-border-light p-4 shadow-card">
           <div className="flex items-center gap-3">
             {onBack && (
-              <button onClick={onBack} className="rounded-lg p-1.5 text-[#737686] hover:bg-[#F1F2F6] transition-colors">
+              <button onClick={onBack} className="rounded-lg p-1.5 text-text-tertiary hover:bg-bg-light transition-colors">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
               </button>
             )}
             <div>
-              <h2 className="text-base font-semibold text-[#121C28]">{sprint.name}</h2>
-              <p className="text-xs text-[#737686]">
+              <h2 className="text-base font-semibold text-text-primary">{sprint.name}</h2>
+              <p className="text-xs text-text-tertiary">
                 {sprint.goal && `Goal: ${sprint.goal}`}
-                {sprint.startDate && ` · ${new Date(sprint.startDate).toLocaleDateString()}`}
-                {sprint.endDate && ` — ${new Date(sprint.endDate).toLocaleDateString()}`}
+                {sprint.startDate && ` · ${new Date(sprint.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`}
+                {sprint.endDate && ` — ${new Date(sprint.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4 max-sm:w-full max-sm:justify-between">
             {totalPoints > 0 && (
               <div className="flex items-center gap-2">
-                <div className="w-24 h-2 rounded-full bg-[#DFE1E6] overflow-hidden max-sm:w-16">
-                  <div className="h-full rounded-full bg-[#059669] transition-all" style={{ width: `${donePercent}%` }} />
+                <div className="w-24 h-2 rounded-full bg-bg-neutral overflow-hidden max-sm:w-16">
+                  <div className="h-full rounded-full bg-success transition-all" style={{ width: `${donePercent}%` }} />
                 </div>
-                <span className="text-xs text-[#737686] whitespace-nowrap">
-                  <span className="font-medium text-[#121C28]">{donePoints}/{totalPoints}</span> pts
+                <span className="text-xs text-text-tertiary whitespace-nowrap">
+                  <span className="font-medium text-text-primary">{donePoints}/{totalPoints}</span> pts
                 </span>
               </div>
             )}
@@ -355,97 +357,97 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
         />
       </div>
 
-      <div className="flex-1 min-h-0">
-        {isLoading ? (
-          <div className="flex h-full items-center justify-center">
-            <svg className="h-6 w-6 animate-spin text-[#2563EB]" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          </div>
-        ) : swimlaneType !== "none" && swimlaneGroups ? (
-          <div className="overflow-y-auto h-full pb-4">
-            {swimlaneGroups.map(([groupName, groupTasks]) => (
-              <SwimlaneRow
-                key={groupName}
-                name={groupName}
-                tasks={groupTasks}
-                columns={columns}
-                onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
-              />
-            ))}
-            {swimlaneGroups.length === 0 && (
-              <div className="flex items-center justify-center h-32 text-sm text-[#737686]">
-                No issues match the current filters
-              </div>
-            )}
-          </div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={collisionDetection}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="flex gap-4 overflow-x-auto pb-4 h-full max-sm:flex-col max-sm:overflow-x-hidden max-sm:overflow-y-auto max-sm:gap-6 max-sm:px-1">
-              <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                {columns.map((column) => (
-                  <BoardColumn
-                    key={column.id}
-                    column={column}
-                    tasks={getColumnTasks(column.id)}
-                    onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
-                    onCreateTask={handleCreateTask}
-                    isOver={hoverColumnId === column.id}
-                  />
-                ))}
-              </SortableContext>
-
-              <div className="flex-shrink-0 w-72 max-sm:w-full max-sm:max-w-md max-sm:mx-auto">
-                {showAddColumn ? (
-                  <div className="rounded-[3px] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#C3C6D7]/20">
-                    <input
-                      autoFocus placeholder="Column name"
-                      value={newColumnName}
-                      onChange={(e) => setNewColumnName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleAddColumn();
-                        if (e.key === "Escape") setShowAddColumn(false);
-                      }}
-                      className="w-full rounded-[3px] border border-[#C3C6D7] px-3 py-2 text-sm text-[#121C28] placeholder:text-[#C3C6D7] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent mb-2"
-                    />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleAddColumn}>Add</Button>
-                      <Button size="sm" variant="outline" onClick={() => setShowAddColumn(false)}>Cancel</Button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowAddColumn(true)}
-                    className="flex w-full items-center gap-2 rounded-[3px] border-2 border-dashed border-[#C3C6D7]/30 p-4 text-sm font-medium text-[#737686] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 5v14M5 12h14" />
-                    </svg>
-                    Add column
-                  </button>
-                )}
-              </div>
+        <div className="flex-1 min-h-0">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center">
+              <svg className="h-6 w-6 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
             </div>
-
-            <DragOverlay>
-              {activeId && columns.some((c) => c.id === activeId) ? (
-                <div className="rounded-[3px] bg-white px-4 py-3 shadow-lg border border-[#2563EB]/30 w-72">
-                  <p className="text-sm font-medium text-[#121C28]">{columns.find((c) => c.id === activeId)?.name}</p>
+          ) : swimlaneType !== "none" && swimlaneGroups ? (
+            <div className="overflow-y-auto h-full pb-4">
+              {swimlaneGroups.map(([groupName, groupTasks]) => (
+                <SwimlaneRow
+                  key={groupName}
+                  name={groupName}
+                  tasks={groupTasks}
+                  columns={columns}
+                  onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
+                />
+              ))}
+              {swimlaneGroups.length === 0 && (
+                <div className="flex items-center justify-center h-32 text-sm text-text-tertiary">
+                  No issues match the current filters
                 </div>
-              ) : activeId && tasks.find((t) => t.taskKey === activeId) ? (
-                <IssueCardOverlay task={tasks.find((t) => t.taskKey === activeId)!} />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        )}
-      </div>
+              )}
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={collisionDetection}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="flex gap-3 overflow-x-auto pb-4 h-full max-sm:flex-col max-sm:overflow-x-hidden max-sm:overflow-y-auto max-sm:gap-6 max-sm:px-1">
+                <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                  {columns.map((column) => (
+                    <BoardColumn
+                      key={column.id}
+                      column={column}
+                      tasks={getColumnTasks(column.id)}
+                      onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
+                      onCreateTask={handleCreateTask}
+                      isOver={hoverColumnId === column.id}
+                    />
+                  ))}
+                </SortableContext>
+
+                <div className="flex-shrink-0 w-72 max-sm:w-full max-sm:max-w-md max-sm:mx-auto">
+                  {showAddColumn ? (
+                    <div className="rounded-lg bg-surface p-3 shadow-card border border-border-light">
+                      <input
+                        autoFocus placeholder="Column name"
+                        value={newColumnName}
+                        onChange={(e) => setNewColumnName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddColumn();
+                          if (e.key === "Escape") setShowAddColumn(false);
+                        }}
+                        className="w-full rounded-sm border border-border-input px-3 py-2 text-sm text-text-primary placeholder:text-text-placeholder focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent mb-2"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleAddColumn}>Add</Button>
+                        <Button size="sm" variant="outline" onClick={() => setShowAddColumn(false)}>Cancel</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAddColumn(true)}
+                      className="flex w-full items-center gap-2 rounded-lg border-2 border-dashed border-border-light p-4 text-sm font-medium text-text-tertiary transition-colors hover:border-primary hover:text-primary hover:bg-primary-bg/30"
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 5v14M5 12h14" />
+                      </svg>
+                      Add column
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <DragOverlay>
+                {activeId && columns.some((c) => c.id === activeId) ? (
+                  <div className="rounded-lg bg-surface px-4 py-3 shadow-lg border border-primary/40 w-72">
+                    <p className="text-sm font-medium text-text-primary">{columns.find((c) => c.id === activeId)?.name}</p>
+                  </div>
+                ) : activeId && tasks.find((t) => t.taskKey === activeId) ? (
+                  <IssueCardOverlay task={tasks.find((t) => t.taskKey === activeId)!} />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          )}
+        </div>
 
       {boardForConfig && (
         <BoardConfigPanel open={showConfig} onClose={() => setShowConfig(false)} board={boardForConfig} projectId={projectId} />

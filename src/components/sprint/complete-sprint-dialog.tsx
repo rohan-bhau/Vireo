@@ -3,10 +3,11 @@
 import { useState } from "react";
 import type { Sprint } from "@/store/sprintApi";
 import type { Task } from "@/store/taskApi";
-import { useCompleteSprintMutation } from "@/store/sprintApi";
+import { useCompleteSprintMutation, useGetProjectSprintsQuery } from "@/store/sprintApi";
+import { useCreateSprintMutation } from "@/store/sprintApi";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Plus } from "lucide-react";
 
 interface CompleteSprintDialogProps {
   sprint: Sprint;
@@ -17,18 +18,36 @@ interface CompleteSprintDialogProps {
 
 export function CompleteSprintDialog({ sprint, tasks, projectId, onClose }: CompleteSprintDialogProps) {
   const [completeSprint] = useCompleteSprintMutation();
+  const [createSprint] = useCreateSprintMutation();
+  const { data: allSprints = [] } = useGetProjectSprintsQuery(projectId);
   const [submitting, setSubmitting] = useState(false);
-  const [returnToBacklog, setReturnToBacklog] = useState(true);
+  const [goalCompleted, setGoalCompleted] = useState(false);
+  const [unfinishedAction, setUnfinishedAction] = useState<"backlog" | "new-sprint">("backlog");
+  const [newSprintName, setNewSprintName] = useState("");
 
   const totalPoints = tasks.reduce((sum, t) => sum + (t.storyPoints || 0), 0);
   const donePoints = tasks.filter((t) => t.status === "done").reduce((sum, t) => sum + (t.storyPoints || 0), 0);
   const doneTasks = tasks.filter((t) => t.status === "done").length;
   const incompleteTasks = tasks.filter((t) => t.status !== "done");
+  const plannedSprints = allSprints.filter((s) => s.status === "PLANNING");
 
   async function handleComplete() {
     setSubmitting(true);
     try {
-      await completeSprint({ sprintId: sprint.id, projectId }).unwrap();
+      let moveToSprintId: string | undefined;
+      if (unfinishedAction === "new-sprint" && newSprintName.trim()) {
+        const newSprint = await createSprint({
+          name: newSprintName.trim(),
+          projectId,
+        }).unwrap();
+        moveToSprintId = newSprint.id;
+      }
+      await completeSprint({
+        sprintId: sprint.id,
+        projectId,
+        goalCompleted: goalCompleted || undefined,
+        moveToSprintId,
+      }).unwrap();
       onClose();
     } catch {
     } finally {
@@ -44,6 +63,17 @@ export function CompleteSprintDialog({ sprint, tasks, projectId, onClose }: Comp
             <span className="text-[#5E6C84]">Sprint</span>
             <span className="font-medium text-[#172B4D]">{sprint.name}</span>
           </div>
+          {sprint.goal && (
+            <label className="flex items-center gap-2 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={goalCompleted}
+                onChange={(e) => setGoalCompleted(e.target.checked)}
+                className="rounded border-[#DFE1E6] text-[#0065FF] focus:ring-[#4C9AFF]"
+              />
+              <span className="text-sm text-[#172B4D]">Sprint goal completed</span>
+            </label>
+          )}
           <div className="flex items-center justify-between text-sm">
             <span className="text-[#5E6C84]">Planned</span>
             <span className="font-medium text-[#172B4D]">{tasks.length} issues · {totalPoints} pts</span>
@@ -80,19 +110,60 @@ export function CompleteSprintDialog({ sprint, tasks, projectId, onClose }: Comp
         </div>
 
         {incompleteTasks.length > 0 && (
-          <div className="rounded-[3px] border border-[#DFE1E6] p-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={returnToBacklog}
-                onChange={(e) => setReturnToBacklog(e.target.checked)}
-                className="rounded border-[#DFE1E6] text-[#0065FF] focus:ring-[#4C9AFF]"
-              />
-              <div className="text-sm text-[#172B4D]">
-                <span className="font-medium">Move unfinished to backlog</span>
-                <p className="text-xs text-[#5E6C84]">{incompleteTasks.length} issue{incompleteTasks.length !== 1 ? "s" : ""} will be returned</p>
-              </div>
-            </label>
+          <div className="rounded-[3px] border border-[#DFE1E6] p-3 space-y-3">
+            <p className="text-xs font-semibold text-[#5E6C84] uppercase tracking-wider">
+              Unfinished issues ({incompleteTasks.length})
+            </p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="unfinished-action"
+                  checked={unfinishedAction === "backlog"}
+                  onChange={() => setUnfinishedAction("backlog")}
+                  className="border-[#DFE1E6] text-[#0065FF] focus:ring-[#4C9AFF]"
+                />
+                <div className="text-sm text-[#172B4D]">
+                  <span className="font-medium">Move to backlog</span>
+                  <p className="text-xs text-[#5E6C84]">Issues returned to the backlog</p>
+                </div>
+              </label>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="unfinished-action"
+                  checked={unfinishedAction === "new-sprint"}
+                  onChange={() => setUnfinishedAction("new-sprint")}
+                  className="mt-0.5 border-[#DFE1E6] text-[#0065FF] focus:ring-[#4C9AFF]"
+                />
+                <div className="flex-1 text-sm text-[#172B4D]">
+                  <span className="font-medium">Move to new sprint</span>
+                  {unfinishedAction === "new-sprint" && (
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {plannedSprints.length > 0 && (
+                        <select
+                          value={newSprintName}
+                          onChange={(e) => setNewSprintName(e.target.value)}
+                          className="flex-1 rounded-[3px] border border-[#DFE1E6] px-2.5 py-1.5 text-xs text-[#172B4D] focus:outline-none focus:ring-1 focus:ring-[#4C9AFF]"
+                        >
+                          <option value="">Create new...</option>
+                          {plannedSprints.map((s) => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      )}
+                      <input
+                        placeholder="Sprint name"
+                        value={newSprintName}
+                        onChange={(e) => setNewSprintName(e.target.value)}
+                        className="flex-1 rounded-[3px] border border-[#DFE1E6] px-2.5 py-1.5 text-xs text-[#172B4D] placeholder:text-[#8993A4] focus:outline-none focus:ring-1 focus:ring-[#4C9AFF]"
+                      />
+                      <Plus className="h-3.5 w-3.5 text-[#5E6C84]" />
+                    </div>
+                  )}
+                </div>
+              </label>
+            </div>
           </div>
         )}
 

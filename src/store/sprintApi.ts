@@ -101,10 +101,11 @@ export const sprintApi = api.injectEndpoints({
         { type: "Sprint", id: `project-${projectId}` },
       ],
     }),
-    completeSprint: builder.mutation<Sprint, { sprintId: string; projectId: string }>({
-      query: ({ sprintId }) => ({
+    completeSprint: builder.mutation<Sprint, { sprintId: string; projectId: string; goalCompleted?: boolean; moveToSprintId?: string }>({
+      query: ({ sprintId, goalCompleted, moveToSprintId }) => ({
         url: `/sprints/${sprintId}/complete`,
         method: "POST",
+        body: { goalCompleted, moveToSprintId },
       }),
       transformResponse: (response: SprintResponse) => response.data.sprint,
       invalidatesTags: (_result, _error, { projectId }) => [

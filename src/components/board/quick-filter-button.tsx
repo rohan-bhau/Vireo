@@ -13,10 +13,10 @@ export function QuickFilterButton({ label, active, onClick }: QuickFilterButtonP
     <button
       onClick={onClick}
       className={clsx(
-        "rounded-[3px] px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap",
+        "rounded-sm px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap",
         active
-          ? "bg-[#0052CC] text-white"
-          : "bg-[#F1F2F6] text-[#42526E] hover:bg-[#DFE1E6]"
+          ? "bg-primary text-white"
+          : "bg-bg-light text-text-secondary hover:bg-bg-neutral"
       )}
     >
       {label}
