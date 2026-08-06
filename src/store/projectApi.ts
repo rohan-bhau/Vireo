@@ -105,6 +105,16 @@ export const projectApi = api.injectEndpoints({
       transformResponse: (response: ProjectResponse) => response.data.project,
       providesTags: (_result, _error, projectId) => [{ type: "Project", id: projectId }],
     }),
+    getOrSeedDefaultProject: builder.mutation<Project, string>({
+      query: (workspaceId) => ({
+        url: `/workspaces/${workspaceId}/default-project`,
+        method: "GET",
+      }),
+      transformResponse: (response: { status: string; data: { project: Project } }) => response.data.project,
+      invalidatesTags: (_result, _error, workspaceId) => [
+        { type: "Project", id: `workspace-${workspaceId}` },
+      ],
+    }),
     createProject: builder.mutation<Project, {
       workspaceId: string;
       name: string;
@@ -206,15 +216,19 @@ export const projectApi = api.injectEndpoints({
         { type: "Board", id: boardId },
       ],
     }),
-    reorderColumns: builder.mutation<Column[], { boardId: string; columnIds: string[] }>({
-      query: ({ boardId, columnIds }) => ({
-        url: `/boards/${boardId}/columns/reorder`,
-        method: "PUT",
-        body: { columnIds },
-      }),
+    reorderColumns: builder.mutation<Column[], { boardId: string; projectId: string; columnIds: string[] }>({
+      query: ({ boardId, projectId, columnIds }) => {
+        void projectId;
+        return {
+          url: `/boards/${boardId}/columns/reorder`,
+          method: "PUT",
+          body: { columnIds },
+        };
+      },
       transformResponse: (response: ColumnsResponse) => response.data.columns,
-      invalidatesTags: (_result, _error, { boardId }) => [
+      invalidatesTags: (_result, _error, { boardId, projectId }) => [
         { type: "Board", id: boardId },
+        { type: "Board", id: `project-${projectId}` },
       ],
     }),
     updateBoardConfig: builder.mutation<Board, { boardId: string; config: Partial<BoardConfig> }>({
@@ -234,6 +248,7 @@ export const projectApi = api.injectEndpoints({
 export const {
   useGetWorkspaceProjectsQuery,
   useGetProjectQuery,
+  useGetOrSeedDefaultProjectMutation,
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,

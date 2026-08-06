@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -8,6 +8,7 @@ import {
   DragStartEvent,
   DragOverEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragOverlay,
@@ -32,7 +33,7 @@ import { BoardColumn } from "./board-column";
 import { IssueCard, IssueCardOverlay } from "./issue-card";
 import { SwimlaneRow } from "./swimlane-row";
 import { BoardConfigPanel } from "./board-config-panel";
-import { connectSocket } from "@/lib/socket";
+import { connectSocket, onBoardColumnsReordered } from "@/lib/socket";
 import type { Task } from "@/store/taskApi";
 import type { Board, Column } from "@/store/projectApi";
 
@@ -51,19 +52,14 @@ const DEFAULT_COLUMNS: { id: string; name: string; wipLimit: number | null }[] =
   { id: "done", name: "Done", wipLimit: null },
 ];
 
-const collisionDetection: CollisionDetection = (args) => {
-  const pointerCollisions = pointerWithin(args);
-  if (pointerCollisions.length > 0) return pointerCollisions;
-  return rectIntersection(args);
-};
-
 export function BoardView({ projectId, workspaceId, boardId: initialBoardId, sprintId, onBack }: BoardViewProps) {
   const router = useRouter();
 
   const { data: project } = useGetProjectQuery(projectId);
-  const { data: boards = [] } = useGetProjectBoardsQuery(projectId);
+  const { data: boards = [], refetch: refetchBoards } = useGetProjectBoardsQuery(projectId);
 
   const [activeBoardId, setActiveBoardId] = useState<string | undefined>(initialBoardId);
+  const [columnOrderOverride, setColumnOrderOverride] = useState<string[] | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
@@ -100,25 +96,61 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   }, [activeBoardId]);
 
   useEffect(() => {
+    if (!activeBoardId) return;
+    const off = onBoardColumnsReordered((data) => {
+      if (data.boardId !== activeBoardId) return;
+      const incoming = data.columns.map((c) => c.id);
+      setColumnOrderOverride(incoming);
+      refetchBoards();
+    });
+    return off;
+  }, [activeBoardId, refetchBoards]);
+
+  useEffect(() => {
     if (!activeBoardId && boards.length > 0) {
       setActiveBoardId(boards[0].id);
     }
   }, [boards, activeBoardId]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 4, delay: 0 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } })
   );
 
   const boardConfig = activeBoard?.config || {};
 
   const columns: { id: string; name: string; wipLimit: number | null }[] = useMemo(() => {
     if (activeBoard?.columns && activeBoard.columns.length > 0) {
-      return [...activeBoard.columns]
+      const sorted = [...activeBoard.columns]
         .sort((a, b) => a.position - b.position)
         .map((c: Column) => ({ id: c.id, name: c.name, wipLimit: (c as any).wipLimit ?? null }));
+      if (columnOrderOverride && columnOrderOverride.length === sorted.length) {
+        const byId = new Map(sorted.map((c) => [c.id, c]));
+        const reordered = columnOrderOverride.map((id) => byId.get(id)).filter(Boolean) as typeof sorted;
+        if (reordered.length === sorted.length) return reordered;
+      }
+      return sorted;
     }
     return DEFAULT_COLUMNS;
-  }, [activeBoard, sprintId]);
+  }, [activeBoard, sprintId, columnOrderOverride]);
+
+  const collisionDetection = useCallback<CollisionDetection>(
+    (args) => {
+      const activeId = args.active.id as string;
+      const isColumnDrag = columns.some((c) => c.id === activeId);
+      const candidates = args.droppableContainers.filter((dc) => {
+        if (isColumnDrag) {
+          return columns.some((c) => c.id === dc.id);
+        }
+        return dc.id !== activeId;
+      });
+      const filteredArgs = { ...args, droppableContainers: candidates };
+      const pointer = pointerWithin(filteredArgs);
+      if (pointer.length > 0) return pointer;
+      return rectIntersection(filteredArgs);
+    },
+    [columns]
+  );
 
   const columnIds = columns.map((c) => c.id);
 
@@ -189,7 +221,23 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   }
 
   function handleDragOver(event: DragOverEvent) {
-    const overId = event.over?.id as string | undefined;
+    const { active, over } = event;
+    const activeIdStr = active.id as string;
+    const overId = over?.id as string | undefined;
+
+    const isColumnDrag = columns.some((c) => c.id === activeIdStr);
+
+    if (isColumnDrag && overId && activeBoard?.columns) {
+      const currentOrder = columnOrderOverride ?? [...activeBoard.columns].sort((a, b) => a.position - b.position).map((c) => c.id);
+      const oldIndex = currentOrder.indexOf(activeIdStr);
+      const newIndex = currentOrder.indexOf(overId);
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        setColumnOrderOverride(arrayMove(currentOrder, oldIndex, newIndex));
+      }
+      setHoverColumnId(overId);
+      return;
+    }
+
     if (overId && columns.some((c) => c.id === overId)) {
       setHoverColumnId(overId);
     } else if (overId) {
@@ -212,13 +260,9 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     const isColumn = columns.some((c) => c.id === activeIdStr);
     if (isColumn) {
       if (!activeBoard || !activeBoard.columns) return;
-      const sorted = [...activeBoard.columns].sort((a, b) => a.position - b.position);
-      const oldIndex = sorted.findIndex((c) => c.id === activeIdStr);
-      const newIndex = sorted.findIndex((c) => c.id === overIdStr);
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const reordered = arrayMove(sorted, oldIndex, newIndex);
-        await reorderColumns({ boardId: activeBoard.id, columnIds: reordered.map((c) => c.id) });
-      }
+      const newOrder = columnOrderOverride ?? [...activeBoard.columns].sort((a, b) => a.position - b.position).map((c) => c.id);
+      setColumnOrderOverride(newOrder);
+      await reorderColumns({ boardId: activeBoard.id, projectId, columnIds: newOrder });
       return;
     }
 
@@ -438,7 +482,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
 
               <DragOverlay>
                 {activeId && columns.some((c) => c.id === activeId) ? (
-                  <div className="rounded-lg bg-surface px-4 py-3 shadow-lg border border-primary/40 w-72">
+                  <div className="rounded-lg bg-surface px-4 py-3 shadow-lg border border-primary/40 w-72 cursor-grabbing">
                     <p className="text-sm font-medium text-text-primary">{columns.find((c) => c.id === activeId)?.name}</p>
                   </div>
                 ) : activeId && tasks.find((t) => t.taskKey === activeId) ? (

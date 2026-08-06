@@ -69,6 +69,12 @@ export function onBoardUpdated(callback: () => void): () => void {
   return () => { s.off("board-updated", callback); };
 }
 
+export function onBoardColumnsReordered(callback: (data: { boardId: string; columns: { id: string; name: string; position: number }[] }) => void): () => void {
+  const s = connectSocket();
+  s.on("board-columns-reordered", callback);
+  return () => { s.off("board-columns-reordered", callback); };
+}
+
 export function onTaskMoved(callback: (data: any) => void): () => void {
   const s = connectSocket();
   s.on("task-moved", callback);

@@ -46,7 +46,7 @@ export function BoardConfigPanel({ open, onClose, board, projectId }: BoardConfi
           ))}
         </div>
         <div className="flex-1 min-w-0">
-          {activeTab === "columns" && <ColumnsTab board={board} />}
+          {activeTab === "columns" && <ColumnsTab board={board} projectId={projectId} />}
           {activeTab === "swimlanes" && <SwimlanesTab board={board} />}
           {activeTab === "card-layout" && <CardLayoutTab board={board} />}
           {activeTab === "quick-filters" && <QuickFiltersTab board={board} />}
@@ -56,7 +56,7 @@ export function BoardConfigPanel({ open, onClose, board, projectId }: BoardConfi
   );
 }
 
-function ColumnsTab({ board }: { board: Board }) {
+function ColumnsTab({ board, projectId }: { board: Board; projectId: string }) {
   const [addColumn] = useAddColumnMutation();
   const [updateColumn] = useUpdateColumnMutation();
   const [removeColumn] = useRemoveColumnMutation();
@@ -82,7 +82,7 @@ function ColumnsTab({ board }: { board: Board }) {
     const cols = [...sortedColumns];
     const ids = cols.map((c) => c.id);
     [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
-    await reorderColumns({ boardId: board.id, columnIds: ids });
+    await reorderColumns({ boardId: board.id, projectId: projectId, columnIds: ids });
   }
 
   async function handleMoveDown(_col: Column, index: number) {
@@ -90,7 +90,7 @@ function ColumnsTab({ board }: { board: Board }) {
     const cols = [...sortedColumns];
     const ids = cols.map((c) => c.id);
     [ids[index], ids[index + 1]] = [ids[index + 1], ids[index]];
-    await reorderColumns({ boardId: board.id, columnIds: ids });
+    await reorderColumns({ boardId: board.id, projectId: projectId, columnIds: ids });
   }
 
   return (

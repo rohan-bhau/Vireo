@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
+import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picker";
+import type { ProjectTemplate } from "@/store/projectApi";
 
 type SettingsTab = "general" | "members" | "billing";
 
@@ -34,6 +36,7 @@ export default function WorkspaceSettingsPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [template, setTemplate] = useState<ProjectTemplate>("KANBAN");
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showDelete, setShowDelete] = useState(false);
@@ -42,6 +45,7 @@ export default function WorkspaceSettingsPage() {
     if (workspace) {
       setName(workspace.name);
       setDescription(workspace.description || "");
+      setTemplate(workspace.template || "KANBAN");
     }
   }, [workspace]);
 
@@ -57,7 +61,7 @@ export default function WorkspaceSettingsPage() {
       return;
     }
     try {
-      await updateWorkspace({ workspaceId, name: name.trim(), description: description.trim() || undefined }).unwrap();
+      await updateWorkspace({ workspaceId, name: name.trim(), description: description.trim() || undefined, template }).unwrap();
       setSuccess("Workspace updated successfully");
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
@@ -169,6 +173,12 @@ export default function WorkspaceSettingsPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={!isAdmin}
               />
+              <div className={!isAdmin ? "pointer-events-none opacity-60" : ""}>
+                <WorkspaceTypePicker value={template} onChange={setTemplate} />
+                <p className="mt-1.5 text-xs text-[#737686]">
+                  Sets the default board and menu layout for this workspace.
+                </p>
+              </div>
               <div>
                 <label className="text-xs font-semibold text-[#434655]">Workspace ID</label>
                 <div className="mt-1.5 rounded-lg border border-[#C3C6D7] bg-gray-50 px-3 py-2.5 text-sm text-[#737686] font-mono">

@@ -28,7 +28,7 @@ interface OnboardingPopupProps {
   onClose: () => void;
 }
 
-const STEPS = ["role", "company", "usecase", "template"] as const;
+const STEPS = ["role", "company", "usecase", "type", "name"] as const;
 type Step = (typeof STEPS)[number];
 
 const roles = [
@@ -83,24 +83,39 @@ const useCases = [
 
 const templates = [
   {
-    id: "scrum",
+    id: "SCRUM",
     name: "Scrum",
     desc: "Sprints, backlog, velocity tracking",
   },
   {
-    id: "kanban",
+    id: "KANBAN",
     name: "Kanban",
-    desc: "Continuous flow, WIP limits",
+    desc: "Continuous flow, todo → in review → done",
   },
   {
-    id: "bug-tracking",
+    id: "BUG_TRACKING",
     name: "Bug Tracking",
     desc: "Triage and resolve defects",
   },
   {
-    id: "blank",
+    id: "PROJECT_MANAGEMENT",
+    name: "Project Management",
+    desc: "Plan projects with a timeline and tasks",
+  },
+  {
+    id: "DEVOPS",
+    name: "DevOps",
+    desc: "Connect development and operations",
+  },
+  {
+    id: "TASK_TRACKING",
+    name: "Task Tracking",
+    desc: "Simple to-do and task workflows",
+  },
+  {
+    id: "BLANK",
     name: "Start from scratch",
-    desc: "Empty project, you configure everything",
+    desc: "Empty board, you configure everything",
   },
 ];
 
@@ -120,10 +135,15 @@ const stepMeta: Record<Step, { icon: typeof Briefcase; title: string; subtitle: 
     title: "How will you use Vireo?",
     subtitle: "Choose what fits you best — you can change it later.",
   },
-  template: {
+  type: {
     icon: LayoutTemplate,
-    title: "Pick a starting template",
-    subtitle: "We'll scaffold your first project for you.",
+    title: "What type of workspace?",
+    subtitle: "This sets your board and menu layout — you can change it later in settings.",
+  },
+  name: {
+    icon: Briefcase,
+    title: "Name your workspace",
+    subtitle: "This will become the board that shows up when you open it.",
   },
 };
 
@@ -206,12 +226,14 @@ export function OnboardingPopup({ open, onClose }: OnboardingPopupProps) {
         setError("Please select a use case to continue.");
         return;
       }
-      await persist({ useCase }, "template");
-    } else if (step === "template") {
+      await persist({ useCase }, "type");
+    } else if (step === "type") {
       if (!template) {
-        setError("Please select a template to continue.");
+        setError("Please select a workspace type to continue.");
         return;
       }
+      await persist({ template }, "name");
+    } else if (step === "name") {
       if (!workspaceName.trim()) {
         setError("Please give your workspace a name.");
         return;
@@ -398,29 +420,8 @@ export function OnboardingPopup({ open, onClose }: OnboardingPopupProps) {
                     </div>
                   )}
 
-                  {step === "template" && (
-                    <div className="mt-6 space-y-3">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-text-secondary">
-                          Workspace name
-                        </label>
-                        <input
-                          type="text"
-                          value={workspaceName}
-                          onChange={(e) => {
-                            setWorkspaceName(e.target.value);
-                            setError(null);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleContinue();
-                            }
-                          }}
-                          placeholder="e.g. Acme Engineering"
-                          className="w-full rounded-[3px] border border-border-input bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-placeholder transition-[border-color,box-shadow] duration-[200ms] ease-in-out focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+                  {step === "type" && (
+                    <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {templates.map((tpl) => (
                         <button
                           key={tpl.id}
@@ -429,7 +430,7 @@ export function OnboardingPopup({ open, onClose }: OnboardingPopupProps) {
                             setTemplate(tpl.id);
                             setError(null);
                           }}
-                          className={`w-full cursor-pointer rounded-[3px] border p-4 text-left transition-all ${
+                          className={`cursor-pointer rounded-[3px] border p-4 text-left transition-all ${
                             template === tpl.id
                               ? "border-primary bg-primary-bg"
                               : "border-border-light hover:border-border hover:bg-bg-light"
@@ -449,7 +450,37 @@ export function OnboardingPopup({ open, onClose }: OnboardingPopupProps) {
                             )}
                           </div>
                         </button>
-                       ))}
+                      ))}
+                    </div>
+                  )}
+
+                  {step === "name" && (
+                    <div className="mt-6">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-text-secondary">
+                          Workspace name
+                        </label>
+                        <input
+                          type="text"
+                          value={workspaceName}
+                          onChange={(e) => {
+                            setWorkspaceName(e.target.value);
+                            setError(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleContinue();
+                            }
+                          }}
+                          placeholder="e.g. Acme Engineering"
+                          autoFocus
+                          className="w-full rounded-[3px] border border-border-input bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-placeholder transition-[border-color,box-shadow] duration-[200ms] ease-in-out focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+                      <p className="mt-2 text-xs text-text-tertiary">
+                        Opening your workspace will take you straight to its board.
+                      </p>
                     </div>
                   )}
                 </motion.div>
@@ -472,7 +503,7 @@ export function OnboardingPopup({ open, onClose }: OnboardingPopupProps) {
                 isLoading={saving || isSubmitting}
                 className="cursor-pointer"
               >
-                {step === "template" ? "Create workspace" : "Continue"}
+                {step === "name" ? "Create workspace" : "Continue"}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

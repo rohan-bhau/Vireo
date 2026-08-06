@@ -10,6 +10,8 @@ import {
   useCreateWorkspaceMutation,
 } from "@/store/workspaceApi";
 import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
+import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picker";
+import type { ProjectTemplate } from "@/store/projectApi";
 import {
   LayoutDashboard,
   Plus,
@@ -245,6 +247,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   const [showCustomize, setShowCustomize] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
+  const [newTemplate, setNewTemplate] = useState<ProjectTemplate>("KANBAN");
   const [createError, setCreateError] = useState<string | null>(null);
   const [forYouExpanded, setForYouExpanded] = useState(true);
   const [starredExpanded, setStarredExpanded] = useState(true);
@@ -301,10 +304,12 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
       const ws = await createWorkspace({
         name: newName.trim(),
         description: newDescription.trim() || undefined,
+        template: newTemplate,
       }).unwrap();
       setShowCreate(false);
       setNewName("");
       setNewDescription("");
+      setNewTemplate("KANBAN");
       dispatch(setActiveWorkspace(ws.id));
       dispatch(addRecentWorkspace(ws.id));
       window.location.href = `/w/${ws.id}`;
@@ -642,6 +647,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
             value={newDescription}
             onChange={(e) => setNewDescription(e.target.value)}
           />
+          <WorkspaceTypePicker value={newTemplate} onChange={setNewTemplate} />
           <div className="flex justify-end gap-3 pt-2">
             <Button
               type="button"

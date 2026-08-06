@@ -11,7 +11,9 @@ import { SkeletonWorkspaceCard } from "@/components/ui/skeleton";
 import { Dialog } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/app-layout";
 import { OnboardingPopup } from "@/components/onboarding/onboarding-popup";
+import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picker";
 import { setOnboardingNeeded } from "@/store/authSlice";
+import type { ProjectTemplate } from "@/store/projectApi";
 import { Plus, Home, Users } from "lucide-react";
 
 export default function DashboardPage() {
@@ -25,6 +27,7 @@ export default function DashboardPage() {
   const [autoOpened, setAutoOpened] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [template, setTemplate] = useState<ProjectTemplate>("KANBAN");
   const [error, setError] = useState<string | null>(null);
 
   if (!isLoading && onboardingNeeded && workspaces.length === 0 && !autoOpened) {
@@ -53,10 +56,11 @@ export default function DashboardPage() {
       return;
     }
     try {
-      const ws = await createWorkspace({ name: name.trim(), description: description.trim() || undefined }).unwrap();
+      const ws = await createWorkspace({ name: name.trim(), description: description.trim() || undefined, template }).unwrap();
       setShowCreate(false);
       setName("");
       setDescription("");
+      setTemplate("KANBAN");
       window.location.href = `/w/${ws.id}`;
     } catch (err: unknown) {
       setError((err as { data?: { message?: string } })?.data?.message || "Failed to create workspace");
@@ -178,6 +182,7 @@ export default function DashboardPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+          <WorkspaceTypePicker value={template} onChange={setTemplate} />
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>
               Cancel

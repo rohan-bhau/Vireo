@@ -1,10 +1,12 @@
 import { api } from "./api";
+import type { ProjectTemplate } from "./projectApi";
 
 interface Workspace {
   id: string;
   name: string;
   description: string | null;
   ownerId: string;
+  template: ProjectTemplate;
   createdAt: string;
   updatedAt: string;
   members?: WorkspaceMember[];
@@ -64,7 +66,7 @@ export const workspaceApi = api.injectEndpoints({
       transformResponse: (response: WorkspaceResponse) => response.data.workspace,
       providesTags: (_result, _error, id) => [{ type: "Workspace", id }],
     }),
-    createWorkspace: builder.mutation<Workspace, { name: string; description?: string }>({
+    createWorkspace: builder.mutation<Workspace, { name: string; description?: string; template?: ProjectTemplate }>({
       query: (body) => ({
         url: "/workspaces",
         method: "POST",
@@ -73,7 +75,7 @@ export const workspaceApi = api.injectEndpoints({
       transformResponse: (response: WorkspaceResponse) => response.data.workspace,
       invalidatesTags: ["Workspace"],
     }),
-    updateWorkspace: builder.mutation<Workspace, { workspaceId: string; name?: string; description?: string }>({
+    updateWorkspace: builder.mutation<Workspace, { workspaceId: string; name?: string; description?: string; template?: ProjectTemplate }>({
       query: ({ workspaceId, ...body }) => ({
         url: `/workspaces/${workspaceId}`,
         method: "PUT",

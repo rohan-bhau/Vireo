@@ -64,12 +64,15 @@ export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, isOver }
         "flex w-72 max-sm:w-64 flex-shrink-0 flex-col rounded-lg bg-bg-light border border-border-light/60",
         isDropOver && "ring-2 ring-primary/30",
         wipExceeded && "ring-2 ring-danger/30",
-        isDragging && "shadow-xl opacity-90"
+        isDragging && "shadow-xl opacity-90 cursor-grabbing"
       )}
     >
-      <div className="flex items-center justify-between px-3 py-3 min-h-[44px] border-b border-border-light/40" {...listeners}>
+      <div
+        className="flex items-center justify-between px-3 py-3 min-h-[44px] border-b border-border-light/40 cursor-grab active:cursor-grabbing touch-none"
+        {...listeners}
+      >
         <div className="flex items-center gap-2 overflow-hidden">
-          <svg className="h-3.5 w-3.5 flex-shrink-0 text-text-placeholder cursor-grab active:cursor-grabbing" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="h-3.5 w-3.5 flex-shrink-0 text-text-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M8 6h.01M16 6h.01M8 12h.01M16 12h.01M8 18h.01M16 18h.01" />
           </svg>
           <div className={clsx(
