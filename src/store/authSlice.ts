@@ -11,10 +11,12 @@ interface User {
 
 interface OnboardingData {
   role?: string;
-  teamSize?: string;
+  companySize?: string;
   useCase?: string;
+  template?: string;
+  workspaceName?: string;
+  step?: string;
   completed: boolean;
-  selectedTemplate?: string;
 }
 
 interface AuthState {
@@ -25,6 +27,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   onboarding: OnboardingData;
+  onboardingNeeded: boolean;
 }
 
 const initialState: AuthState = {
@@ -36,7 +39,9 @@ const initialState: AuthState = {
   error: null,
   onboarding: {
     completed: false,
+    step: "role",
   },
+  onboardingNeeded: false,
 };
 
 const authSlice = createSlice({
@@ -72,6 +77,9 @@ const authSlice = createSlice({
     setOnboarding(state, action: PayloadAction<Partial<OnboardingData>>) {
       state.onboarding = { ...state.onboarding, ...action.payload };
     },
+    setOnboardingNeeded(state, action: PayloadAction<boolean>) {
+      state.onboardingNeeded = action.payload;
+    },
     completeOnboarding(state) {
       state.onboarding.completed = true;
     },
@@ -81,7 +89,8 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
-      state.onboarding = { completed: false };
+      state.onboarding = { completed: false, step: "role" };
+      state.onboardingNeeded = false;
     },
   },
 });
@@ -93,6 +102,7 @@ export const {
   setLoading,
   setError,
   setOnboarding,
+  setOnboardingNeeded,
   completeOnboarding,
   logout,
 } = authSlice.actions;

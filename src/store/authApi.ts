@@ -55,9 +55,20 @@ interface RegisterInput {
 
 interface OnboardingInput {
   role: string;
-  teamSize: string;
+  companySize: string;
   useCase: string;
-  selectedTemplate?: string;
+  template?: string;
+  workspaceName?: string;
+}
+
+interface OnboardingDraft {
+  role?: string;
+  companySize?: string;
+  useCase?: string;
+  template?: string;
+  workspaceName?: string;
+  step?: string;
+  completedAt?: string;
 }
 
 interface OnboardingResponse {
@@ -136,6 +147,22 @@ export const authApi = api.injectEndpoints({
         body,
       }),
     }),
+    getOnboarding: builder.query<OnboardingDraft | null, void>({
+      query: () => "/auth/onboarding",
+      transformResponse: (response: { status: string; data: OnboardingDraft | null }) =>
+        response.data,
+      providesTags: ["Onboarding"],
+    }),
+    updateOnboarding: builder.mutation<OnboardingDraft, Partial<OnboardingDraft>>({
+      query: (body) => ({
+        url: "/auth/onboarding",
+        method: "PUT",
+        body,
+      }),
+      transformResponse: (response: { status: string; data: OnboardingDraft }) =>
+        response.data,
+      invalidatesTags: ["Onboarding"],
+    }),
   }),
 });
 
@@ -150,4 +177,7 @@ export const {
   useLazyGetProfileQuery,
   useUpdateProfileMutation,
   useSubmitOnboardingMutation,
+  useGetOnboardingQuery,
+  useUpdateOnboardingMutation,
+  useLazyGetOnboardingQuery,
 } = authApi;

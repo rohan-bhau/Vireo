@@ -2,22 +2,48 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/store";
 import { useGetWorkspacesQuery, useCreateWorkspaceMutation } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SkeletonWorkspaceCard } from "@/components/ui/skeleton";
 import { Dialog } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/app-layout";
+import { OnboardingPopup } from "@/components/onboarding/onboarding-popup";
+import { setOnboardingNeeded } from "@/store/authSlice";
 import { Plus, Home, Users } from "lucide-react";
 
 export default function DashboardPage() {
   const { data: workspaces = [], isLoading } = useGetWorkspacesQuery();
   const [createWorkspace, { isLoading: isCreating }] = useCreateWorkspaceMutation();
+  const onboardingNeeded = useSelector((state: RootState) => state.auth.onboardingNeeded);
+  const dispatch = useDispatch();
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [autoOpened, setAutoOpened] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  if (!isLoading && onboardingNeeded && workspaces.length === 0 && !autoOpened) {
+    setAutoOpened(true);
+    setShowOnboarding(true);
+  }
+
+  function closeOnboarding() {
+    setShowOnboarding(false);
+    dispatch(setOnboardingNeeded(false));
+  }
+
+  function openCreate() {
+    if (workspaces.length === 0) {
+      setShowOnboarding(true);
+    } else {
+      setShowCreate(true);
+    }
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +73,7 @@ export default function DashboardPage() {
               Welcome back! Select a workspace or create a new one.
             </p>
           </div>
-          <Button onClick={() => setShowCreate(true)} className="w-full sm:w-auto">
+          <Button onClick={openCreate} className="w-full sm:w-auto">
             <Plus className="mr-1.5 h-4 w-4" />
             New Workspace
           </Button>
@@ -69,7 +95,7 @@ export default function DashboardPage() {
               Workspaces are where your team collaborates on projects. Create your first workspace to get started.
             </p>
             <div className="mt-6 md:mt-8 flex items-center justify-center gap-4">
-              <Button onClick={() => setShowCreate(true)} size="lg" className="w-full sm:w-auto">
+              <Button onClick={() => setShowOnboarding(true)} size="lg" className="w-full sm:w-auto">
                 <Plus className="mr-1.5 h-4 w-4" />
                 Create your first workspace
               </Button>
@@ -162,6 +188,8 @@ export default function DashboardPage() {
           </div>
         </form>
       </Dialog>
+
+      <OnboardingPopup open={showOnboarding} onClose={closeOnboarding} />
     </AppLayout>
   );
 }
