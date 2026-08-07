@@ -12,11 +12,55 @@ import {
   useGetInvitationsQuery,
   useCreateInvitationMutation,
   useCancelInvitationMutation,
+  type Role,
 } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
+import { toastSuccess, toastError } from "@/lib/toast";
 import Link from "next/link";
+
+const ROLE_LABELS: Record<Role, string> = {
+  ADMIN: "Admin",
+  MEMBER: "Member",
+  VIEWER: "Viewer",
+};
+
+const ROLE_BADGE: Record<Role, string> = {
+  ADMIN: "bg-[#EEF4FF] text-[#004AC6]",
+  MEMBER: "bg-[#F0F0F5] text-[#737686]",
+  VIEWER: "bg-[#F5F3FF] text-[#6D28D9]",
+};
+
+function Avatar({
+  name,
+  avatar,
+}: {
+  name: string;
+  avatar?: string | null;
+}) {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  if (avatar) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatar}
+        alt={name}
+        className="h-9 w-9 rounded-full object-cover"
+      />
+    );
+  }
+  return (
+    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2563EB] text-xs font-bold text-white">
+      {initials || "?"}
+    </div>
+  );
+}
 
 export default function MembersPage() {
   const params = useParams();
@@ -33,10 +77,13 @@ export default function MembersPage() {
 
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
+  const [inviteRole, setInviteRole] = useState<Role>("VIEWER");
   const [inviteMessage, setInviteMessage] = useState("");
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const [removeLoading, setRemoveLoading] = useState(false);
+  const [roleLoading, setRoleLoading] = useState<string | null>(null);
 
   const currentMember = members.find((m) => m.userId === user?.id);
   const isAdmin = currentMember?.role === "ADMIN";
@@ -60,23 +107,51 @@ export default function MembersPage() {
       setInviteMessage("");
       setInviteSuccess("Invitation sent to " + inviteEmail.trim());
       setTimeout(() => setInviteSuccess(null), 3000);
-    } catch (err: any) {
-      setInviteError(err?.data?.message || "Failed to send invitation");
+    } catch (err) {
+      setInviteError(
+        (err as { data?: { message?: string } }).data?.message ||
+          (err as { message?: string }).message ||
+          "Failed to send invitation"
+      );
     }
   }
 
   async function handleRemoveMember(userId: string) {
-    if (!confirm("Remove this member from the workspace?")) return;
-    try { await removeMember({ workspaceId, userId }).unwrap(); } catch {}
+    setRemoveLoading(true);
+    try {
+      await removeMember({ workspaceId, userId }).unwrap();
+      toastSuccess("Member removed");
+    } catch (err) {
+      toastError(
+        (err as { data?: { message?: string } }).data?.message || "Failed to remove member"
+      );
+    } finally {
+      setRemoveLoading(false);
+      setRemoveTarget(null);
+    }
   }
 
-  async function handleToggleRole(memberId: string, currentRole: "ADMIN" | "MEMBER") {
-    const newRole = currentRole === "ADMIN" ? "MEMBER" : "ADMIN";
-    try { await updateRole({ workspaceId, userId: memberId, role: newRole }).unwrap(); } catch {}
+  async function handleChangeRole(memberUserId: string, role: Role) {
+    setRoleLoading(memberUserId);
+    try {
+      await updateRole({ workspaceId, userId: memberUserId, role }).unwrap();
+    } catch (err) {
+      toastError(
+        (err as { data?: { message?: string } }).data?.message || "Failed to update role"
+      );
+    } finally {
+      setRoleLoading(null);
+    }
   }
 
   async function handleCancelInvitation(invitationId: string) {
-    try { await cancelInvitation({ workspaceId, invitationId }).unwrap(); } catch {}
+    try {
+      await cancelInvitation({ workspaceId, invitationId }).unwrap();
+    } catch (err) {
+      toastError(
+        (err as { data?: { message?: string } }).data?.message || "Failed to cancel invitation"
+      );
+    }
   }
 
   return (
@@ -117,61 +192,64 @@ export default function MembersPage() {
             <thead>
               <tr className="border-b border-[#C3C6D7]/20">
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Member</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#C3C6D7]/10">
-              {members.map((member) => (
-                <tr key={member.userId} className="hover:bg-[#F8F9FF]">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2563EB] text-xs font-bold text-white">
-                        {member.userId === user?.id
-                          ? user.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-                          : member.userId.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
+              {members.map((member) => {
+                const displayName =
+                  member.user?.name || (member.userId === user?.id ? "You" : `User ${member.userId.slice(0, 8)}`);
+                const email = member.user?.email || "";
+                const isCurrentUser = member.userId === user?.id;
+                return (
+                  <tr key={member.userId} className="hover:bg-[#F8F9FF]">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={displayName} avatar={member.user?.avatar} />
                         <p className="text-sm font-medium text-[#121C28]">
-                          {member.userId === user?.id ? "You" : `User ${member.userId.slice(0, 8)}`}
-                        </p>
-                        <p className="text-xs text-[#737686]">
-                          {member.userId === user?.id ? user?.email : ""}
+                          {displayName}
+                          {isCurrentUser && <span className="ml-1.5 text-xs text-[#737686]">(you)</span>}
                         </p>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      member.role === "ADMIN"
-                        ? "bg-[#EEF4FF] text-[#004AC6]"
-                        : "bg-[#F0F0F5] text-[#737686]"
-                    }`}>
-                      {member.role === "ADMIN" ? "Admin" : "Member"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {isAdmin && member.userId !== user?.id ? (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleToggleRole(member.userId, member.role)}
-                          className="rounded-md px-3 py-1.5 text-xs font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
+                    </td>
+                    <td className="px-6 py-4 text-sm text-[#737686]">{email}</td>
+                    <td className="px-6 py-4">
+                      {isAdmin && !isCurrentUser ? (
+                        <select
+                          value={member.role}
+                          disabled={roleLoading === member.userId}
+                          onChange={(e) => handleChangeRole(member.userId, e.target.value as Role)}
+                          className="rounded-md border border-[#C3C6D7] bg-white px-2 py-1 text-xs font-medium text-[#434655] focus:border-[#2563EB] focus:outline-none"
                         >
-                          {member.role === "ADMIN" ? "Demote" : "Promote"}
-                        </button>
+                          {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
+                            <option key={role} value={role}>
+                              {ROLE_LABELS[role]}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${ROLE_BADGE[member.role]}`}>
+                          {ROLE_LABELS[member.role]}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {isAdmin && !isCurrentUser ? (
                         <button
-                          onClick={() => handleRemoveMember(member.userId)}
+                          onClick={() => setRemoveTarget(member.userId)}
                           className="rounded-md px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
                         >
                           Remove
                         </button>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-[#C3C6D7]">&mdash;</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                      ) : (
+                        <span className="text-xs text-[#C3C6D7]">&mdash;</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -196,8 +274,8 @@ export default function MembersPage() {
                       <p className="text-sm font-medium text-[#121C28]">{inv.inviteeEmail}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-block rounded-full bg-[#FFFBEB] px-2.5 py-0.5 text-[11px] font-medium text-[#92400E]">
-                        {inv.role === "ADMIN" ? "Admin" : "Member"}
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${ROLE_BADGE[inv.role]}`}>
+                        {ROLE_LABELS[inv.role]}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -234,7 +312,7 @@ export default function MembersPage() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-[#434655]">Workspace Role</label>
             <div className="flex gap-3">
-              {(["MEMBER", "ADMIN"] as const).map((role) => (
+              {(["VIEWER", "MEMBER", "ADMIN"] as const).map((role) => (
                 <button
                   key={role}
                   type="button"
@@ -245,14 +323,16 @@ export default function MembersPage() {
                       : "border-[#C3C6D7] text-[#434655] hover:bg-[#F8F9FF]"
                   }`}
                 >
-                  {role === "ADMIN" ? "Admin" : "Member"}
+                  {ROLE_LABELS[role]}
                 </button>
               ))}
             </div>
             <p className="text-xs text-[#737686]">
               {inviteRole === "ADMIN"
                 ? "Full access to billing, members, and all projects."
-                : "Can create projects and manage their own work."}
+                : inviteRole === "MEMBER"
+                ? "Can create projects and manage their own work."
+                : "Read-only access. Can view boards and comment on tasks."}
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -270,6 +350,28 @@ export default function MembersPage() {
             <Button type="submit" isLoading={isInviting}>Send Invites</Button>
           </div>
         </form>
+      </Dialog>
+
+      <Dialog
+        open={!!removeTarget}
+        onClose={() => setRemoveTarget(null)}
+        title="Remove member"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[#434655]">
+            Are you sure you want to remove this member from the workspace? They will lose access to all projects and boards.
+          </p>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setRemoveTarget(null)}>Cancel</Button>
+            <Button
+              variant="danger"
+              isLoading={removeLoading}
+              onClick={() => removeTarget && handleRemoveMember(removeTarget)}
+            >
+              Remove
+            </Button>
+          </div>
+        </div>
       </Dialog>
     </>
   );

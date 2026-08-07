@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState, AppDispatch } from "@/store";
+import { taskApi } from "@/store/taskApi";
 import {
   DndContext,
   DragEndEvent,
@@ -24,8 +27,8 @@ import {
 import { useGetProjectQuery, useGetProjectBoardsQuery, useReorderColumnsMutation, useAddColumnMutation } from "@/store/projectApi";
 import { useGetBoardTasksQuery, useMoveTaskMutation } from "@/store/taskApi";
 import { useGetSprintQuery, useGetSprintTasksQuery, useCompleteSprintMutation } from "@/store/sprintApi";
+import { useGetMembersQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
-import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 import { BoardSwitcher } from "./board-switcher";
 import { BoardHeader } from "./board-header";
 import { BoardFilterBar } from "./board-filter-bar";
@@ -33,7 +36,19 @@ import { BoardColumn } from "./board-column";
 import { IssueCard, IssueCardOverlay } from "./issue-card";
 import { SwimlaneRow } from "./swimlane-row";
 import { BoardConfigPanel } from "./board-config-panel";
-import { connectSocket, onBoardColumnsReordered } from "@/lib/socket";
+import { TaskDetailOverlay } from "@/components/tasks/task-detail-overlay";
+import { toastError } from "@/lib/toast";
+import {
+  connectSocket,
+  joinWorkspaceRoom,
+  leaveWorkspaceRoom,
+  onBoardColumnsReordered,
+  onTaskCreated,
+  onTaskUpdated,
+  onTaskMoved,
+  onTaskDeleted,
+  onTaskReordered,
+} from "@/lib/socket";
 import type { Task } from "@/store/taskApi";
 import type { Board, Column } from "@/store/projectApi";
 
@@ -54,6 +69,8 @@ const DEFAULT_COLUMNS: { id: string; name: string; wipLimit: number | null }[] =
 
 export function BoardView({ projectId, workspaceId, boardId: initialBoardId, sprintId, onBack }: BoardViewProps) {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
 
   const { data: project } = useGetProjectQuery(projectId);
   const { data: boards = [], refetch: refetchBoards } = useGetProjectBoardsQuery(projectId);
@@ -66,7 +83,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
 
   const activeBoard = boards.find((b) => b.id === activeBoardId) || boards[0] || null;
 
-  const { data: boardTasks = [], isLoading: tasksLoading } = useGetBoardTasksQuery(activeBoardId ?? "", { skip: !activeBoardId || !!sprintId });
+  const { data: boardTasks = [], isLoading: tasksLoading, refetch: refetchBoardTasks } = useGetBoardTasksQuery(activeBoardId ?? "", { skip: !activeBoardId || !!sprintId });
   const { data: sprintTasks = [], isLoading: sprintTasksLoading } = useGetSprintTasksQuery(sprintId ?? "", { skip: !sprintId });
   const { data: sprint } = useGetSprintQuery(sprintId ?? "", { skip: !sprintId });
 
@@ -79,21 +96,33 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hoverColumnId, setHoverColumnId] = useState<string | null>(null);
+  const [createColumnId, setCreateColumnId] = useState<string>("");
+  const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(null);
 
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
   const [jqlQuery, setJqlQuery] = useState("");
   const [swimlaneType, setSwimlaneType] = useState<string>("none");
 
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [createColumnId, setCreateColumnId] = useState<string>("");
+  const { data: members = [] } = useGetMembersQuery(workspaceId);
+  const membersMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const m of members) {
+      if (m.user?.name) map[m.userId] = m.user.name;
+    }
+    return map;
+  }, [members]);
 
   useEffect(() => {
     if (!activeBoardId) return;
     const socket = connectSocket();
     socket.emit("join-board", activeBoardId);
-    return () => { socket.emit("leave-board", activeBoardId); };
-  }, [activeBoardId]);
+    joinWorkspaceRoom(workspaceId);
+    return () => {
+      socket.emit("leave-board", activeBoardId);
+      leaveWorkspaceRoom(workspaceId);
+    };
+  }, [activeBoardId, workspaceId]);
 
   useEffect(() => {
     if (!activeBoardId) return;
@@ -105,6 +134,21 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     });
     return off;
   }, [activeBoardId, refetchBoards]);
+
+  useEffect(() => {
+    if (!activeBoardId || sprintId) return;
+    const refresh = () => {
+      if (refetchBoardTasks) refetchBoardTasks();
+    };
+    const offs = [
+      onTaskCreated((data) => { if (data.actorId !== currentUserId) refresh(); }),
+      onTaskUpdated((data) => { if (data.actorId !== currentUserId) refresh(); }),
+      onTaskMoved((data) => { if (data.actorId !== currentUserId) refresh(); }),
+      onTaskDeleted((data) => { if (data.actorId !== currentUserId) refresh(); }),
+      onTaskReordered((data) => { if ((data as { actorId?: string }).actorId !== currentUserId) refresh(); }),
+    ];
+    return () => offs.forEach((off) => off());
+  }, [activeBoardId, sprintId, refetchBoardTasks, currentUserId]);
 
   useEffect(() => {
     if (!activeBoardId && boards.length > 0) {
@@ -282,9 +326,24 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     const currentColId = activeTask.columnId || defaultColumnId(activeTask.status);
     if (currentColId === targetColumnId) return;
 
+    if (activeBoardId) {
+      dispatch(
+        taskApi.util.updateQueryData("getBoardTasks", activeBoardId, (draft) => {
+          const idx = draft.findIndex((t) => t.taskKey === activeIdStr);
+          if (idx === -1) return draft;
+          draft[idx] = { ...draft[idx], columnId: targetColumnId };
+          return draft;
+        })
+      );
+    }
+
     try {
-      await moveTask({ taskKey: activeIdStr, columnId: targetColumnId, position: 0 }).unwrap();
-    } catch {}
+      await moveTask({ taskKey: activeIdStr, columnId: targetColumnId, position: 0, boardId: activeBoardId }).unwrap();
+    } catch (e) {
+      toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||
+        (e as { message?: string })?.message ||
+        "Could not move task");
+    }
   }
 
   async function handleAddColumn() {
@@ -303,8 +362,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   }
 
   function handleCreateTask(colId: string) {
-    setCreateColumnId(colId);
-    setCreateDialogOpen(true);
+    setCreateColumnId((prev) => (prev === colId ? "" : colId));
   }
 
   const isLoading = tasksLoading || sprintTasksLoading;
@@ -417,7 +475,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                   name={groupName}
                   tasks={groupTasks}
                   columns={columns}
-                  onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
+                  onTaskClick={(taskKey) => setSelectedTaskKey(taskKey)}
                 />
               ))}
               {swimlaneGroups.length === 0 && (
@@ -441,9 +499,14 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                       key={column.id}
                       column={column}
                       tasks={getColumnTasks(column.id)}
-                      onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
+onTaskClick={(taskKey) => setSelectedTaskKey(taskKey)}
                       onCreateTask={handleCreateTask}
                       isOver={hoverColumnId === column.id}
+                      workspaceId={workspaceId}
+                      projectId={projectId}
+                      boardId={activeBoard?.id || ""}
+                      membersMap={membersMap}
+                      quickCreating={createColumnId === column.id}
                     />
                   ))}
                 </SortableContext>
@@ -497,7 +560,14 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
         <BoardConfigPanel open={showConfig} onClose={() => setShowConfig(false)} board={boardForConfig} projectId={projectId} />
       )}
 
-      <CreateTaskDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} workspaceId={workspaceId} columnId={createColumnId} />
+      {selectedTaskKey && (
+        <TaskDetailOverlay
+          key={selectedTaskKey}
+          taskKey={selectedTaskKey}
+          workspaceId={workspaceId}
+          onClose={() => setSelectedTaskKey(null)}
+        />
+      )}
     </div>
   );
 }

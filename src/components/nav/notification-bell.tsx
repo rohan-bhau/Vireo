@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useGetUnreadCountQuery, useGetNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation, type Notification, type NotificationType } from "@/store/notificationApi";
 import { connectSocket } from "@/lib/socket";
-import { Bell, UserPlus, AtSign, ArrowRightLeft, MessageSquare, Plus, RefreshCw, Trash2, Play, CheckSquare } from "lucide-react";
+import { Bell, UserPlus, AtSign, ArrowRightLeft, MessageSquare, Plus, RefreshCw, Trash2, Play, CheckSquare, UserPlus2, Shield, CalendarClock, PartyPopper } from "lucide-react";
 import { clsx } from "clsx";
 
 const typeIcons: Record<NotificationType, { icon: typeof Bell; color: string }> = {
@@ -17,6 +17,11 @@ const typeIcons: Record<NotificationType, { icon: typeof Bell; color: string }> 
   issue_deleted: { icon: Trash2, color: "text-[#EF4444]" },
   sprint_started: { icon: Play, color: "text-[#059669]" },
   sprint_completed: { icon: CheckSquare, color: "text-[#7C3AED]" },
+  member_added: { icon: UserPlus2, color: "text-[#2563EB]" },
+  role_changed: { icon: RefreshCw, color: "text-[#7C3AED]" },
+  invited: { icon: UserPlus2, color: "text-[#059669]" },
+  due_date: { icon: CalendarClock, color: "text-[#D97706]" },
+  issue_completed: { icon: PartyPopper, color: "text-[#059669]" },
 };
 
 function timeAgo(date: Date): string {

@@ -12,6 +12,7 @@ import { AssigneePicker } from "./assignee-picker";
 import { LabelEditor } from "./label-editor";
 import { MultiComponentSelector } from "./component-selector";
 import { VersionSelector } from "./version-selector";
+import { toastError } from "@/lib/toast";
 
 interface IssueDetailDetailsPanelProps {
   task: Task;
@@ -49,7 +50,11 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
     try {
       await updateTask({ taskKey: task.taskKey, data: { [field]: value } }).unwrap();
       setEditingField(null);
-    } catch {}
+    } catch (e) {
+      toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||
+        (e as { message?: string })?.message ||
+        "Update failed");
+    }
   }
 
   function startEdit(field: string, currentValue: any) {

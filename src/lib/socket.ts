@@ -69,28 +69,58 @@ export function onBoardUpdated(callback: () => void): () => void {
   return () => { s.off("board-updated", callback); };
 }
 
+export function joinWorkspaceRoom(workspaceId: string) {
+  const s = connectSocket();
+  s.emit("join-workspace", workspaceId);
+}
+
+export function leaveWorkspaceRoom(workspaceId: string) {
+  const s = getSocket();
+  if (s) s.emit("leave-workspace", workspaceId);
+}
+
 export function onBoardColumnsReordered(callback: (data: { boardId: string; columns: { id: string; name: string; position: number }[] }) => void): () => void {
   const s = connectSocket();
   s.on("board-columns-reordered", callback);
   return () => { s.off("board-columns-reordered", callback); };
 }
 
-export function onTaskMoved(callback: (data: any) => void): () => void {
+export interface TaskSocketData {
+  task?: import("@/store/taskApi").Task;
+  taskKey?: string;
+  columnId?: string;
+  actorId?: string;
+  tasks?: import("@/store/taskApi").Task[];
+}
+
+export function onTaskMoved(callback: (data: TaskSocketData) => void): () => void {
   const s = connectSocket();
   s.on("task-moved", callback);
   return () => { s.off("task-moved", callback); };
 }
 
-export function onTaskCreated(callback: (data: any) => void): () => void {
+export function onTaskCreated(callback: (data: TaskSocketData) => void): () => void {
   const s = connectSocket();
   s.on("task-created", callback);
   return () => { s.off("task-created", callback); };
 }
 
-export function onTaskUpdated(callback: (data: any) => void): () => void {
+export function onTaskUpdated(callback: (data: TaskSocketData) => void): () => void {
   const s = connectSocket();
   s.on("task-updated", callback);
   return () => { s.off("task-updated", callback); };
+}
+
+export function onTaskDeleted(callback: (data: TaskSocketData) => void): () => void {
+  const s = connectSocket();
+  s.on("task-deleted", callback);
+  return () => { s.off("task-deleted", callback); };
+}
+
+export function onTaskReordered(callback: (data: TaskSocketData) => void): () => void {
+  const s = connectSocket();
+  s.on("task-reordered", callback);
+  return () => { s.off("task-reordered", callback); };
 }
 
 export function onNewNotification(callback: (data: any) => void): () => void {

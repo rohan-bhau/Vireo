@@ -148,8 +148,8 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
         taskKey={task.taskKey}
         workspaceId={workspaceId}
         projectId={task.projectId}
-        parentTask={task.parentTask}
-        subtaskKeys={[]}
+        boardId={task.boardId}
+        columnId={task.columnId}
       />
 
       <div className="border-b border-border-light">

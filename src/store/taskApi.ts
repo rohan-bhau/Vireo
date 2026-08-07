@@ -151,6 +151,10 @@ export const taskApi = api.injectEndpoints({
       query: (columnId) => `/tasks/column/${columnId}`,
       transformResponse: (response: TasksResponse) => response.data.tasks,
     }),
+    getSubtasksByParent: builder.query<Task[], string>({
+      query: (taskKey) => `/tasks/${taskKey}/subtasks`,
+      transformResponse: (response: TasksResponse) => response.data.tasks,
+    }),
     createTask: builder.mutation<Task, CreateTaskInput>({
       query: (body) => ({
         url: "/tasks",
@@ -158,9 +162,10 @@ export const taskApi = api.injectEndpoints({
         body,
       }),
       transformResponse: (response: TaskResponse) => response.data.task,
-      invalidatesTags: (_result, _error, { workspaceId, projectId }) => [
+      invalidatesTags: (_result, _error, { workspaceId, projectId, boardId }) => [
         { type: "Task", id: `workspace-${workspaceId}` },
         ...(projectId ? [{ type: "Task" as const, id: `project-${projectId}` }] : []),
+        ...(boardId ? [{ type: "Task" as const, id: `board-${boardId}` }] : []),
       ],
     }),
     updateTask: builder.mutation<Task, { taskKey: string; data: UpdateTaskInput }>({
@@ -181,14 +186,16 @@ export const taskApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Task"],
     }),
-    moveTask: builder.mutation<Task, { taskKey: string; columnId: string; position: number }>({
-      query: ({ taskKey, ...body }) => ({
+    moveTask: builder.mutation<Task, { taskKey: string; columnId: string; position: number; boardId?: string }>({
+      query: ({ taskKey, columnId, position }) => ({
         url: `/tasks/${taskKey}/move`,
         method: "POST",
-        body,
+        body: { columnId, position },
       }),
       transformResponse: (response: TaskResponse) => response.data.task,
-      invalidatesTags: ["Task"],
+      invalidatesTags: (_result, _error, arg) => [
+        ...(arg.boardId ? [{ type: "Task" as const, id: `board-${arg.boardId}` }] : ["Task" as const]),
+      ],
     }),
     addAttachment: builder.mutation<Task, { taskKey: string; url: string; filename: string; publicId: string }>({
       query: ({ taskKey, ...body }) => ({
@@ -196,6 +203,21 @@ export const taskApi = api.injectEndpoints({
         method: "POST",
         body,
       }),
+      transformResponse: (response: TaskResponse) => response.data.task,
+      invalidatesTags: (_result, _error, { taskKey }) => [
+        { type: "Task", id: taskKey },
+      ],
+    }),
+    uploadAttachment: builder.mutation<Task, { taskKey: string; file: File }>({
+      query: ({ taskKey, file }) => {
+        const form = new FormData();
+        form.append("file", file);
+        return {
+          url: `/tasks/${taskKey}/attachments/upload`,
+          method: "POST",
+          body: form,
+        };
+      },
       transformResponse: (response: TaskResponse) => response.data.task,
       invalidatesTags: (_result, _error, { taskKey }) => [
         { type: "Task", id: taskKey },
@@ -287,11 +309,13 @@ export const {
   useGetProjectTasksQuery,
   useGetBoardTasksQuery,
   useGetColumnTasksQuery,
+  useGetSubtasksByParentQuery,
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useDeleteTaskMutation,
   useMoveTaskMutation,
   useAddAttachmentMutation,
+  useUploadAttachmentMutation,
   useRemoveAttachmentMutation,
   useGetTaskActivityQuery,
   useGetTaskCommentsQuery,

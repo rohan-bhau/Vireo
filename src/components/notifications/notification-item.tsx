@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   Bell, CheckCheck, ChevronRight, AtSign, UserPlus,
   ArrowRightLeft, MessageSquare, Plus, RefreshCw, Trash2, Play, CheckSquare,
+  UserPlus2, Shield, CalendarClock, PartyPopper,
 } from "lucide-react";
 import type { Notification, NotificationType } from "@/store/notificationApi";
 
@@ -17,6 +18,11 @@ export const typeConfig: Record<NotificationType, { icon: typeof Bell; color: st
   issue_deleted: { icon: Trash2, color: "text-[#EF4444] bg-[#FEF2F2]", label: "Issue deleted" },
   sprint_started: { icon: Play, color: "text-[#059669] bg-[#ECFDF5]", label: "Sprint started" },
   sprint_completed: { icon: CheckSquare, color: "text-[#7C3AED] bg-[#F3EEFF]", label: "Sprint completed" },
+  member_added: { icon: UserPlus2, color: "text-[#2563EB] bg-[#EEF4FF]", label: "Member added" },
+  role_changed: { icon: RefreshCw, color: "text-[#7C3AED] bg-[#F3EEFF]", label: "Role changed" },
+  invited: { icon: UserPlus2, color: "text-[#059669] bg-[#ECFDF5]", label: "Invited" },
+  due_date: { icon: CalendarClock, color: "text-[#D97706] bg-[#FFFBEB]", label: "Due date" },
+  issue_completed: { icon: PartyPopper, color: "text-[#059669] bg-[#ECFDF5]", label: "Completed" },
 };
 
 export function timeAgo(dateStr: string): string {
@@ -134,7 +140,7 @@ export function NotificationItem({
         </div>
       </div>
       <Link
-        href={`/task/${notification.taskId}`}
+        href={notification.taskId ? `/task/${notification.taskId}` : notification.workspaceId ? `/w/${notification.workspaceId}` : "#"}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#737686] opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-[#2563EB]"
       >
         <ChevronRight className="h-4 w-4" />

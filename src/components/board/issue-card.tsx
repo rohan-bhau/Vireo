@@ -4,30 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { clsx } from "clsx";
 import type { Task } from "@/store/taskApi";
-
-const TYPE_ICONS: Record<string, string> = {
-  task: "☐",
-  bug: "🐛",
-  epic: "★",
-  story: "📖",
-  subtask: "↳",
-};
-
-const PRIORITY_ICONS: Record<string, string> = {
-  lowest: "⇣",
-  low: "↓",
-  medium: "→",
-  high: "↑",
-  highest: "⇡",
-};
-
-const PRIORITY_COLORS: Record<string, string> = {
-  lowest: "text-priority-lowest",
-  low: "text-priority-low",
-  medium: "text-priority-medium",
-  high: "text-priority-high",
-  highest: "text-priority-highest",
-};
+import { TypeIcon } from "@/components/tasks/type-icons";
 
 const EPIC_COLORS = [
   "#4F46E5", "#7C3AED", "#0052CC", "#059669",
@@ -38,9 +15,18 @@ interface IssueCardProps {
   task: Task;
   onClick?: () => void;
   isOver?: boolean;
+  assigneeName?: string | null;
 }
 
-export function IssueCard({ task, onClick }: IssueCardProps) {
+function getInitials(name: string | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.charAt(0) || "?";
+  const second = parts.length > 1 ? parts[parts.length - 1]?.charAt(0) : "";
+  return (first + second).toUpperCase();
+}
+
+export function IssueCard({ task, onClick, isOver, assigneeName }: IssueCardProps) {
   const {
     setNodeRef,
     attributes,
@@ -48,7 +34,7 @@ export function IssueCard({ task, onClick }: IssueCardProps) {
     transform,
     transition,
     isDragging,
-    isOver,
+    isOver: dropOver,
   } = useSortable({ id: task.taskKey });
 
   const style = {
@@ -65,6 +51,7 @@ export function IssueCard({ task, onClick }: IssueCardProps) {
   const isFlagged = task.labels.includes("flagged");
   const isDone = task.status === "done";
   const isSubtask = task.type === "subtask";
+  const displayName = assigneeName || task.assignee || "";
 
   return (
     <div
@@ -74,9 +61,8 @@ export function IssueCard({ task, onClick }: IssueCardProps) {
       {...listeners}
       onClick={onClick}
       className={clsx(
-        "relative cursor-pointer rounded-lg bg-surface text-left shadow-card border border-border-light hover:border-primary/40 hover:shadow-card-hover transition-all duration-150 touch-none select-none group",
-        isOver && !isDragging && "border-t-2 border-t-primary",
-        isDone && "opacity-75"
+        "relative cursor-pointer rounded-lg bg-white text-left shadow-card border border-[#C3C6D7]/30 hover:border-[#2563EB]/40 hover:shadow-card-hover transition-all duration-150 touch-none select-none group p-2.5",
+        dropOver && !isDragging && "border-t-2 border-t-[#2563EB]"
       )}
     >
       {epicColor && (
@@ -85,80 +71,80 @@ export function IssueCard({ task, onClick }: IssueCardProps) {
           style={{ backgroundColor: epicColor }}
         />
       )}
-      <div className={clsx("flex items-center gap-1.5", isSubtask ? "mb-1" : "mb-1.5")}>
-        <span className="text-xs leading-none" title={task.type}>{TYPE_ICONS[task.type] || "☐"}</span>
-        <span className={clsx("font-mono font-medium", isSubtask ? "text-[10px] text-text-placeholder" : "text-[11px] text-text-tertiary")}>
-          {task.taskKey}
-        </span>
-        <span className={clsx(isSubtask ? "text-[10px]" : "text-[11px]", PRIORITY_COLORS[task.priority] || "text-text-tertiary")} title={task.priority}>
-          {PRIORITY_ICONS[task.priority] || ""}
-        </span>
-        {isFlagged && (
-          <span className="text-danger text-[11px]" title="Flagged">🚩</span>
-        )}
-        {task.storyPoints && (
-          <span className="ml-auto rounded bg-bg-light px-1.5 py-0.5 text-[10px] font-medium text-text-tertiary">
-            {task.storyPoints}
-          </span>
-        )}
-      </div>
+
       <p className={clsx(
-        isSubtask ? "text-xs" : "text-sm",
-        "font-medium text-text-primary line-clamp-2",
-        isDone && "line-through text-text-placeholder"
+        "text-sm font-medium text-[#121C28] line-clamp-2",
+        isSubtask && "text-xs ml-2",
+        isDone && "line-through text-[#737686]"
       )}>
         {task.title}
       </p>
+
+      <div className="mt-1 flex items-center gap-1">
+        <TypeIcon type={task.type} className="h-3.5 w-3.5 shrink-0" />
+        <span className={clsx("font-mono font-medium text-[#737686]", isSubtask ? "text-[10px]" : "text-[11px]")}>
+          {task.taskKey}
+        </span>
+        {isFlagged && (
+          <span className="text-[#FF5630] text-[11px]" title="Flagged">🚩</span>
+        )}
+        {task.storyPoints && (
+          <span className="rounded bg-[#F4F5F7] px-1.5 py-0.5 text-[10px] font-medium text-[#737686]">
+            {task.storyPoints}
+          </span>
+        )}
+
+        <div className="ml-auto flex items-center gap-1">
+          {isDone && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#36B37E] text-white" title="Done">
+              <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </span>
+          )}
+          {task.assignee ? (
+            <span
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2563EB] text-[9px] font-semibold text-white flex-shrink-0"
+              title={displayName}
+            >
+              {getInitials(displayName)}
+            </span>
+          ) : (
+            <span
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F4F5F7] text-[#737686] flex-shrink-0"
+              title="Unassigned"
+            >
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
+              </svg>
+            </span>
+          )}
+        </div>
+      </div>
+
       {task.dueDate && (
         <p className={clsx(
-          "mt-1 text-[10px]",
+          "mt-0.5 text-[10px]",
           new Date(task.dueDate) < new Date() && !isDone
-            ? "text-danger font-medium"
-            : "text-text-tertiary"
+            ? "text-[#FF5630] font-medium"
+            : "text-[#737686]"
         )}>
           {new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </p>
       )}
-      <div className={clsx("flex items-center gap-2", isSubtask ? "mt-1.5" : "mt-2")}>
-        <div className="flex flex-1 gap-1 overflow-hidden flex-wrap">
-          {task.labels.filter((l) => !l.startsWith("epic:")).slice(0, 2).map((label) => (
-            <span
-              key={label}
-              className="rounded bg-primary-bg px-1.5 py-0.5 text-[10px] font-medium text-primary truncate max-w-[80px]"
-            >
-              {label}
-            </span>
-          ))}
-          {task.labels.filter((l) => !l.startsWith("epic:")).length > 2 && (
-            <span className="text-[10px] text-text-tertiary">
-              +{task.labels.filter((l) => !l.startsWith("epic:")).length - 2}
-            </span>
-          )}
-        </div>
-        {task.assignee && (
-          <span
-            className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-white flex-shrink-0"
-            title={task.assignee}
-          >
-            {task.assignee.charAt(0).toUpperCase()}
-          </span>
-        )}
-      </div>
     </div>
   );
 }
 
 export function IssueCardOverlay({ task }: { task: Task }) {
   return (
-    <div className="rounded-lg bg-surface p-3 shadow-lg border border-primary/30 w-72 opacity-90">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="text-xs">{TYPE_ICONS[task.type] || "☐"}</span>
-        <span className="text-[11px] font-mono font-medium text-text-tertiary">{task.taskKey}</span>
+    <div className="rounded-lg bg-white p-3 shadow-lg border border-[#2563EB]/30 w-72 opacity-90">
+      <p className="text-sm font-medium text-[#121C28] line-clamp-2">{task.title}</p>
+      <div className="mt-1 flex items-center gap-1.5">
+        <TypeIcon type={task.type} className="h-3.5 w-3.5" />
+        <span className="text-[11px] font-mono font-medium text-[#737686]">{task.taskKey}</span>
       </div>
-      <p className="text-sm font-medium text-text-primary">{task.title}</p>
     </div>
   );
 }
-
-export const TYPE_ICONS_MAP = TYPE_ICONS;
-export const PRIORITY_COLORS_MAP = PRIORITY_COLORS;

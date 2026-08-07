@@ -1,6 +1,7 @@
 "use client";
 
 import type { Task } from "@/store/taskApi";
+import { TypeIcon } from "@/components/tasks/type-icons";
 
 interface SearchResultsDetailProps {
   task: Task | null;
@@ -19,14 +20,6 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: "In Progress",
   in_review: "In Review",
   done: "Done",
-};
-
-const TYPE_ICONS: Record<string, string> = {
-  task: "○",
-  bug: "◉",
-  story: "☰",
-  epic: "◆",
-  subtask: "▶",
 };
 
 const PRIORITY_ICONS: Record<string, string> = {
@@ -60,9 +53,10 @@ export function SearchResultsDetail({ task, onClose }: SearchResultsDetailProps)
       <div className="flex items-center justify-between border-b border-[#DFE1E6] px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs font-medium text-[#2563EB]">{task.taskKey}</span>
-          <span className="text-[11px] text-[#737686]">
-            {TYPE_ICONS[task.type] || "○"} {task.type}
-          </span>
+          <div className="flex items-center gap-1 text-[11px] text-[#737686]">
+            <TypeIcon type={task.type} className="h-3.5 w-3.5" />
+            <span className="capitalize">{task.type}</span>
+          </div>
         </div>
         <button onClick={onClose} className="text-[#737686] hover:text-[#121C28] transition-colors">
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

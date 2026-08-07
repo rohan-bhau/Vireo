@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
-  useAddAttachmentMutation,
+  useUploadAttachmentMutation,
   useRemoveAttachmentMutation,
   type Attachment,
 } from "@/store/taskApi";
 import { Button } from "@/components/ui/button";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 interface AttachmentListProps {
   taskKey: string;
@@ -14,30 +15,25 @@ interface AttachmentListProps {
 }
 
 export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
-  const [addAttachment] = useAddAttachmentMutation();
+  const [uploadAttachment, { isLoading: uploading }] = useUploadAttachmentMutation();
   const [removeAttachment] = useRemoveAttachmentMutation();
-  const [showAdd, setShowAdd] = useState(false);
-  const [url, setUrl] = useState("");
-  const [filename, setFilename] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
 
-  async function handleAdd() {
-    if (!url.trim() || !filename.trim() || submitting) return;
-    setSubmitting(true);
+  async function handleFile(file: File) {
     try {
-      await addAttachment({
-        taskKey,
-        url: url.trim(),
-        filename: filename.trim(),
-        publicId: `attach-${Date.now()}`,
-      }).unwrap();
-      setUrl("");
-      setFilename("");
-      setShowAdd(false);
-    } catch {
-    } finally {
-      setSubmitting(false);
+      await uploadAttachment({ taskKey, file }).unwrap();
+      toastSuccess(`Uploaded ${file.name}`);
+    } catch (e) {
+      toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||
+        (e as { message?: string })?.message ||
+        "Upload failed");
     }
+  }
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    for (const f of Array.from(files)) await handleFile(f);
   }
 
   async function handleRemove(publicId: string) {
@@ -57,46 +53,40 @@ export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
     return "📎";
   }
 
+  function isImage(url: string): boolean {
+    return /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/i.test(url);
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#121C28]">
-          Attachments ({attachments.length})
-        </h3>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="text-xs font-medium text-[#2563EB] hover:text-[#1d4ed8] transition-colors"
-        >
-          {showAdd ? "Cancel" : "+ Add"}
-        </button>
+        <h3 className="text-sm font-semibold text-[#121C28]">Attachments ({attachments.length})</h3>
       </div>
 
-      {showAdd && (
-        <div className="flex flex-col gap-2 rounded-lg border border-[#C3C6D7]/40 bg-white p-3">
-          <input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Attachment URL"
-            className="w-full rounded-lg border border-[#C3C6D7] px-3 py-2 text-sm text-[#121C28] placeholder:text-[#C3C6D7] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
-          />
-          <input
-            value={filename}
-            onChange={(e) => setFilename(e.target.value)}
-            placeholder="File name (e.g. screenshot.png)"
-            className="w-full rounded-lg border border-[#C3C6D7] px-3 py-2 text-sm text-[#121C28] placeholder:text-[#C3C6D7] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
-          />
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              onClick={handleAdd}
-              disabled={!url.trim() || !filename.trim() || submitting}
-              isLoading={submitting}
-            >
-              Add
-            </Button>
-          </div>
-        </div>
-      )}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
+        onClick={() => fileInputRef.current?.click()}
+        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-6 text-center transition-colors ${
+          dragging ? "border-[#2563EB] bg-[#EEF4FF]" : "border-[#C3C6D7] hover:border-[#2563EB] hover:bg-[#F8F9FF]"
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
+        />
+        <svg className="h-6 w-6 text-[#9CA3AF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+        </svg>
+        <p className="text-xs text-[#737686]">
+          {uploading ? "Uploading..." : "Drop files here or click to upload"}
+        </p>
+        <p className="text-[10px] text-[#C3C6D7]">Max 15 MB per file</p>
+      </div>
 
       {attachments.length > 0 ? (
         <div className="flex flex-col gap-2">
@@ -105,7 +95,11 @@ export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
               key={att.publicId}
               className="flex items-center gap-3 rounded-lg border border-[#C3C6D7]/20 bg-white px-3 py-2"
             >
-              <span className="text-base">{getFileIcon(att.filename)}</span>
+              {isImage(att.url) ? (
+                <img src={att.url} alt={att.filename} className="h-9 w-9 flex-shrink-0 rounded object-cover" />
+              ) : (
+                <span className="text-base">{getFileIcon(att.filename)}</span>
+              )}
               <div className="flex flex-1 flex-col min-w-0">
                 <a
                   href={att.url}
@@ -116,15 +110,9 @@ export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
                   {att.filename}
                 </a>
               </div>
-              <button
-                onClick={() => handleRemove(att.publicId)}
-                className="flex h-7 w-7 items-center justify-center rounded text-[#C3C6D7] hover:bg-[#F1F2F6] hover:text-red-500 transition-colors"
-                title="Remove"
-              >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
+              <Button size="sm" variant="outline" onClick={() => handleRemove(att.publicId)}>
+                Remove
+              </Button>
             </div>
           ))}
         </div>

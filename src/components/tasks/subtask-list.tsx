@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  useGetTaskByKeyQuery,
+  useGetSubtasksByParentQuery,
   useCreateTaskMutation,
   useUpdateTaskMutation,
-  type Task,
 } from "@/store/taskApi";
 import { IssueTypeIcon } from "./issue-type-icon";
 import { StatusBadge } from "./status-badge";
@@ -16,19 +15,20 @@ interface SubtaskListProps {
   taskKey: string;
   workspaceId: string;
   projectId: string;
-  parentTask: string | null;
-  subtaskKeys: string[];
+  boardId?: string | null;
+  columnId?: string | null;
 }
 
-export function SubtaskList({ taskKey, workspaceId, projectId, parentTask, subtaskKeys }: SubtaskListProps) {
+export function SubtaskList({ taskKey, workspaceId, projectId, boardId, columnId }: SubtaskListProps) {
   const router = useRouter();
+  const { data: subtleSubtasks = [], refetch } = useGetSubtasksByParentQuery(taskKey);
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
   const [newSummary, setNewSummary] = useState("");
   const [adding, setAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const doneCount = subtaskKeys.filter((k) => k).length;
+  const doneCount = subtleSubtasks.filter((t) => t.status === "done").length;
 
   async function handleAdd() {
     if (!newSummary.trim() || submitting) return;
@@ -41,26 +41,65 @@ export function SubtaskList({ taskKey, workspaceId, projectId, parentTask, subta
         workspaceId,
         projectId,
         parentTask: taskKey,
+        boardId: boardId || undefined,
+        columnId: columnId || undefined,
       }).unwrap();
       setNewSummary("");
       setAdding(false);
+      refetch();
     } catch {
     } finally {
       setSubmitting(false);
     }
   }
 
+  async function handleToggleDone(subtaskKey: string, currentStatus: string) {
+    const next = currentStatus === "done" ? "todo" : "done";
+    await updateTask({ taskKey: subtaskKey, data: { status: next } }).unwrap();
+    refetch();
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-text">Subtasks</h3>
-        <span className="text-xs text-text-placeholder">{doneCount} subtasks</span>
+        <span className="text-xs text-text-placeholder">
+          {doneCountLabel(doneCount, subtleSubtasks.length)}
+        </span>
       </div>
 
-      {subtaskKeys.length > 0 && (
+      {subtleSubtasks.length > 0 && (
         <div className="flex flex-col gap-1">
-          {subtaskKeys.map((sk) => (
-            <SubtaskItem key={sk} taskKey={sk} />
+          {subtleSubtasks.map((sk) => (
+            <div
+              key={sk.taskKey}
+              className="flex items-center gap-2 rounded-[3px] px-2 py-1.5 hover:bg-bg-light transition-colors group"
+            >
+              <button
+                onClick={() => handleToggleDone(sk.taskKey, sk.status)}
+                title={sk.status === "done" ? "Mark as not done" : "Mark as done"}
+                className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border transition-colors ${
+                  sk.status === "done"
+                    ? "border-transparent bg-[#36B37E] text-white"
+                    : "border-text-placeholder text-transparent hover:border-primary hover:text-primary/50"
+                }`}
+              >
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </button>
+              <IssueTypeIcon type="subtask" />
+              <span className="text-xs text-text-secondary font-mono">{sk.taskKey}</span>
+              <button
+                onClick={() => router.push(`/task/${sk.taskKey}`)}
+                className={`flex-1 text-sm text-text truncate text-left hover:text-primary transition-colors ${
+                  sk.status === "done" ? "line-through text-text-placeholder" : ""
+                }`}
+              >
+                {sk.title}
+              </button>
+              <StatusBadge status={sk.status} />
+            </div>
           ))}
         </div>
       )}
@@ -93,23 +132,8 @@ export function SubtaskList({ taskKey, workspaceId, projectId, parentTask, subta
       )}
     </div>
   );
-}
 
-function SubtaskItem({ taskKey }: { taskKey: string }) {
-  const router = useRouter();
-  const { data: task } = useGetTaskByKeyQuery(taskKey);
-  const [updateTask] = useUpdateTaskMutation();
-
-  if (!task) return null;
-
-  return (
-    <div className="flex items-center gap-2 rounded-[3px] px-2 py-1.5 hover:bg-bg-light transition-colors group cursor-pointer"
-      onClick={() => router.push(`/task/${taskKey}`)}
-    >
-      <IssueTypeIcon type="subtask" />
-      <span className="text-xs text-text-secondary font-mono">{task.taskKey}</span>
-      <span className="flex-1 text-sm text-text truncate">{task.title}</span>
-      <StatusBadge status={task.status} />
-    </div>
-  );
+  function doneCountLabel(done: number, total: number) {
+    return total > 0 ? `${done}/${total} subtasks complete` : "";
+  }
 }

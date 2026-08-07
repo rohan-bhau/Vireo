@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 import { clsx } from "clsx";
-import { useGetWorkspaceTasksQuery, type Task } from "@/store/taskApi";
+import type { RootState } from "@/store";
+import { useGetWorkspaceTasksQuery } from "@/store/taskApi";
+import { useGetWorkspaceProjectsQuery, useGetProjectBoardsQuery } from "@/store/projectApi";
+import { useGetMembersQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { SkeletonTableRows } from "@/components/ui/skeleton";
-import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
+import { BoardQuickCreate } from "@/components/board/board-quick-create";
+import { TypeIcon } from "@/components/tasks/type-icons";
+import { joinWorkspaceRoom, leaveWorkspaceRoom, onTaskCreated, onTaskUpdated, onTaskMoved, onTaskDeleted, onTaskReordered } from "@/lib/socket";
 
 type SortKey = "key" | "title" | "status" | "priority" | "assignee" | "updated";
 type SortDir = "asc" | "desc";
@@ -53,20 +59,48 @@ function timeAgo(dateStr: string): string {
 
 export function ListTab({ workspaceId }: ListTabProps) {
   const router = useRouter();
-  const { data: tasks = [], isLoading } = useGetWorkspaceTasksQuery(workspaceId);
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+  const { data: tasks = [], isLoading, refetch: refetchTasks } = useGetWorkspaceTasksQuery(workspaceId);
+  const { data: projects = [] } = useGetWorkspaceProjectsQuery(workspaceId);
+  const { data: members = [] } = useGetMembersQuery(workspaceId);
+  const firstProject = projects[0];
+  const boards = useGetProjectBoardsQuery(firstProject?.id || "", { skip: !firstProject });
+
+  const memberMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const m of members) if (m.user?.name) map[m.userId] = m.user.name;
+    return map;
+  }, [members]);
 
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("updated");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [quickCreating, setQuickCreating] = useState(false);
+
+  useEffect(() => {
+    joinWorkspaceRoom(workspaceId);
+    return () => leaveWorkspaceRoom(workspaceId);
+  }, [workspaceId]);
+
+  useEffect(() => {
+    const refresh = () => { if (refetchTasks) refetchTasks(); };
+    const offs = [
+      onTaskCreated((data) => { if (data.actorId !== currentUserId) refresh(); }),
+      onTaskUpdated((data) => { if (data.actorId !== currentUserId) refresh(); }),
+      onTaskMoved((data) => { if (data.actorId !== currentUserId) refresh(); }),
+      onTaskDeleted((data) => { if (data.actorId !== currentUserId) refresh(); }),
+      onTaskReordered((data) => { if ((data as { actorId?: string }).actorId !== currentUserId) refresh(); }),
+    ];
+    return () => offs.forEach((off) => off());
+  }, [refetchTasks, currentUserId]);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
       setSortDir(sortDir === "asc" ? "desc" : "asc");
     } else {
       setSortKey(key);
-      setSortDir("asc");
+      setSortDir(key === "updated" ? "desc" : "asc");
     }
   }
 
@@ -86,6 +120,9 @@ export function ListTab({ workspaceId }: ListTabProps) {
       return true;
     })
     .sort((a, b) => {
+      if (sortKey === "updated" && sortDir === "desc" && !searchText && statusFilter === "all") {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
       const dir = sortDir === "asc" ? 1 : -1;
       switch (sortKey) {
         case "key": return a.taskKey.localeCompare(b.taskKey) * dir;
@@ -139,10 +176,22 @@ export function ListTab({ workspaceId }: ListTabProps) {
           <option value="in-review">In Review</option>
           <option value="done">Done</option>
         </select>
-        <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+        <Button size="sm" onClick={() => setQuickCreating((v) => !v)}>
           + Create task
         </Button>
       </div>
+
+      {quickCreating && firstProject && (
+        <div className="mb-4 rounded-xl border border-[#C3C6D7]/20 bg-white p-3">
+          <BoardQuickCreate
+            workspaceId={workspaceId}
+            projectId={firstProject.id}
+            boardId={boards.data?.[0]?.id || ""}
+            columnId={boards.data?.[0]?.columns?.[0]?.id || ""}
+            onClose={() => setQuickCreating(false)}
+          />
+        </div>
+      )}
 
       <div className="flex-1 overflow-x-auto rounded-xl border border-[#C3C6D7]/20 bg-white">
         <table className="w-full text-left">
@@ -205,7 +254,7 @@ export function ListTab({ workspaceId }: ListTabProps) {
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2563EB] text-[10px] font-semibold text-white">
                           {task.assignee.charAt(0).toUpperCase()}
                         </span>
-                        <span className="text-sm text-[#434655]">{task.assignee}</span>
+                        <span className="text-sm text-[#434655]">{memberMap[task.assignee || ""] || task.assignee || "Unassigned"}</span>
                       </div>
                     ) : (
                       <span className="text-sm text-[#C3C6D7]">—</span>
@@ -237,23 +286,10 @@ export function ListTab({ workspaceId }: ListTabProps) {
           </tbody>
         </table>
       </div>
-
-      <CreateTaskDialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        workspaceId={workspaceId}
-      />
     </div>
   );
 }
 
 function TaskTypeBadge({ type }: { type: string }) {
-  const icons: Record<string, string> = {
-    task: "☐",
-    bug: "🐛",
-    epic: "★",
-    story: "📖",
-    subtask: "↳",
-  };
-  return <span className="text-xs">{icons[type] || "☐"}</span>;
+  return <TypeIcon type={type} className="h-3.5 w-3.5" />;
 }

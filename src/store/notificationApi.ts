@@ -9,14 +9,19 @@ export type NotificationType =
   | "issue_updated"
   | "issue_deleted"
   | "sprint_started"
-  | "sprint_completed";
+  | "sprint_completed"
+  | "member_added"
+  | "role_changed"
+  | "invited"
+  | "due_date"
+  | "issue_completed";
 
 export interface Notification {
   _id: string;
   userId: string;
   type: NotificationType;
-  taskId: string;
-  taskTitle: string;
+  taskId?: string;
+  taskTitle?: string;
   actorId: string;
   actorName: string;
   message: string;

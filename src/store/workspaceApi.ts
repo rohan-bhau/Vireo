@@ -12,11 +12,13 @@ interface Workspace {
   members?: WorkspaceMember[];
 }
 
-interface WorkspaceMember {
+export type Role = "ADMIN" | "MEMBER" | "VIEWER";
+
+export interface WorkspaceMember {
   id: string;
   workspaceId: string;
   userId: string;
-  role: "ADMIN" | "MEMBER";
+  role: Role;
   joinedAt: string;
   invitedBy: string | null;
   user: { name: string; email: string; avatar?: string } | null;
@@ -27,7 +29,7 @@ interface Invitation {
   workspaceId: string;
   inviterId: string;
   inviteeEmail: string;
-  role: "ADMIN" | "MEMBER";
+  role: Role;
   token: string;
   status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
   expiresAt: string;
@@ -106,9 +108,10 @@ export const workspaceApi = api.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { workspaceId }) => [
         { type: "Members", id: workspaceId },
+        "Dashboard",
       ],
     }),
-    updateMemberRole: builder.mutation<WorkspaceMember, { workspaceId: string; userId: string; role: "ADMIN" | "MEMBER" }>({
+    updateMemberRole: builder.mutation<WorkspaceMember, { workspaceId: string; userId: string; role: Role }>({
       query: ({ workspaceId, userId, ...body }) => ({
         url: `/workspaces/${workspaceId}/members/${userId}/role`,
         method: "PUT",
@@ -124,7 +127,7 @@ export const workspaceApi = api.injectEndpoints({
       transformResponse: (response: InvitationsResponse) => response.data.invitations,
       providesTags: (_result, _error, id) => [{ type: "Invitations", id }],
     }),
-    createInvitation: builder.mutation<Invitation, { workspaceId: string; inviteeEmail: string; role?: "ADMIN" | "MEMBER"; message?: string }>({
+    createInvitation: builder.mutation<Invitation, { workspaceId: string; inviteeEmail: string; role?: Role; message?: string }>({
       query: ({ workspaceId, ...body }) => ({
         url: `/workspaces/${workspaceId}/invitations`,
         method: "POST",
@@ -149,14 +152,14 @@ export const workspaceApi = api.injectEndpoints({
         url: `/invitations/${token}/accept`,
         method: "POST",
       }),
-      invalidatesTags: ["Invitations", "Members"],
+      invalidatesTags: ["Invitations", "Members", "Dashboard"],
     }),
     declineInvitation: builder.mutation<void, string>({
       query: (token) => ({
         url: `/invitations/${token}/decline`,
         method: "POST",
       }),
-      invalidatesTags: ["Invitations"],
+      invalidatesTags: ["Invitations", "Dashboard"],
     }),
   }),
 });
