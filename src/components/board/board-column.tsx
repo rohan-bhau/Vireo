@@ -8,6 +8,7 @@ import { clsx } from "clsx";
 import { IssueCard } from "./issue-card";
 import { BoardQuickCreate } from "./board-quick-create";
 import type { Task } from "@/store/taskApi";
+import type { WorkspaceMember } from "@/store/workspaceApi";
 
 interface ColumnData {
   id: string;
@@ -25,10 +26,12 @@ interface BoardColumnProps {
   projectId: string;
   boardId: string;
   membersMap?: Record<string, string>;
+  members?: WorkspaceMember[];
   quickCreating?: boolean;
+  onAssigneeChange?: (taskKey: string, userId: string | null) => void;
 }
 
-export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, isOver, workspaceId, projectId, boardId, membersMap = {}, quickCreating }: BoardColumnProps) {
+export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, isOver, workspaceId, projectId, boardId, membersMap = {}, members = [], quickCreating, onAssigneeChange }: BoardColumnProps) {
   const {
     setNodeRef,
     attributes,
@@ -107,29 +110,22 @@ export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, isOver, 
       </div>
 
       <SortableContext items={tasks.map((t) => t.taskKey)} strategy={verticalListSortingStrategy}>
-        <div className="flex-1 space-y-2 overflow-y-auto px-2 py-2 min-h-[60px]">
+        <div className="overflow-y-auto px-2 pb-2 max-h-[calc(100vh-230px)] min-h-[32px]">
           {tasks.filter((t) => !t.parentTask).map((task) => (
-            <div key={task.taskKey}>
-              <IssueCard task={task} onClick={() => onTaskClick(task.taskKey)} assigneeName={membersMap[task.assignee || ""]} />
+            <div key={task.taskKey} className="mt-2">
+              <IssueCard task={task} onClick={() => onTaskClick(task.taskKey)} assigneeName={membersMap[task.assignee || ""]} members={members} onAssigneeChange={onAssigneeChange?.bind(null, task.taskKey)} />
               {subtaskMap.get(task.taskKey)?.map((sub) => (
                 <div key={sub.taskKey} className="ml-3 mt-1.5">
-                  <IssueCard task={sub} onClick={() => onTaskClick(sub.taskKey)} assigneeName={membersMap[sub.assignee || ""]} />
+                  <IssueCard task={sub} onClick={() => onTaskClick(sub.taskKey)} assigneeName={membersMap[sub.assignee || ""]} members={members} onAssigneeChange={onAssigneeChange?.bind(null, sub.taskKey)} />
                 </div>
               ))}
             </div>
           ))}
           {orphanSubtasks.map((task) => (
-            <IssueCard key={task.taskKey} task={task} onClick={() => onTaskClick(task.taskKey)} assigneeName={membersMap[task.assignee || ""]} />
-          ))}
-          {tasks.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <svg className="mb-2 h-8 w-8 text-text-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M12 8v8M8 12h8" />
-              </svg>
-              <p className="text-xs text-text-tertiary">Drop issues here</p>
+            <div key={task.taskKey} className="py-2">
+              <IssueCard task={task} onClick={() => onTaskClick(task.taskKey)} assigneeName={membersMap[task.assignee || ""]} members={members} onAssigneeChange={onAssigneeChange?.bind(null, task.taskKey)} />
             </div>
-          )}
+          ))}
         </div>
       </SortableContext>
 

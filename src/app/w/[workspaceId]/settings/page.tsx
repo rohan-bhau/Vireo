@@ -10,6 +10,8 @@ import {
   useGetMembersQuery,
   useUpdateWorkspaceMutation,
   useDeleteWorkspaceMutation,
+  useUpdateMemberRoleMutation,
+  type Role,
 } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +35,19 @@ export default function WorkspaceSettingsPage() {
   const { data: members = [] } = useGetMembersQuery(workspaceId);
   const [updateWorkspace, { isLoading: isUpdating }] = useUpdateWorkspaceMutation();
   const [deleteWorkspace, { isLoading: isDeleting }] = useDeleteWorkspaceMutation();
+  const [updateMemberRole] = useUpdateMemberRoleMutation();
+  const [roleLoading, setRoleLoading] = useState<string | null>(null);
+
+  async function handleChangeRole(memberUserId: string, role: Role) {
+    setRoleLoading(memberUserId);
+    try {
+      await updateMemberRole({ workspaceId, userId: memberUserId, role }).unwrap();
+    } catch {
+      // ignore; cache revalidation surfaces state
+    } finally {
+      setRoleLoading(null);
+    }
+  }
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -196,7 +211,7 @@ export default function WorkspaceSettingsPage() {
             </form>
           </div>
 
-          {isAdmin && (
+          {isAdmin && workspace?.ownerId === user?.id && (
             <div className="mt-8 rounded-xl border border-red-200 bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
               <h3 className="text-base font-semibold text-red-600">Delete Workspace</h3>
               <p className="mt-1 text-sm text-[#737686]">
@@ -243,13 +258,28 @@ export default function WorkspaceSettingsPage() {
                       </p>
                     </div>
                   </div>
-                  <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                    member.role === "ADMIN"
-                      ? "bg-[#EEF4FF] text-[#004AC6]"
-                      : "bg-[#F0F0F5] text-[#737686]"
-                  }`}>
-                    {member.role === "ADMIN" ? "Admin" : "Member"}
-                  </span>
+                  {isAdmin && member.userId !== user?.id ? (
+                    <select
+                      value={member.role}
+                      disabled={roleLoading === member.userId}
+                      onChange={(e) => handleChangeRole(member.userId, e.target.value as Role)}
+                      className="rounded-md border border-[#C3C6D7] bg-white px-2 py-1 text-xs font-medium text-[#434655] focus:border-[#2563EB] focus:outline-none"
+                    >
+                      <option value="ADMIN">Admin</option>
+                      <option value="MEMBER">Member</option>
+                      <option value="VIEWER">Viewer</option>
+                    </select>
+                  ) : (
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                      member.role === "ADMIN"
+                        ? "bg-[#EEF4FF] text-[#004AC6]"
+                        : member.role === "VIEWER"
+                        ? "bg-[#F5F3FF] text-[#6D28D9]"
+                        : "bg-[#F0F0F5] text-[#737686]"
+                    }`}>
+                      {member.role === "ADMIN" ? "Admin" : member.role === "VIEWER" ? "Viewer" : "Member"}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>

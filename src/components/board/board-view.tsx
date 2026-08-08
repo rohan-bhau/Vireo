@@ -25,7 +25,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { useGetProjectQuery, useGetProjectBoardsQuery, useReorderColumnsMutation, useAddColumnMutation } from "@/store/projectApi";
-import { useGetBoardTasksQuery, useMoveTaskMutation } from "@/store/taskApi";
+import { useGetBoardTasksQuery, useMoveTaskMutation, useUpdateTaskMutation } from "@/store/taskApi";
 import { useGetSprintQuery, useGetSprintTasksQuery, useCompleteSprintMutation } from "@/store/sprintApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   const tasks = sprintId ? sprintTasks : boardTasks;
 
   const [moveTask] = useMoveTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
   const [reorderColumns] = useReorderColumnsMutation();
   const [addColumn] = useAddColumnMutation();
   const [completeSprint] = useCompleteSprintMutation();
@@ -157,8 +158,8 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   }, [boards, activeBoardId]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4, delay: 0 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8, delay: 0 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 10 } })
   );
 
   const boardConfig = activeBoard?.config || {};
@@ -339,6 +340,10 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
 
     try {
       await moveTask({ taskKey: activeIdStr, columnId: targetColumnId, position: 0, boardId: activeBoardId }).unwrap();
+      const children = tasks.filter((t) => t.parentTask === activeIdStr);
+      for (const child of children) {
+        await moveTask({ taskKey: child.taskKey, columnId: targetColumnId, position: 0, boardId: activeBoardId }).unwrap();
+      }
     } catch (e) {
       toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||
         (e as { message?: string })?.message ||
@@ -363,6 +368,24 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
 
   function handleCreateTask(colId: string) {
     setCreateColumnId((prev) => (prev === colId ? "" : colId));
+  }
+
+  async function handleAssigneeChange(taskKey: string, userId: string | null) {
+    if (!activeBoardId) return;
+    try {
+      await updateTask({
+        taskKey,
+        data: { assignee: userId },
+        workspaceId,
+        boardId: activeBoardId,
+      }).unwrap();
+    } catch (e) {
+      toastError(
+        (e as { data?: { message?: string }; message?: string })?.data?.message ||
+        (e as { message?: string })?.message ||
+        "Could not update assignee"
+      );
+    }
   }
 
   const isLoading = tasksLoading || sprintTasksLoading;
@@ -492,7 +515,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <div className="flex gap-3 overflow-x-auto pb-4 h-full max-sm:flex-col max-sm:overflow-x-hidden max-sm:overflow-y-auto max-sm:gap-6 max-sm:px-1">
+              <div className="flex gap-3 overflow-x-auto pb-4 h-full items-start max-sm:flex-col max-sm:overflow-x-hidden max-sm:overflow-y-auto max-sm:gap-6 max-sm:px-1">
                 <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                   {columns.map((column) => (
                     <BoardColumn
@@ -506,6 +529,8 @@ onTaskClick={(taskKey) => setSelectedTaskKey(taskKey)}
                       projectId={projectId}
                       boardId={activeBoard?.id || ""}
                       membersMap={membersMap}
+                      members={members}
+                      onAssigneeChange={handleAssigneeChange}
                       quickCreating={createColumnId === column.id}
                     />
                   ))}

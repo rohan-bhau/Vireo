@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { clsx } from "clsx";
 import type { RootState } from "@/store";
-import { useGetWorkspaceTasksQuery } from "@/store/taskApi";
+import { useGetWorkspaceTasksQuery, useUpdateTaskMutation, type Task } from "@/store/taskApi";
+import type { WorkspaceMember } from "@/store/workspaceApi";
 import { useGetWorkspaceProjectsQuery, useGetProjectBoardsQuery } from "@/store/projectApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
@@ -58,8 +59,8 @@ function timeAgo(dateStr: string): string {
 }
 
 export function ListTab({ workspaceId }: ListTabProps) {
-  const router = useRouter();
   const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+  const [updateTask] = useUpdateTaskMutation();
   const { data: tasks = [], isLoading, refetch: refetchTasks } = useGetWorkspaceTasksQuery(workspaceId);
   const { data: projects = [] } = useGetWorkspaceProjectsQuery(workspaceId);
   const { data: members = [] } = useGetMembersQuery(workspaceId);
@@ -77,6 +78,16 @@ export function ListTab({ workspaceId }: ListTabProps) {
   const [sortKey, setSortKey] = useState<SortKey>("updated");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [quickCreating, setQuickCreating] = useState(false);
+  const [assigneeEditingKey, setAssigneeEditingKey] = useState<string | null>(null);
+
+  async function handleAssigneeChange(taskKey: string, userId: string | null) {
+    try {
+      await updateTask({ taskKey, data: { assignee: userId }, workspaceId }).unwrap();
+    } catch {
+      // surface nothing; query invalidation revalidates on failure too
+    }
+    setAssigneeEditingKey(null);
+  }
 
   useEffect(() => {
     joinWorkspaceRoom(workspaceId);
@@ -104,7 +115,7 @@ export function ListTab({ workspaceId }: ListTabProps) {
     }
   }
 
-  const filtered = tasks
+const filtered = tasks
     .filter((t) => {
       if (statusFilter !== "all") {
         const filterVal = statusFilter.replace("-", "_");
@@ -150,6 +161,22 @@ export function ListTab({ workspaceId }: ListTabProps) {
     { key: "assignee", label: "Assignee" },
     { key: "updated", label: "Updated" },
   ];
+
+  const childrenOf = useMemo(() => {
+    const map = new Map<string, Task[]>();
+    for (const t of filtered) {
+      if (!t.parentTask) continue;
+      const list = map.get(t.parentTask) || [];
+      list.push(t);
+      map.set(t.parentTask, list);
+    }
+    return map;
+  }, [filtered]);
+
+  const topLevel = useMemo(
+    () => filtered.filter((t) => !t.parentTask || !filtered.some((p) => p.taskKey === t.parentTask)),
+    [filtered]
+  );
 
   return (
     <div className="flex flex-1 flex-col">
@@ -219,51 +246,17 @@ export function ListTab({ workspaceId }: ListTabProps) {
             {isLoading ? (
               <SkeletonTableRows rows={5} />
             ) : filtered.length > 0 ? (
-              filtered.map((task) => (
-                <tr
+              topLevel.map((task) => (
+                <TaskRowGroup
                   key={task.taskKey}
-                  onClick={() => router.push(`/task/${task.taskKey}`)}
-                  className="border-b border-[#C3C6D7]/10 cursor-pointer transition-colors hover:bg-[#F8F9FF]"
-                >
-                  <td className="px-4 py-3">
-                    <span className="text-sm font-mono font-medium text-[#2563EB]">
-                      {task.taskKey}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <TaskTypeBadge type={task.type} />
-                      <span className="text-sm font-medium text-[#121C28] truncate max-w-[250px]">
-                        {task.title}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={clsx("inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_COLORS[task.status])}>
-                      {STATUS_LABELS[task.status] || task.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-sm text-[#434655]">
-                      {PRIORITY_LABELS[task.priority] || task.priority}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {task.assignee ? (
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2563EB] text-[10px] font-semibold text-white">
-                          {task.assignee.charAt(0).toUpperCase()}
-                        </span>
-                        <span className="text-sm text-[#434655]">{memberMap[task.assignee || ""] || task.assignee || "Unassigned"}</span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-[#C3C6D7]">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-sm text-[#737686]">{timeAgo(task.updatedAt)}</span>
-                  </td>
-                </tr>
+                  task={task}
+                  childrenTasks={childrenOf.get(task.taskKey) || []}
+                  memberMap={memberMap}
+                  members={members}
+                  assigneeEditingKey={assigneeEditingKey}
+                  onToggleEdit={(k) => setAssigneeEditingKey((cur) => (cur === k ? null : k))}
+                  onAssigneeChange={(k, userId) => handleAssigneeChange(k, userId)}
+                />
               ))
             ) : (
               <tr>
@@ -292,4 +285,235 @@ export function ListTab({ workspaceId }: ListTabProps) {
 
 function TaskTypeBadge({ type }: { type: string }) {
   return <TypeIcon type={type} className="h-3.5 w-3.5" />;
+}
+
+interface TaskRowGroupProps {
+  task: Task;
+  childrenTasks: Task[];
+  memberMap: Record<string, string>;
+  members: WorkspaceMember[];
+  assigneeEditingKey: string | null;
+  onToggleEdit: (taskKey: string) => void;
+  onAssigneeChange: (taskKey: string, userId: string | null) => void;
+}
+
+function TaskRowGroup({
+  task,
+  childrenTasks,
+  memberMap,
+  members,
+  assigneeEditingKey,
+  onToggleEdit,
+  onAssigneeChange,
+}: TaskRowGroupProps) {
+  return (
+    <>
+      <TaskRow
+        task={task}
+        isSubtaskRow={false}
+        memberMap={memberMap}
+        members={members}
+        editing={assigneeEditingKey === task.taskKey}
+        onToggleEdit={onToggleEdit}
+        onAssigneeChange={onAssigneeChange}
+      />
+      {childrenTasks.map((sub) => (
+        <TaskRow
+          key={sub.taskKey}
+          task={sub}
+          isSubtaskRow
+          memberMap={memberMap}
+          members={members}
+          editing={assigneeEditingKey === sub.taskKey}
+          onToggleEdit={onToggleEdit}
+          onAssigneeChange={onAssigneeChange}
+        />
+      ))}
+    </>
+  );
+}
+
+interface TaskRowProps {
+  task: Task;
+  isSubtaskRow: boolean;
+  memberMap: Record<string, string>;
+  members: WorkspaceMember[];
+  editing: boolean;
+  onToggleEdit: (taskKey: string) => void;
+  onAssigneeChange: (taskKey: string, userId: string | null) => void;
+}
+
+function TaskRow({ task, isSubtaskRow, memberMap, members, editing, onToggleEdit, onAssigneeChange }: TaskRowProps) {
+  const router = useRouter();
+  return (
+    <tr
+      onClick={() => router.push(`/task/${task.taskKey}`)}
+      className={clsx(
+        "border-b border-[#C3C6D7]/10 cursor-pointer transition-colors hover:bg-[#F8F9FF]",
+        isSubtaskRow && "bg-[#FCFCFE]"
+      )}
+    >
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-1">
+          {isSubtaskRow && (
+            <svg className="h-3 w-3 text-[#C3C6D7] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          )}
+          <span className={clsx("text-sm font-mono font-medium text-[#2563EB]", isSubtaskRow && "text-xs")}>
+            {task.taskKey}
+          </span>
+        </div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <TaskTypeBadge type={task.type} />
+          <span className={clsx("text-sm font-medium text-[#121C28] truncate max-w-[250px]", isSubtaskRow && "text-xs text-[#434655]")}>
+            {task.title}
+          </span>
+        </div>
+      </td>
+      <td className="px-4 py-3">
+        <span className={clsx("inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_COLORS[task.status])}>
+          {STATUS_LABELS[task.status] || task.status}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <span className="text-sm text-[#434655]">
+          {PRIORITY_LABELS[task.priority] || task.priority}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <ListAssigneeCell
+          assignee={task.assignee}
+          assigneeName={memberMap[task.assignee || ""]}
+          members={members}
+          editing={editing}
+          onToggleEdit={() => onToggleEdit(task.taskKey)}
+          onChange={(userId) => onAssigneeChange(task.taskKey, userId)}
+        />
+      </td>
+      <td className="px-4 py-3">
+        <span className="text-sm text-[#737686]">{timeAgo(task.updatedAt)}</span>
+      </td>
+    </tr>
+  );
+}
+
+function getInitials(name: string | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.charAt(0) || "?";
+  const second = parts.length > 1 ? parts[parts.length - 1]?.charAt(0) : "";
+  return (first + second).toUpperCase();
+}
+
+interface ListAssigneeCellProps {
+  assignee: string | null;
+  assigneeName?: string;
+  members: WorkspaceMember[];
+  editing: boolean;
+  onToggleEdit: () => void;
+  onChange: (userId: string | null) => void;
+}
+
+function ListAssigneeCell({
+  assignee,
+  assigneeName,
+  members,
+  editing,
+  onToggleEdit,
+  onChange,
+}: ListAssigneeCellProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editing) return;
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onToggleEdit();
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [editing, onToggleEdit]);
+
+  const assignedMember = members.find((m) => m.userId === assignee);
+  const displayName = assigneeName || assignedMember?.user?.name || "";
+
+  return (
+    <div ref={ref} className="relative flex items-center">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleEdit();
+        }}
+        title={displayName || "Unassigned"}
+        className={clsx(
+          "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold transition-opacity hover:opacity-80",
+          assignee ? "bg-[#2563EB] text-white" : "bg-[#F4F5F7] text-[#737686]"
+        )}
+      >
+        {assignee ? (
+          getInitials(displayName)
+        ) : (
+          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
+          </svg>
+        )}
+      </button>
+      {assignee && (
+        <span className="ml-2 text-sm text-[#434655]">{displayName}</span>
+      )}
+      {!assignee && (
+        <span className="ml-2 text-sm text-[#C3C6D7]">Unassigned</span>
+      )}
+
+      {editing && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute left-0 top-full z-50 mt-1 w-48 rounded-[3px] border border-[#C3C6D7]/30 bg-white py-1 shadow-modal max-h-56 overflow-y-auto"
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(null);
+            }}
+            className={clsx(
+              "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
+              !assignee && "bg-[#F0F6FF] font-medium"
+            )}
+          >
+            <svg className="h-3.5 w-3.5 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
+            Unassigned
+          </button>
+          {members.map((m) => (
+            <button
+              key={m.userId}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(m.userId);
+              }}
+              className={clsx(
+                "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
+                assignee === m.userId && "bg-[#F0F6FF] font-medium"
+              )}
+            >
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2563EB] text-[8px] font-semibold text-white">
+                {getInitials(m.user?.name || "")}
+              </span>
+              <span className="truncate">{m.user?.name || "Unknown"}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

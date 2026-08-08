@@ -33,8 +33,6 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString();
 }
 
-const MOCK_USERS = ["Alice", "Bob", "Charlie", "Diana", "Eve"];
-
 function renderCommentContent(content: string): React.ReactNode {
   const parts = content.split(/(@\w+)/g);
   return parts.map((part, i) => {
@@ -61,6 +59,28 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
     return member?.user?.name || userId;
   }
 
+  function getUserAvatar(userId: string): string | null {
+    const member = members?.find((m) => m.userId === userId);
+    return member?.user?.avatar || null;
+  }
+
+  function Avatar({ userId, size = 8 }: { userId: string; size?: number }) {
+    const avatar = getUserAvatar(userId);
+    const initial = getUserName(userId).charAt(0)?.toUpperCase() || "?";
+    const cls = `h-${size} w-${size}`;
+    if (avatar) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={avatar} alt={getUserName(userId)} className={`${cls} flex-shrink-0 rounded-full object-cover`} />
+      );
+    }
+    return (
+      <div className={`${cls} flex flex-shrink-0 items-center justify-center rounded-full bg-bg-light text-xs font-semibold text-text-secondary`}>
+        {initial}
+      </div>
+    );
+  }
+
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [newComment, setNewComment] = useState("");
@@ -71,9 +91,10 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
   const [mentionSearch, setMentionSearch] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const filteredUsers = MOCK_USERS.filter((u) =>
-    u.toLowerCase().includes(mentionSearch.toLowerCase())
-  );
+  const filteredUsers = (members || [])
+    .map((m) => m.user?.name)
+    .filter((name): name is string => !!name)
+    .filter((n) => n.toLowerCase().includes(mentionSearch.toLowerCase()));
 
   function handleInputChange(value: string) {
     setNewComment(value);
@@ -150,9 +171,14 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
       </h3>
 
       <div className="flex gap-3">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white">
-          {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
-        </div>
+        {currentUser?.avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={currentUser.avatar} alt={currentUser.name || "You"} className="h-8 w-8 flex-shrink-0 rounded-full object-cover" />
+        ) : (
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white">
+            {currentUser?.name?.charAt(0)?.toUpperCase() || "U"}
+          </div>
+        )}
         <div className="flex flex-1 flex-col gap-2 relative">
           <div>
             <textarea
@@ -179,9 +205,17 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
                     onMouseDown={(e) => { e.preventDefault(); insertMention(u); }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light"
                   >
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] text-white">
-                      {u.charAt(0)}
-                    </span>
+                    {(() => {
+                      const member = members?.find((m) => m.user?.name === u);
+                      return member?.user?.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={member.user.avatar} alt={u} className="h-5 w-5 flex-shrink-0 rounded-full object-cover" />
+                      ) : (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[9px] text-white">
+                          {u.charAt(0)}
+                        </span>
+                      );
+                    })()}
                     {u}
                   </button>
                 ))}
@@ -212,9 +246,7 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
         {comments && comments.length > 0 ? (
           comments.map((comment) => (
             <div key={comment._id} className="flex gap-3">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-bg-light text-xs font-semibold text-text-secondary">
-                {getUserName(comment.authorId).charAt(0).toUpperCase() || "?"}
-              </div>
+              <Avatar userId={comment.authorId} />
               <div className="flex flex-1 flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-text">

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useGetUnreadCountQuery, useGetNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation, type Notification, type NotificationType } from "@/store/notificationApi";
 import { connectSocket } from "@/lib/socket";
-import { Bell, UserPlus, AtSign, ArrowRightLeft, MessageSquare, Plus, RefreshCw, Trash2, Play, CheckSquare, UserPlus2, Shield, CalendarClock, PartyPopper } from "lucide-react";
+import { Bell, UserPlus, AtSign, ArrowRightLeft, MessageSquare, Plus, RefreshCw, Trash2, Play, CheckSquare, UserPlus2, CalendarClock, PartyPopper } from "lucide-react";
 import { clsx } from "clsx";
 
 const typeIcons: Record<NotificationType, { icon: typeof Bell; color: string }> = {
@@ -106,7 +106,7 @@ export function NotificationBell() {
                 return (
                   <Link
                     key={notif._id}
-                    href={`/task/${notif.taskId}`}
+                    href={notif.taskId ? `/task/${notif.taskId}` : notif.workspaceId ? `/w/${notif.workspaceId}` : "#"}
                     onClick={() => {
                       if (!notif.read) markRead(notif._id);
                       setOpen(false);

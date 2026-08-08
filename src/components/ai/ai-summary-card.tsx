@@ -79,9 +79,17 @@ export function AISummaryCard({ taskKey }: AISummaryCardProps) {
 
   return (
     <div className="rounded-lg border border-[#2563EB]/20 bg-gradient-to-r from-[#EEF4FF] to-[#F8F9FF]">
-      <button
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center justify-between px-4 py-3"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setCollapsed(!collapsed);
+          }
+        }}
+        className="flex w-full items-center justify-between px-4 py-3 cursor-pointer select-none"
       >
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-[#2563EB]" />
@@ -101,7 +109,7 @@ export function AISummaryCard({ taskKey }: AISummaryCardProps) {
             <ChevronUp className="h-4 w-4 text-[#737686]" />
           )}
         </div>
-      </button>
+      </div>
       {!collapsed && (
         <div className="border-t border-[#2563EB]/10 px-4 py-3 space-y-3">
           <p className="text-sm text-[#434655] leading-relaxed">{result.summary}</p>

@@ -48,7 +48,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
 
   async function handleSave(field: string, value: any) {
     try {
-      await updateTask({ taskKey: task.taskKey, data: { [field]: value } }).unwrap();
+      await updateTask({ taskKey: task.taskKey, data: { [field]: value }, workspaceId }).unwrap();
       setEditingField(null);
     } catch (e) {
       toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||

@@ -18,6 +18,11 @@ const TYPE_FILTERS: { value: NotificationType | ""; label: string }[] = [
   { value: "issue_deleted", label: "Issue deleted" },
   { value: "sprint_started", label: "Sprint started" },
   { value: "sprint_completed", label: "Sprint completed" },
+  { value: "member_added", label: "Member added" },
+  { value: "role_changed", label: "Role changed" },
+  { value: "invited", label: "Invited" },
+  { value: "due_date", label: "Due date" },
+  { value: "issue_completed", label: "Completed" },
 ];
 
 interface ProjectOption {

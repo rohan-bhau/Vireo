@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   Bell, CheckCheck, ChevronRight, AtSign, UserPlus,
   ArrowRightLeft, MessageSquare, Plus, RefreshCw, Trash2, Play, CheckSquare,
-  UserPlus2, Shield, CalendarClock, PartyPopper,
+  UserPlus2, CalendarClock, PartyPopper,
 } from "lucide-react";
 import type { Notification, NotificationType } from "@/store/notificationApi";
 

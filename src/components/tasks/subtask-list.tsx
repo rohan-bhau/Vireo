@@ -55,7 +55,7 @@ export function SubtaskList({ taskKey, workspaceId, projectId, boardId, columnId
 
   async function handleToggleDone(subtaskKey: string, currentStatus: string) {
     const next = currentStatus === "done" ? "todo" : "done";
-    await updateTask({ taskKey: subtaskKey, data: { status: next } }).unwrap();
+    await updateTask({ taskKey: subtaskKey, data: { status: next }, workspaceId }).unwrap();
     refetch();
   }
 

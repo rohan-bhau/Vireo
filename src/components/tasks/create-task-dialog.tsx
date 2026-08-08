@@ -158,7 +158,7 @@ export function CreateTaskDialog({
       };
 
       if (editTask) {
-        await updateTask({ taskKey: editTask.taskKey, data: payload }).unwrap();
+        await updateTask({ taskKey: editTask.taskKey, data: payload, workspaceId }).unwrap();
         onClose();
       } else {
         await createTask(payload).unwrap();

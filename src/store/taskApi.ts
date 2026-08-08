@@ -168,15 +168,17 @@ export const taskApi = api.injectEndpoints({
         ...(boardId ? [{ type: "Task" as const, id: `board-${boardId}` }] : []),
       ],
     }),
-    updateTask: builder.mutation<Task, { taskKey: string; data: UpdateTaskInput }>({
+    updateTask: builder.mutation<Task, { taskKey: string; data: UpdateTaskInput; workspaceId?: string; boardId?: string }>({
       query: ({ taskKey, data }) => ({
         url: `/tasks/${taskKey}`,
         method: "PUT",
         body: data,
       }),
       transformResponse: (response: TaskResponse) => response.data.task,
-      invalidatesTags: (_result, _error, { taskKey }) => [
+      invalidatesTags: (_result, _error, { taskKey, workspaceId, boardId }) => [
         { type: "Task", id: taskKey },
+        ...(workspaceId ? [{ type: "Task" as const, id: `workspace-${workspaceId}` }] : []),
+        ...(boardId ? [{ type: "Task" as const, id: `board-${boardId}` }] : []),
       ],
     }),
     deleteTask: builder.mutation<void, string>({

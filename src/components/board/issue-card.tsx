@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { clsx } from "clsx";
 import type { Task } from "@/store/taskApi";
+import type { WorkspaceMember } from "@/store/workspaceApi";
 import { TypeIcon } from "@/components/tasks/type-icons";
 
 const EPIC_COLORS = [
@@ -16,6 +18,8 @@ interface IssueCardProps {
   onClick?: () => void;
   isOver?: boolean;
   assigneeName?: string | null;
+  members?: WorkspaceMember[];
+  onAssigneeChange?: (userId: string | null) => void;
 }
 
 function getInitials(name: string | undefined): string {
@@ -26,7 +30,7 @@ function getInitials(name: string | undefined): string {
   return (first + second).toUpperCase();
 }
 
-export function IssueCard({ task, onClick, isOver, assigneeName }: IssueCardProps) {
+export function IssueCard({ task, onClick, assigneeName, members = [], onAssigneeChange }: IssueCardProps) {
   const {
     setNodeRef,
     attributes,
@@ -102,22 +106,19 @@ export function IssueCard({ task, onClick, isOver, assigneeName }: IssueCardProp
               </svg>
             </span>
           )}
-          {task.assignee ? (
+          {onAssigneeChange ? (
+            <CardAssignee
+              task={task}
+              members={members}
+              displayName={displayName}
+              onChange={onAssigneeChange}
+            />
+          ) : (
             <span
               className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2563EB] text-[9px] font-semibold text-white flex-shrink-0"
               title={displayName}
             >
               {getInitials(displayName)}
-            </span>
-          ) : (
-            <span
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F4F5F7] text-[#737686] flex-shrink-0"
-              title="Unassigned"
-            >
-              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
-              </svg>
             </span>
           )}
         </div>
@@ -132,6 +133,113 @@ export function IssueCard({ task, onClick, isOver, assigneeName }: IssueCardProp
         )}>
           {new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </p>
+      )}
+    </div>
+  );
+}
+
+function CardAssignee({
+  task,
+  members,
+  displayName,
+  onChange,
+}: {
+  task: Task;
+  members: WorkspaceMember[];
+  displayName: string;
+  onChange: (userId: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(e.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [open]);
+
+  return (
+    <div className="relative flex-shrink-0">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        title={displayName || "Unassigned"}
+        className={clsx(
+          "flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-semibold transition-opacity",
+          task.assignee
+            ? "bg-[#2563EB] text-white hover:opacity-80"
+            : "bg-[#F4F5F7] text-[#737686] hover:bg-[#E7E9F2]"
+        )}
+      >
+        {task.assignee ? (
+          getInitials(displayName)
+        ) : (
+          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
+          </svg>
+        )}
+      </button>
+
+      {open && (
+        <div
+          ref={popupRef}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-0 top-full z-50 mt-1 w-48 rounded-[3px] border border-[#C3C6D7]/30 bg-white py-1 shadow-modal max-h-56 overflow-y-auto"
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(null);
+              setOpen(false);
+            }}
+            className={clsx(
+              "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
+              !task.assignee && "bg-[#F0F6FF] font-medium"
+            )}
+          >
+            <svg className="h-3.5 w-3.5 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
+            Unassigned
+          </button>
+          {members.map((m) => (
+            <button
+              key={m.userId}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(m.userId);
+                setOpen(false);
+              }}
+              className={clsx(
+                "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
+                task.assignee === m.userId && "bg-[#F0F6FF] font-medium"
+              )}
+            >
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2563EB] text-[8px] font-semibold text-white">
+                {getInitials(m.user?.name || "")}
+              </span>
+              <span className="truncate">{m.user?.name || "Unknown"}</span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );

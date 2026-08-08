@@ -33,7 +33,7 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
     if (!summaryValue.trim() || saving) return;
     setSaving(true);
     try {
-      await updateTask({ taskKey: task.taskKey, data: { title: summaryValue.trim() } }).unwrap();
+      await updateTask({ taskKey: task.taskKey, data: { title: summaryValue.trim() }, workspaceId }).unwrap();
       setEditingSummary(false);
     } catch {
     } finally {
@@ -45,7 +45,7 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
     if (saving) return;
     setSaving(true);
     try {
-      await updateTask({ taskKey: task.taskKey, data: { description: descValue } }).unwrap();
+      await updateTask({ taskKey: task.taskKey, data: { description: descValue }, workspaceId }).unwrap();
       setEditingDesc(false);
     } catch {
     } finally {
