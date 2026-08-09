@@ -12,6 +12,7 @@ import {
   useDeleteWorkspaceMutation,
   useUpdateMemberRoleMutation,
   type Role,
+  type WorkspaceMember,
 } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,27 @@ import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picke
 import type { ProjectTemplate } from "@/store/projectApi";
 
 type SettingsTab = "general" | "members" | "billing";
+
+const ROLE_LABELS: Record<Role, string> = {
+  ADMIN: "Admin",
+  EDIT: "Edit",
+  VIEW: "View",
+};
+
+const ROLE_BADGE: Record<Role, string> = {
+  ADMIN: "bg-[#EEF4FF] text-[#004AC6]",
+  EDIT: "bg-[#F0F0F5] text-[#737686]",
+  VIEW: "bg-[#F5F3FF] text-[#6D28D9]",
+};
+
+const ROLE_DESCRIPTIONS: Record<Role, string> = {
+  ADMIN:
+    "Full workspace management: settings, members, invites. Cannot delete the workspace or change admin roles.",
+  EDIT:
+    "Can create, edit, update, and delete tasks they created across projects. No access to workspace settings or member management.",
+  VIEW:
+    "Read-only access. Can view boards, tasks, and comments but cannot modify anything.",
+};
 
 export default function WorkspaceSettingsPage() {
   const params = useParams();
@@ -37,16 +59,26 @@ export default function WorkspaceSettingsPage() {
   const [deleteWorkspace, { isLoading: isDeleting }] = useDeleteWorkspaceMutation();
   const [updateMemberRole] = useUpdateMemberRoleMutation();
   const [roleLoading, setRoleLoading] = useState<string | null>(null);
+  const [roleModalMember, setRoleModalMember] = useState<WorkspaceMember | null>(null);
+  const [roleModalValue, setRoleModalValue] = useState<Role>("VIEW");
+  const [roleModalSaving, setRoleModalSaving] = useState(false);
 
   async function handleChangeRole(memberUserId: string, role: Role) {
     setRoleLoading(memberUserId);
     try {
       await updateMemberRole({ workspaceId, userId: memberUserId, role }).unwrap();
+      setRoleModalMember(null);
     } catch {
       // ignore; cache revalidation surfaces state
     } finally {
       setRoleLoading(null);
+      setRoleModalSaving(false);
     }
+  }
+
+  function openRoleModal(member: WorkspaceMember) {
+    setRoleModalMember(member);
+    setRoleModalValue(member.role);
   }
 
   const [name, setName] = useState("");
@@ -66,6 +98,21 @@ export default function WorkspaceSettingsPage() {
 
   const currentMember = members.find((m) => m.userId === user?.id);
   const isAdmin = currentMember?.role === "ADMIN";
+  const isOwner = workspace?.ownerId === user?.id;
+
+  const canManageMember = (member: WorkspaceMember) => {
+    if (member.userId === user?.id) return false;
+    if (member.userId === workspace?.ownerId) return false;
+    if (!isAdmin) return false;
+    if (member.role === "ADMIN" && !isOwner) return false;
+    return true;
+  };
+
+  const roleModalOptions = (): Role[] => {
+    if (!roleModalMember) return [];
+    if (isOwner) return ["ADMIN", "EDIT", "VIEW"];
+    return ["EDIT", "VIEW"];
+  };
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
@@ -101,6 +148,15 @@ export default function WorkspaceSettingsPage() {
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
+      </div>
+    );
+  }
+
+  if (members.length > 0 && !isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-16">
+        <p className="text-[#737686]">Only workspace admins can access settings.</p>
+        <Link href={`/w/${workspaceId}`}><Button variant="outline">Back to workspace</Button></Link>
       </div>
     );
   }
@@ -258,26 +314,27 @@ export default function WorkspaceSettingsPage() {
                       </p>
                     </div>
                   </div>
-                  {isAdmin && member.userId !== user?.id ? (
-                    <select
-                      value={member.role}
-                      disabled={roleLoading === member.userId}
-                      onChange={(e) => handleChangeRole(member.userId, e.target.value as Role)}
-                      className="rounded-md border border-[#C3C6D7] bg-white px-2 py-1 text-xs font-medium text-[#434655] focus:border-[#2563EB] focus:outline-none"
-                    >
-                      <option value="ADMIN">Admin</option>
-                      <option value="MEMBER">Member</option>
-                      <option value="VIEWER">Viewer</option>
-                    </select>
+                  {canManageMember(member) ? (
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${ROLE_BADGE[member.role]}`}>
+                        {ROLE_LABELS[member.role]}
+                      </span>
+                      <button
+                        onClick={() => openRoleModal(member)}
+                        className="rounded-md px-2 py-1 text-xs font-medium text-[#2563EB] transition-colors hover:bg-[#EEF4FF]"
+                      >
+                        Manage access
+                      </button>
+                    </div>
                   ) : (
                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
                       member.role === "ADMIN"
                         ? "bg-[#EEF4FF] text-[#004AC6]"
-                        : member.role === "VIEWER"
+                        : member.role === "VIEW"
                         ? "bg-[#F5F3FF] text-[#6D28D9]"
                         : "bg-[#F0F0F5] text-[#737686]"
                     }`}>
-                      {member.role === "ADMIN" ? "Admin" : member.role === "VIEWER" ? "Viewer" : "Member"}
+                      {member.role === "ADMIN" ? "Admin" : member.role === "VIEW" ? "View" : "Edit"}
                     </span>
                   )}
                 </div>
@@ -304,6 +361,60 @@ export default function WorkspaceSettingsPage() {
             <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>Delete</Button>
           </div>
         </div>
+      </Dialog>
+
+      <Dialog
+        open={!!roleModalMember}
+        onClose={() => setRoleModalMember(null)}
+        title="Manage access"
+      >
+        {roleModalMember && (
+          <div className="space-y-4">
+            <p className="text-sm text-[#434655]">
+              Change workspace role for{" "}
+              <strong>
+                {roleModalMember.user?.name || roleModalMember.userId.slice(0, 8)}
+              </strong>
+              .
+            </p>
+            <div className="flex flex-col gap-2">
+              {roleModalOptions().map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setRoleModalValue(role)}
+                  className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                    roleModalValue === role
+                      ? "border-[#2563EB] bg-[#EEF4FF]"
+                      : "border-[#C3C6D7] hover:bg-[#F8F9FF]"
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-[#121C28]">
+                    {ROLE_LABELS[role]}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-[#737686]">
+                    {ROLE_DESCRIPTIONS[role]}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setRoleModalMember(null)}>
+                Cancel
+              </Button>
+              <Button
+                isLoading={roleModalSaving}
+                disabled={roleModalValue === roleModalMember.role}
+                onClick={() => {
+                  setRoleModalSaving(true);
+                  handleChangeRole(roleModalMember.userId, roleModalValue);
+                }}
+              >
+                {roleModalValue === roleModalMember.role ? "Current role" : "Change role"}
+              </Button>
+            </div>
+          </div>
+        )}
       </Dialog>
     </>
   );

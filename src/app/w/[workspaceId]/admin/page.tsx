@@ -333,18 +333,18 @@ export default function AdminSettingsPage() {
                       className="rounded-md border border-[#C3C6D7] bg-white px-2 py-1 text-xs font-medium text-[#434655] focus:border-[#2563EB] focus:outline-none"
                     >
                       <option value="ADMIN">Admin</option>
-                      <option value="MEMBER">Member</option>
-                      <option value="VIEWER">Viewer</option>
+                      <option value="EDIT">Edit</option>
+                      <option value="VIEW">View</option>
                     </select>
                   ) : (
                     <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
                       member.role === "ADMIN"
                         ? "bg-[#EEF4FF] text-[#004AC6]"
-                        : member.role === "VIEWER"
+                        : member.role === "VIEW"
                         ? "bg-[#F5F3FF] text-[#6D28D9]"
                         : "bg-[#F0F0F5] text-[#737686]"
                     }`}>
-                      {member.role === "ADMIN" ? "Admin" : member.role === "VIEWER" ? "Viewer" : "Member"}
+                      {member.role === "ADMIN" ? "Admin" : member.role === "VIEW" ? "View" : "Edit"}
                     </span>
                   )}
                 </div>

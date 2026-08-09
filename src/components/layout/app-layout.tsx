@@ -7,6 +7,7 @@ import { AppNavbar } from "./app-navbar";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { NotificationListener } from "@/components/notifications/notification-listener";
+import { WorkspaceListener } from "@/components/notifications/workspace-listener";
 import { AIChatPanel } from "@/components/ai/ai-chat-panel";
 import { ErrorBoundary } from "./error-boundary";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
@@ -180,6 +181,7 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
   return (
     <AuthGuard>
       <NotificationListener />
+      <WorkspaceListener />
       <div className="flex min-h-screen flex-col bg-bg-light">
         <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} onToggleChat={handleToggleChat} />
         <div className="flex flex-1 min-h-0">

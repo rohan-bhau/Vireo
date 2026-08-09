@@ -12,7 +12,7 @@ interface Workspace {
   members?: WorkspaceMember[];
 }
 
-export type Role = "ADMIN" | "MEMBER" | "VIEWER";
+export type Role = "ADMIN" | "EDIT" | "VIEW";
 
 export interface WorkspaceMember {
   id: string;

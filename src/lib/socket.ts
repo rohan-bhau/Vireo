@@ -134,3 +134,15 @@ export function onNotificationCount(callback: (data: { count: number }) => void)
   s.on("notification-count", callback);
   return () => { s.off("notification-count", callback); };
 }
+
+export function onWorkspaceRemoved(callback: (data: { workspaceId: string }) => void): () => void {
+  const s = connectSocket();
+  s.on("workspace-removed", callback);
+  return () => { s.off("workspace-removed", callback); };
+}
+
+export function onWorkspaceMemberRoleChanged(callback: (data: { workspaceId: string; userId: string; role: import("@/store/workspaceApi").Role }) => void): () => void {
+  const s = connectSocket();
+  s.on("workspace-member-role-changed", callback);
+  return () => { s.off("workspace-member-role-changed", callback); };
+}

@@ -13,6 +13,7 @@ import {
   useCreateInvitationMutation,
   useCancelInvitationMutation,
   type Role,
+  type WorkspaceMember,
 } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,14 +23,23 @@ import Link from "next/link";
 
 const ROLE_LABELS: Record<Role, string> = {
   ADMIN: "Admin",
-  MEMBER: "Member",
-  VIEWER: "Viewer",
+  EDIT: "Edit",
+  VIEW: "View",
 };
 
 const ROLE_BADGE: Record<Role, string> = {
   ADMIN: "bg-[#EEF4FF] text-[#004AC6]",
-  MEMBER: "bg-[#F0F0F5] text-[#737686]",
-  VIEWER: "bg-[#F5F3FF] text-[#6D28D9]",
+  EDIT: "bg-[#F0F0F5] text-[#737686]",
+  VIEW: "bg-[#F5F3FF] text-[#6D28D9]",
+};
+
+const ROLE_DESCRIPTIONS: Record<Role, string> = {
+  ADMIN:
+    "Full workspace management: settings, members, invites. Cannot delete the workspace or change admin roles.",
+  EDIT:
+    "Can create, edit, update, and delete tasks they created across projects. No access to workspace settings or member management.",
+  VIEW:
+    "Read-only access. Can view boards, tasks, and comments but cannot modify anything.",
 };
 
 function Avatar({
@@ -77,16 +87,34 @@ export default function MembersPage() {
 
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<Role>("VIEWER");
+  const [inviteRole, setInviteRole] = useState<Role>("VIEW");
   const [inviteMessage, setInviteMessage] = useState("");
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const [removeLoading, setRemoveLoading] = useState(false);
   const [roleLoading, setRoleLoading] = useState<string | null>(null);
+  const [roleModalMember, setRoleModalMember] = useState<WorkspaceMember | null>(null);
+  const [roleModalValue, setRoleModalValue] = useState<Role>("VIEW");
+  const [roleModalSaving, setRoleModalSaving] = useState(false);
 
   const currentMember = members.find((m) => m.userId === user?.id);
   const isAdmin = currentMember?.role === "ADMIN";
+  const isOwner = workspace?.ownerId === user?.id;
+
+  const canManageMember = (member: WorkspaceMember) => {
+    if (member.userId === user?.id) return false;
+    if (member.userId === workspace?.ownerId) return false;
+    if (!isAdmin) return false;
+    if (member.role === "ADMIN" && !isOwner) return false; // only the owner manages admins
+    return true;
+  };
+
+  const roleModalOptions = (): Role[] => {
+    if (!roleModalMember) return [];
+    if (isOwner) return ["ADMIN", "EDIT", "VIEW"];
+    return ["EDIT", "VIEW"]; // non-owner admins can only set EDIT/VIEW
+  };
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -135,13 +163,20 @@ export default function MembersPage() {
     setRoleLoading(memberUserId);
     try {
       await updateRole({ workspaceId, userId: memberUserId, role }).unwrap();
+      setRoleModalMember(null);
     } catch (err) {
       toastError(
         (err as { data?: { message?: string } }).data?.message || "Failed to update role"
       );
     } finally {
       setRoleLoading(null);
+      setRoleModalSaving(false);
     }
+  }
+
+  function openRoleModal(member: WorkspaceMember) {
+    setRoleModalMember(member);
+    setRoleModalValue(member.role);
   }
 
   async function handleCancelInvitation(invitationId: string) {
@@ -216,27 +251,22 @@ export default function MembersPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-[#737686]">{email}</td>
                     <td className="px-6 py-4">
-                      {isAdmin && !isCurrentUser ? (
-                        <select
-                          value={member.role}
-                          disabled={roleLoading === member.userId}
-                          onChange={(e) => handleChangeRole(member.userId, e.target.value as Role)}
-                          className="rounded-md border border-[#C3C6D7] bg-white px-2 py-1 text-xs font-medium text-[#434655] focus:border-[#2563EB] focus:outline-none"
-                        >
-                          {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
-                            <option key={role} value={role}>
-                              {ROLE_LABELS[role]}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
+                      <div className="flex items-center gap-2">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${ROLE_BADGE[member.role]}`}>
                           {ROLE_LABELS[member.role]}
                         </span>
-                      )}
+                        {canManageMember(member) && (
+                          <button
+                            onClick={() => openRoleModal(member)}
+                            className="rounded-md px-2 py-1 text-xs font-medium text-[#2563EB] transition-colors hover:bg-[#EEF4FF]"
+                          >
+                            Manage access
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      {isAdmin && !isCurrentUser ? (
+                      {canManageMember(member) ? (
                         <button
                           onClick={() => setRemoveTarget(member.userId)}
                           className="rounded-md px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
@@ -312,7 +342,7 @@ export default function MembersPage() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-[#434655]">Workspace Role</label>
             <div className="flex gap-3">
-              {(["VIEWER", "MEMBER", "ADMIN"] as const).map((role) => (
+              {(isOwner ? (["VIEW", "EDIT", "ADMIN"] as const) : (["VIEW", "EDIT"] as const)).map((role) => (
                 <button
                   key={role}
                   type="button"
@@ -329,10 +359,10 @@ export default function MembersPage() {
             </div>
             <p className="text-xs text-[#737686]">
               {inviteRole === "ADMIN"
-                ? "Full access to billing, members, and all projects."
-                : inviteRole === "MEMBER"
-                ? "Can create projects and manage their own work."
-                : "Read-only access. Can view boards and comment on tasks."}
+                ? "Manage members, settings, and permissions (cannot delete the workspace or change admin roles)."
+                : inviteRole === "EDIT"
+                ? "Can create, edit, and update tasks across projects."
+                : "Read-only access. Can view boards and tasks."}
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -350,6 +380,60 @@ export default function MembersPage() {
             <Button type="submit" isLoading={isInviting}>Send Invites</Button>
           </div>
         </form>
+      </Dialog>
+
+      <Dialog
+        open={!!roleModalMember}
+        onClose={() => setRoleModalMember(null)}
+        title="Manage access"
+      >
+        {roleModalMember && (
+          <div className="space-y-4">
+            <p className="text-sm text-[#434655]">
+              Change workspace role for{" "}
+              <strong>
+                {roleModalMember.user?.name || roleModalMember.userId.slice(0, 8)}
+              </strong>
+              .
+            </p>
+            <div className="flex flex-col gap-2">
+              {roleModalOptions().map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setRoleModalValue(role)}
+                  className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                    roleModalValue === role
+                      ? "border-[#2563EB] bg-[#EEF4FF]"
+                      : "border-[#C3C6D7] hover:bg-[#F8F9FF]"
+                  }`}
+                >
+                  <span className="block text-sm font-semibold text-[#121C28]">
+                    {ROLE_LABELS[role]}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-[#737686]">
+                    {ROLE_DESCRIPTIONS[role]}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setRoleModalMember(null)}>
+                Cancel
+              </Button>
+              <Button
+                isLoading={roleModalSaving}
+                disabled={roleModalValue === roleModalMember.role}
+                onClick={() => {
+                  setRoleModalSaving(true);
+                  handleChangeRole(roleModalMember.userId, roleModalValue);
+                }}
+              >
+                {roleModalValue === roleModalMember.role ? "Current role" : "Change role"}
+              </Button>
+            </div>
+          </div>
+        )}
       </Dialog>
 
       <Dialog

@@ -27,6 +27,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
   const starredWorkspaces = useSelector(
     (state: RootState) => state.workspace.starredWorkspaces
   );
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const [showMenu, setShowMenu] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -85,6 +86,9 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
   if (isLoading || !workspace) return null;
 
   const isStarred = !!starredWorkspaces[workspaceId];
+  const currentMember = workspace.members?.find((m) => m.userId === user?.id);
+  const isAdmin = currentMember?.role === "ADMIN";
+  const isOwner = workspace.ownerId === user?.id;
 
   return (
     <>
@@ -101,13 +105,15 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
         </div>
 
         <div className="flex items-center gap-2 shrink-0 max-sm:ml-auto">
-          <button
-            onClick={() => setShowInvite(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark min-h-[36px] sm:min-h-[32px]"
-          >
-            <UserPlus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Add member</span>
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setShowInvite(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark min-h-[36px] sm:min-h-[32px]"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Add member</span>
+            </button>
+          )}
 
           <div ref={menuRef} className="relative">
             <button
@@ -134,24 +140,28 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
                   />
                   {isStarred ? "Unstar workspace" : "Star workspace"}
                 </button>
-                <Link
-                  href={`/w/${workspaceId}/settings`}
-                  onClick={() => setShowMenu(false)}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light"
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  Settings
-                </Link>
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    setShowDelete(true);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-danger hover:bg-danger-bg"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Delete workspace
-                </button>
+                {isAdmin && (
+                  <Link
+                    href={`/w/${workspaceId}/settings`}
+                    onClick={() => setShowMenu(false)}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light"
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                    Settings
+                  </Link>
+                )}
+                {isOwner && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowDelete(true);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-danger hover:bg-danger-bg"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete workspace
+                  </button>
+                )}
               </div>
             )}
           </div>
