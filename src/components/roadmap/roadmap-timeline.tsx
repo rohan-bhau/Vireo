@@ -144,6 +144,9 @@ export function RoadmapTimeline({
     [taskItems]
   );
 
+  const ROW_HEIGHT = 36;
+  const LABEL_WIDTH = 200;
+
   const displayedItems = useMemo(() => {
     if (!showEpics) return taskItems;
     return items;
@@ -159,10 +162,7 @@ export function RoadmapTimeline({
       pos[item.id] = { x: left, y: top, width };
     });
     return pos;
-  }, [displayedItems, timelineStart, totalMs]);
-
-  const ROW_HEIGHT = 36;
-  const LABEL_WIDTH = 200;
+  }, [displayedItems, timelineStart, totalMs, ROW_HEIGHT]);
 
   return (
     <div className="flex flex-col">
