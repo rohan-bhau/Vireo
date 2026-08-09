@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter, usePathname } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import {
@@ -19,8 +19,10 @@ import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
 import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picker";
 import type { ProjectTemplate } from "@/store/projectApi";
+import { Settings2, Users, Pencil, Trash2, Check, Plus } from "lucide-react";
+import { clsx } from "clsx";
 
-type SettingsTab = "general" | "members" | "billing";
+type SettingsTab = "general" | "members";
 
 const ROLE_LABELS: Record<Role, string> = {
   ADMIN: "Admin",
@@ -29,72 +31,65 @@ const ROLE_LABELS: Record<Role, string> = {
 };
 
 const ROLE_BADGE: Record<Role, string> = {
-  ADMIN: "bg-[#EEF4FF] text-[#004AC6]",
-  EDIT: "bg-[#F0F0F5] text-[#737686]",
+  ADMIN: "bg-primary-bg text-primary",
+  EDIT: "bg-bg-light text-text-secondary",
   VIEW: "bg-[#F5F3FF] text-[#6D28D9]",
 };
 
 const ROLE_DESCRIPTIONS: Record<Role, string> = {
   ADMIN:
-    "Full workspace management: settings, members, invites. Cannot delete the workspace or change admin roles.",
+    "Full workspace management: settings, members, invites. Cannot delete the workspace or change the owner's role.",
   EDIT:
     "Can create, edit, update, and delete tasks they created across projects. No access to workspace settings or member management.",
   VIEW:
     "Read-only access. Can view boards, tasks, and comments but cannot modify anything.",
 };
 
+function Avatar({ name, email }: { name?: string | null; email?: string | null }) {
+  const initial = (name || email || "?").trim().charAt(0)?.toUpperCase() || "?";
+  return (
+    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+      {initial}
+    </div>
+  );
+}
+
 export default function WorkspaceSettingsPage() {
   const params = useParams();
   const router = useRouter();
-  const pathname = usePathname();
   const workspaceId = params.workspaceId as string;
   const { user } = useSelector((state: RootState) => state.auth);
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
-  const isBillingPage = pathname?.endsWith("/settings/billing");
 
   const { data: workspace, isLoading } = useGetWorkspaceQuery(workspaceId);
   const { data: members = [] } = useGetMembersQuery(workspaceId);
   const [updateWorkspace, { isLoading: isUpdating }] = useUpdateWorkspaceMutation();
   const [deleteWorkspace, { isLoading: isDeleting }] = useDeleteWorkspaceMutation();
   const [updateMemberRole] = useUpdateMemberRoleMutation();
+
   const [roleLoading, setRoleLoading] = useState<string | null>(null);
   const [roleModalMember, setRoleModalMember] = useState<WorkspaceMember | null>(null);
   const [roleModalValue, setRoleModalValue] = useState<Role>("VIEW");
   const [roleModalSaving, setRoleModalSaving] = useState(false);
 
-  async function handleChangeRole(memberUserId: string, role: Role) {
-    setRoleLoading(memberUserId);
-    try {
-      await updateMemberRole({ workspaceId, userId: memberUserId, role }).unwrap();
-      setRoleModalMember(null);
-    } catch {
-      // ignore; cache revalidation surfaces state
-    } finally {
-      setRoleLoading(null);
-      setRoleModalSaving(false);
-    }
-  }
-
-  function openRoleModal(member: WorkspaceMember) {
-    setRoleModalMember(member);
-    setRoleModalValue(member.role);
-  }
-
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [template, setTemplate] = useState<ProjectTemplate>("KANBAN");
-  const [success, setSuccess] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
+  const [showRename, setShowRename] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [lastSyncedName, setLastSyncedName] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (workspace) {
-      setName(workspace.name);
-      setDescription(workspace.description || "");
-      setTemplate(workspace.template || "KANBAN");
-    }
-  }, [workspace]);
+  if (workspace && name !== workspace.name && lastSyncedName !== workspace.name) {
+    setLastSyncedName(workspace.name);
+    setDescription(workspace.description || "");
+    setTemplate(workspace.template || "KANBAN");
+    setName(workspace.name);
+  }
 
   const currentMember = members.find((m) => m.userId === user?.id);
   const isAdmin = currentMember?.role === "ADMIN";
@@ -114,20 +109,54 @@ export default function WorkspaceSettingsPage() {
     return ["EDIT", "VIEW"];
   };
 
+  async function handleRename() {
+    const value = renameValue.trim();
+    if (!value) {
+      setRenameError("Workspace name is required");
+      return;
+    }
+    setRenameError(null);
+    setRenaming(true);
+    try {
+      await updateWorkspace({ workspaceId, name: value, description: description.trim() || undefined, template }).unwrap();
+      setRenameValue("");
+      setShowRename(false);
+      setName(value);
+    } catch (err: unknown) {
+      setRenameError((err as { data?: { message?: string } })?.data?.message || "Failed to rename workspace");
+    } finally {
+      setRenaming(false);
+    }
+  }
+
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
+    setSaveState("idle");
     if (!name.trim()) {
-      setError("Workspace name is required");
+      setSaveState("error");
       return;
     }
     try {
       await updateWorkspace({ workspaceId, name: name.trim(), description: description.trim() || undefined, template }).unwrap();
-      setSuccess("Workspace updated successfully");
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err?.data?.message || "Failed to update workspace");
+      setSaveState("success");
+      setTimeout(() => setSaveState("idle"), 3000);
+    } catch {
+      setSaveState("error");
+      setTimeout(() => setSaveState("idle"), 3000);
+    }
+  }
+
+  async function handleChangeRole(memberUserId: string, role: Role) {
+    setRoleModalSaving(true);
+    setRoleLoading(memberUserId);
+    try {
+      await updateMemberRole({ workspaceId, userId: memberUserId, role }).unwrap();
+      setRoleModalMember(null);
+    } catch {
+      // cache revalidation surfaces state
+    } finally {
+      setRoleLoading(null);
+      setRoleModalSaving(false);
     }
   }
 
@@ -135,8 +164,7 @@ export default function WorkspaceSettingsPage() {
     try {
       await deleteWorkspace(workspaceId).unwrap();
       router.replace("/dashboard");
-    } catch (err: any) {
-      setError(err?.data?.message || "Failed to delete workspace");
+    } catch {
       setShowDelete(false);
     }
   }
@@ -144,10 +172,7 @@ export default function WorkspaceSettingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <svg className="h-6 w-6 animate-spin text-[#2563EB]" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -155,7 +180,7 @@ export default function WorkspaceSettingsPage() {
   if (members.length > 0 && !isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
-        <p className="text-[#737686]">Only workspace admins can access settings.</p>
+        <p className="text-sm text-text-secondary">Only workspace admins can access settings.</p>
         <Link href={`/w/${workspaceId}`}><Button variant="outline">Back to workspace</Button></Link>
       </div>
     );
@@ -164,218 +189,236 @@ export default function WorkspaceSettingsPage() {
   if (!workspace) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
-        <p className="text-[#737686]">Workspace not found</p>
+        <p className="text-sm text-text-secondary">Workspace not found</p>
         <Link href="/dashboard"><Button variant="outline">Back to workspaces</Button></Link>
       </div>
     );
   }
 
+  const navItems = [
+    { id: "general" as SettingsTab, label: "General", icon: Settings2, desc: "Workspace details & preferences" },
+    { id: "members" as SettingsTab, label: "Members", icon: Users, desc: "Manage roles and access" },
+  ];
+
   return (
     <>
-      <div className="mb-4 flex items-center gap-2 text-sm">
-        <Link href={`/w/${workspaceId}`} className="font-medium text-[#737686] hover:text-[#121C28] transition-colors">
-          {workspace.name}
-        </Link>
-        <span className="text-[#C3C6D7]">/</span>
-        <span className="font-semibold text-[#121C28]">Settings</span>
-      </div>
-      <div className="flex gap-2 mb-6 border-b border-[#C3C6D7]/20 pb-4">
-        {(["general", "members", "billing"] as const).map((tab) => {
-          if (tab === "billing") {
-            return (
-              <Link
-                key={tab}
-                href={`/w/${workspaceId}/settings/billing`}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  isBillingPage
-                    ? "bg-[#EEF4FF] text-[#004AC6]"
-                    : "text-[#434655] hover:bg-[#F8F9FF]"
-                }`}
-              >
-                Plans & Billing
-              </Link>
-            );
-          }
-          return (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === tab
-                  ? "bg-[#EEF4FF] text-[#004AC6]"
-                  : "text-[#434655] hover:bg-[#F8F9FF]"
-              }`}
-            >
-              {tab === "general" ? "General Details" : "Members"}
-            </button>
-          );
-        })}
-      </div>
-
-      {activeTab === "general" && (
-        <div className="max-w-2xl">
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-[#121C28]">Workspace Settings</h2>
-            <p className="mt-1 text-sm text-[#737686]">Manage your workspace general details and preferences.</p>
-          </div>
-
-          <div className="rounded-xl bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-            <h3 className="text-base font-semibold text-[#121C28]">General Details</h3>
-            <p className="mt-1 text-sm text-[#737686]">Information about your workspace identity.</p>
-
-            {success && (
-              <div className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">{success}</div>
-            )}
-            {error && (
-              <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
-            )}
-
-            <form onSubmit={handleUpdate} className="mt-6 space-y-5">
-              <Input
-                label="Workspace Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={!isAdmin}
-              />
-              <Input
-                label="Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={!isAdmin}
-              />
-              <div className={!isAdmin ? "pointer-events-none opacity-60" : ""}>
-                <WorkspaceTypePicker value={template} onChange={setTemplate} />
-                <p className="mt-1.5 text-xs text-[#737686]">
-                  Sets the default board and menu layout for this workspace.
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-[#434655]">Workspace ID</label>
-                <div className="mt-1.5 rounded-lg border border-[#C3C6D7] bg-gray-50 px-3 py-2.5 text-sm text-[#737686] font-mono">
-                  {workspaceId}
-                </div>
-              </div>
-              {isAdmin && (
-                <div className="flex gap-3 pt-2">
-                  <Button type="submit" isLoading={isUpdating}>Save Changes</Button>
-                </div>
-              )}
-              {!isAdmin && (
-                <p className="text-sm text-[#737686]">Only workspace admins can edit these settings.</p>
-              )}
-            </form>
-          </div>
-
-          {isAdmin && workspace?.ownerId === user?.id && (
-            <div className="mt-8 rounded-xl border border-red-200 bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-              <h3 className="text-base font-semibold text-red-600">Delete Workspace</h3>
-              <p className="mt-1 text-sm text-[#737686]">
-                Once you delete a workspace, there is no going back. All project data, member history, and associated assets will be permanently removed.
+      <div className="rounded-xl border border-border-light bg-surface">
+        <div className="flex flex-col gap-4 border-b border-border-light px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-base font-bold text-primary">
+              {workspace.name.charAt(0)?.toUpperCase() || "W"}
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-semibold text-text">{workspace.name}</h1>
+              <p className="text-xs text-text-tertiary">
+                {isOwner ? "Owner & admin" : "Admin"} · {members.length} member{members.length !== 1 ? "s" : ""}
               </p>
-              <Button
-                variant="danger"
-                className="mt-4"
-                onClick={() => setShowDelete(true)}
-              >
-                Delete this workspace
-              </Button>
             </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "members" && (
-        <div className="max-w-2xl">
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-[#121C28]">Members Management</h2>
-            <p className="mt-1 text-sm text-[#737686]">Control who has access to this workspace and manage their roles.</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setRenameValue(workspace.name); setRenameError(null); setShowRename(true); }}
+            className="w-fit gap-1.5"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit workspace name
+          </Button>
+        </div>
 
-          <div className="rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-            <div className="px-6 py-4 border-b border-[#C3C6D7]/20 flex items-center justify-between">
-              <p className="text-sm font-medium text-[#121C28]">Team Members ({members.length})</p>
-              {isAdmin && (
-                <Link href={`/w/${workspaceId}/members`}>
-                  <Button size="sm">Manage Members</Button>
-                </Link>
-              )}
-            </div>
-            <div className="divide-y divide-[#C3C6D7]/10">
-              {members.slice(0, 5).map((member) => (
-                <div key={member.userId} className="flex items-center justify-between px-6 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2563EB] text-[10px] font-bold text-white">
-                      {member.userId.slice(0, 2).toUpperCase()}
+        <div className="flex flex-col md:flex-row">
+          <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-border-light p-2 md:w-60 md:flex-col md:border-b-0 md:border-r md:p-3">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={clsx(
+                  "flex min-w-[140px] items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors md:w-full md:min-w-0",
+                  activeTab === item.id
+                    ? "bg-primary-bg text-primary-dark"
+                    : "text-text-secondary hover:bg-bg-light hover:text-text"
+                )}
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{item.label}</p>
+                  <p className="hidden text-[11px] text-text-tertiary md:block">{item.desc}</p>
+                </div>
+              </button>
+            ))}
+          </nav>
+
+          <div className="min-w-0 flex-1 p-5 sm:p-8">
+            {activeTab === "general" && (
+              <div className="max-w-2xl space-y-6">
+                <div>
+                  <h2 className="text-base font-semibold text-text">General settings</h2>
+                  <p className="mt-0.5 text-sm text-text-secondary">Manage your workspace identity and default working style.</p>
+                </div>
+
+                <div className="space-y-6 rounded-xl border border-border-light bg-surface p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-text">Workspace name</p>
+                      <p className="mt-0.5 text-sm text-text-secondary">{name}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setRenameValue(name); setRenameError(null); setShowRename(true); }}
+                      className="shrink-0 gap-1.5"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </Button>
+                  </div>
+
+                  <form onSubmit={handleUpdate} className="space-y-5">
+                    <Input
+                      label="Description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="What is this workspace about?"
+                      disabled={!isAdmin}
+                    />
+                    <div className={!isAdmin ? "pointer-events-none opacity-60" : ""}>
+                      <WorkspaceTypePicker value={template} onChange={setTemplate} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#121C28]">
-                        {member.userId === user?.id ? "You" : `User ${member.userId.slice(0, 8)}`}
+                      <label className="text-xs font-semibold text-text-secondary">Workspace ID</label>
+                      <div className="mt-1.5 rounded-[3px] border border-border-input bg-bg-light px-3 py-2.5 font-mono text-sm text-text-tertiary">
+                        {workspaceId}
+                      </div>
+                    </div>
+                    {saveState === "success" && (
+                      <p className="flex items-center gap-1.5 text-sm text-green-600">
+                        <Check className="h-4 w-4" /> Workspace updated successfully
                       </p>
-                    </div>
-                  </div>
-                  {canManageMember(member) ? (
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${ROLE_BADGE[member.role]}`}>
-                        {ROLE_LABELS[member.role]}
-                      </span>
-                      <button
-                        onClick={() => openRoleModal(member)}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-[#2563EB] transition-colors hover:bg-[#EEF4FF]"
-                      >
-                        Manage access
-                      </button>
-                    </div>
-                  ) : (
-                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      member.role === "ADMIN"
-                        ? "bg-[#EEF4FF] text-[#004AC6]"
-                        : member.role === "VIEW"
-                        ? "bg-[#F5F3FF] text-[#6D28D9]"
-                        : "bg-[#F0F0F5] text-[#737686]"
-                    }`}>
-                      {member.role === "ADMIN" ? "Admin" : member.role === "VIEW" ? "View" : "Edit"}
-                    </span>
+                    )}
+                    {saveState === "error" && (
+                      <p className="text-sm text-danger">Failed to update workspace. Please try again.</p>
+                    )}
+                    {isAdmin && (
+                      <Button type="submit" isLoading={isUpdating}>Save changes</Button>
+                    )}
+                  </form>
+
+                  {!isAdmin && (
+                    <p className="text-sm text-text-tertiary">Only workspace admins can edit these settings.</p>
                   )}
                 </div>
-              ))}
-            </div>
-            {members.length > 5 && (
-              <div className="px-6 py-3 border-t border-[#C3C6D7]/10">
-                <Link href={`/w/${workspaceId}/members`} className="text-sm font-medium text-[#2563EB] hover:text-[#1d4ed8]">
-                  View all {members.length} members &rarr;
-                </Link>
+
+                {isOwner && (
+                  <div className="rounded-xl border border-danger/20 bg-danger/5 p-6">
+                    <h3 className="text-sm font-semibold text-danger">Danger zone</h3>
+                    <p className="mt-1 text-sm text-text-secondary">
+                      Once you delete a workspace, there is no going back. All projects, tasks, and member data will be permanently removed.
+                    </p>
+                    <Button variant="danger" className="mt-4" onClick={() => setShowDelete(true)}>
+                      Delete this workspace
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "members" && (
+              <div className="space-y-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold text-text">Members</h2>
+                    <p className="mt-0.5 text-sm text-text-secondary">{members.length} people have access to this workspace.</p>
+                  </div>
+                  <Link href={`/w/${workspaceId}/members`}>
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="h-3.5 w-3.5" />
+                      Manage members
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="overflow-hidden rounded-xl border border-border-light bg-surface">
+                  <div className="hidden grid-cols-[1fr_1.4fr_0.8fr_auto] gap-4 border-b border-border-light px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-text-tertiary sm:grid">
+                    <span>Member</span>
+                    <span>Email</span>
+                    <span>Role</span>
+                    <span />
+                  </div>
+                  <div className="divide-y divide-border-light">
+                    {members.map((member) => (
+                      <div
+                        key={member.userId}
+                        className="grid grid-cols-1 gap-2 px-5 py-3.5 sm:grid-cols-[1fr_1.4fr_0.8fr_auto] sm:items-center sm:gap-4"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <Avatar name={member.user?.name} email={member.user?.email} />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-text">
+                              {member.userId === user?.id ? "You" : member.user?.name || `User ${member.userId.slice(0, 8)}`}
+                            </p>
+                            {member.userId === workspace.ownerId && (
+                              <span className="text-[11px] font-medium text-text-tertiary">Owner</span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="truncate text-sm text-text-secondary sm:col-auto">
+                          {member.user?.email || <span className="text-text-tertiary">—</span>}
+                        </p>
+                        <span className="w-fit rounded-full px-2.5 py-0.5 text-[11px] font-medium sm:w-auto sm:text-center">
+                          <span className={clsx("rounded-full px-2.5 py-0.5", ROLE_BADGE[member.role])}>
+                            {ROLE_LABELS[member.role]}
+                          </span>
+                        </span>
+                        <div className="flex items-center justify-end sm:justify-start">
+                          {canManageMember(member) ? (
+                            roleLoading === member.userId ? (
+                              <span className="text-xs text-text-tertiary">Updating…</span>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => { setRoleModalMember(member); setRoleModalValue(member.role); }}
+                              >
+                                Manage access
+                              </Button>
+                            )
+                          ) : (
+                            <span className="text-xs text-text-tertiary">
+                              {member.role === "ADMIN" && !isOwner ? "Managed by owner" : "—"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
-      )}
+      </div>
 
-      <Dialog open={showDelete} onClose={() => setShowDelete(false)} title="Delete workspace" className="max-w-sm">
+      <Dialog open={showRename} onClose={() => setShowRename(false)} title="Rename workspace" className="max-w-md">
         <div className="space-y-4">
-          <p className="text-sm text-[#737686]">
-            Are you sure you want to delete <strong>{workspace.name}</strong>? This will permanently remove all projects, tasks, and member associations.
-          </p>
+          <Input
+            label="Workspace name"
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            error={renameError || undefined}
+            autoFocus
+          />
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setShowDelete(false)}>Cancel</Button>
-            <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>Delete</Button>
+            <Button type="button" variant="outline" onClick={() => setShowRename(false)}>Cancel</Button>
+            <Button isLoading={renaming} onClick={handleRename}>Save</Button>
           </div>
         </div>
       </Dialog>
 
-      <Dialog
-        open={!!roleModalMember}
-        onClose={() => setRoleModalMember(null)}
-        title="Manage access"
-      >
+      <Dialog open={!!roleModalMember} onClose={() => setRoleModalMember(null)} title="Manage access" className="max-w-md" >
         {roleModalMember && (
           <div className="space-y-4">
-            <p className="text-sm text-[#434655]">
-              Change workspace role for{" "}
-              <strong>
-                {roleModalMember.user?.name || roleModalMember.userId.slice(0, 8)}
-              </strong>
-              .
+            <p className="text-sm text-text-secondary">
+              Change workspace role for <strong className="text-text">{roleModalMember.user?.name || "this member"}</strong>.
             </p>
             <div className="flex flex-col gap-2">
               {roleModalOptions().map((role) => (
@@ -383,38 +426,51 @@ export default function WorkspaceSettingsPage() {
                   key={role}
                   type="button"
                   onClick={() => setRoleModalValue(role)}
-                  className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                  className={clsx(
+                    "flex items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors",
                     roleModalValue === role
-                      ? "border-[#2563EB] bg-[#EEF4FF]"
-                      : "border-[#C3C6D7] hover:bg-[#F8F9FF]"
-                  }`}
+                      ? "border-primary bg-primary-bg"
+                      : "border-border-light hover:border-border hover:bg-bg-light"
+                  )}
                 >
-                  <span className="block text-sm font-semibold text-[#121C28]">
-                    {ROLE_LABELS[role]}
+                  <span>
+                    <span className="block text-sm font-semibold text-text">{ROLE_LABELS[role]}</span>
+                    <span className="mt-0.5 block text-xs text-text-tertiary">{ROLE_DESCRIPTIONS[role]}</span>
                   </span>
-                  <span className="mt-0.5 block text-xs text-[#737686]">
-                    {ROLE_DESCRIPTIONS[role]}
-                  </span>
+                  {roleModalValue === role && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white">
+                      <Check className="h-3 w-3" />
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" onClick={() => setRoleModalMember(null)}>
-                Cancel
-              </Button>
+            <div className="flex justify-end gap-3 pt-1">
+              <Button variant="outline" onClick={() => setRoleModalMember(null)}>Cancel</Button>
               <Button
                 isLoading={roleModalSaving}
                 disabled={roleModalValue === roleModalMember.role}
-                onClick={() => {
-                  setRoleModalSaving(true);
-                  handleChangeRole(roleModalMember.userId, roleModalValue);
-                }}
+                onClick={() => handleChangeRole(roleModalMember.userId, roleModalValue)}
               >
                 {roleModalValue === roleModalMember.role ? "Current role" : "Change role"}
               </Button>
             </div>
           </div>
         )}
+      </Dialog>
+
+      <Dialog open={showDelete} onClose={() => setShowDelete(false)} title="Delete workspace" className="max-w-sm">
+        <div className="space-y-4">
+          <p className="text-sm text-text-secondary">
+            Are you sure you want to delete <strong className="text-text">{workspace.name}</strong>? This will permanently remove all projects, tasks, and member associations.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowDelete(false)}>Cancel</Button>
+            <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
+              <Trash2 className="mr-1.5 h-4 w-4" /> Delete
+            </Button>
+          </div>
+        </div>
       </Dialog>
     </>
   );

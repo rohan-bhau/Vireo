@@ -6,6 +6,7 @@ import { useCreateTaskMutation, type TaskType } from "@/store/taskApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
 import type { WorkspaceMember } from "@/store/workspaceApi";
 import { TypeIcon } from "@/components/tasks/type-icons";
+import { DropdownPanel } from "@/components/ui/dropdown";
 
 const TYPE_OPTIONS: { value: TaskType; label: string }[] = [
   { value: "task", label: "Task" },
@@ -13,8 +14,6 @@ const TYPE_OPTIONS: { value: TaskType; label: string }[] = [
   { value: "epic", label: "Epic" },
   { value: "bug", label: "Bug" },
 ];
-
-const POPUP_H = 224;
 
 interface BoardQuickCreateProps {
   workspaceId: string;
@@ -44,11 +43,11 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
   const [typeOpen, setTypeOpen] = useState(false);
   const [assigneeOpen, setAssigneeOpen] = useState(false);
   const [dueOpen, setDueOpen] = useState(false);
-  const [typeUp, setTypeUp] = useState(false);
-  const [assigneeUp, setAssigneeUp] = useState(false);
-  const [dueUp, setDueUp] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
+  const typeAnchorRef = useRef<HTMLButtonElement>(null);
+  const dueAnchorRef = useRef<HTMLButtonElement>(null);
+  const assigneeAnchorRef = useRef<HTMLButtonElement>(null);
 
   const closeAll = useCallback(() => {
     setTypeOpen(false);
@@ -58,7 +57,11 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+      if (
+        rootRef.current &&
+        !rootRef.current.contains(e.target as Node) &&
+        !(e.target as HTMLElement).closest?.("[data-dropdown-panel]")
+      ) {
         closeAll();
       }
     }
@@ -66,22 +69,7 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [closeAll]);
 
-  type PopupKind = "type" | "assignee" | "due";
-
-  function openPopup(kind: PopupKind) {
-    const anchor = rootRef.current?.querySelector(`[data-popup-anchor="${kind}"]`);
-    let openUp = false;
-    if (anchor) {
-      const rect = anchor.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      openUp = spaceBelow < POPUP_H;
-    }
-    if (kind === "type") { setTypeOpen(true); setTypeUp(openUp); setAssigneeOpen(false); setDueOpen(false); }
-    if (kind === "assignee") { setAssigneeOpen(true); setAssigneeUp(openUp); setTypeOpen(false); setDueOpen(false); }
-    if (kind === "due") { setDueOpen(true); setDueUp(openUp); setTypeOpen(false); setAssigneeOpen(false); }
-  }
-
-  function closePopup(kind: PopupKind) {
+  function closePopup(kind: "type" | "assignee" | "due") {
     if (kind === "type") setTypeOpen(false);
     if (kind === "assignee") setAssigneeOpen(false);
     if (kind === "due") setDueOpen(false);
@@ -124,11 +112,11 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
       />
 
       <div className="flex items-center gap-1">
-        <div className="relative" data-popup>
+        <div className="relative">
           <button
+            ref={typeAnchorRef}
             type="button"
-            data-popup-anchor="type"
-            onClick={() => (typeOpen ? closePopup("type") : openPopup("type"))}
+            onClick={() => (typeOpen ? closePopup("type") : (closePopup("assignee"), closePopup("due"), setTypeOpen(true)))}
             className="flex h-6 w-6 items-center justify-center rounded hover:bg-[#F4F5F7] transition-colors"
             title={selectedType.label}
           >
@@ -137,36 +125,29 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
               <path d="M6 9l6 6 6-6" />
             </svg>
           </button>
-          {typeOpen && (
-            <div
-              className={clsx(
-                "absolute left-0 z-50 w-44 rounded-[3px] border border-[#C3C6D7]/30 bg-white py-1 shadow-modal",
-                typeUp ? "bottom-full mb-1" : "top-full mt-1"
-              )}
-            >
-              {TYPE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => { setType(opt.value); setTypeOpen(false); }}
-                  className={clsx(
-                    "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F8F9FF] text-left",
-                    opt.value === type && "bg-[#F0F6FF] font-medium"
-                  )}
-                >
-                  <TypeIcon type={opt.value} className="h-3.5 w-3.5 shrink-0" />
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <DropdownPanel open={typeOpen} triggerRef={typeAnchorRef} onClose={() => setTypeOpen(false)} width={176}>
+            {TYPE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => { setType(opt.value); setTypeOpen(false); }}
+                className={clsx(
+                  "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F8F9FF] text-left",
+                  opt.value === type && "bg-[#F0F6FF] font-medium"
+                )}
+              >
+                <TypeIcon type={opt.value} className="h-3.5 w-3.5 shrink-0" />
+                {opt.label}
+              </button>
+            ))}
+          </DropdownPanel>
         </div>
 
         <div className="relative">
           <button
+            ref={dueAnchorRef}
             type="button"
-            data-popup-anchor="due"
-            onClick={() => (dueOpen ? closePopup("due") : openPopup("due"))}
+            onClick={() => (dueOpen ? closePopup("due") : (closePopup("type"), closePopup("assignee"), setDueOpen(true)))}
             className={clsx(
               "flex h-6 items-center gap-1 rounded px-1.5 text-[#737686] hover:bg-[#F4F5F7] transition-colors",
               dueDate && "text-[#2563EB]"
@@ -179,28 +160,24 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
             </svg>
             {dueDate && <span className="text-[10px] font-medium">{dueDate.slice(5)}</span>}
           </button>
-          {dueOpen && (
-            <div
-              className={clsx(
-                "absolute left-0 z-50 rounded-[3px] border border-[#C3C6BD]/30 bg-white p-2 shadow-modal",
-                dueUp ? "bottom-full mb-1" : "top-full mt-1"
-              )}
-            >
+          <DropdownPanel open={dueOpen} triggerRef={dueAnchorRef} onClose={() => setDueOpen(false)} width={208}>
+            <div className="p-2">
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => { setDueDate(e.target.value); }}
-                className="rounded border border-[#C3C6D7] px-2 py-1 text-xs text-[#121C28] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+                onKeyDown={(e) => { if (e.key === "Escape") setDueOpen(false); }}
+                className="w-full rounded border border-[#C3C6D7] px-2 py-1 text-xs text-[#121C28] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
               />
             </div>
-          )}
+          </DropdownPanel>
         </div>
 
         <div className="relative">
           <button
+            ref={assigneeAnchorRef}
             type="button"
-            data-popup-anchor="assignee"
-            onClick={() => (assigneeOpen ? closePopup("assignee") : openPopup("assignee"))}
+            onClick={() => (assigneeOpen ? closePopup("assignee") : (closePopup("type"), closePopup("due"), setAssigneeOpen(true)))}
             className={clsx(
               "flex h-6 items-center justify-center rounded px-1 hover:bg-[#F4F5F7] transition-colors",
               assigneeMember && "bg-[#2563EB] text-white"
@@ -218,45 +195,38 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
               </svg>
             )}
           </button>
-          {assigneeOpen && (
-            <div
+          <DropdownPanel open={assigneeOpen} triggerRef={assigneeAnchorRef} onClose={() => setAssigneeOpen(false)} width={192} maxHeight={224}>
+            <button
+              type="button"
+              onClick={() => { setAssignee(null); setAssigneeOpen(false); }}
               className={clsx(
-                "absolute left-0 z-50 w-48 rounded-[3px] border border-[#C3C6BD]/30 bg-white py-1 shadow-modal max-h-56 overflow-y-auto",
-                assigneeUp ? "bottom-full mb-1" : "top-full mt-1"
+                "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
+                !assignee && "bg-[#F0F6FF] font-medium"
               )}
             >
+              <svg className="h-3.5 w-3.5 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+              </svg>
+              Unassigned
+            </button>
+            {members.map((m: WorkspaceMember) => (
               <button
+                key={m.userId}
                 type="button"
-                onClick={() => { setAssignee(null); setAssigneeOpen(false); }}
+                onClick={() => { setAssignee(m.userId); setAssigneeOpen(false); }}
                 className={clsx(
                   "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
-                  !assignee && "bg-[#F0F6FF] font-medium"
+                  assignee === m.userId && "bg-[#F0F6FF] font-medium"
                 )}
               >
-                <svg className="h-3.5 w-3.5 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
-                </svg>
-                Unassigned
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2563EB] text-[8px] font-semibold text-white">
+                  {getInitials(m.user?.name || "")}
+                </span>
+                <span className="truncate">{m.user?.name || "Unknown"}</span>
               </button>
-              {members.map((m: WorkspaceMember) => (
-                <button
-                  key={m.userId}
-                  type="button"
-                  onClick={() => { setAssignee(m.userId); setAssigneeOpen(false); }}
-                  className={clsx(
-                    "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
-                    assignee === m.userId && "bg-[#F0F6FF] font-medium"
-                  )}
-                >
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2563EB] text-[8px] font-semibold text-white">
-                    {getInitials(m.user?.name || "")}
-                  </span>
-                  <span className="truncate">{m.user?.name || "Unknown"}</span>
-                </button>
-              ))}
-            </div>
-          )}
+            ))}
+          </DropdownPanel>
         </div>
 
         <button

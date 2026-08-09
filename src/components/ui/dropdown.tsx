@@ -58,7 +58,6 @@ export function DropdownPanel({
     const gap = 4;
     const pad = 8;
     const menuWidth = Math.max(rect.width, width);
-    const menuHeight = panelRef.current?.offsetHeight ?? maxHeight ?? 240;
 
     let left = align === "left" ? rect.left : rect.right - menuWidth;
     if (left < pad) left = pad;
@@ -97,7 +96,9 @@ export function DropdownPanel({
       ref={panelRef}
       data-dropdown-panel=""
       onMouseDown={(e) => e.stopPropagation()}
-      onClick={() => onClose?.()}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button")) onClose?.();
+      }}
       style={{ position: "fixed", top: pos?.top ?? 0, left: pos?.left ?? 0, zIndex: 1000, maxHeight: pos?.maxH, borderWidth: 1 }}
       className={`overflow-y-auto rounded-[3px] border-solid border-border-light bg-surface shadow-modal text-left ${className}`}
     >

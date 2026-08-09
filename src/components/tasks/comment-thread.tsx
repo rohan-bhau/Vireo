@@ -35,7 +35,7 @@ function timeAgo(dateStr: string): string {
 }
 
 function renderCommentContent(content: string): React.ReactNode {
-  const parts = content.split(/(@\w+)/g);
+  const parts = content.split(/(@[\w\s]+?)(?=\s|$|[.,!?;:])/g);
   return parts.map((part, i) => {
     if (part.startsWith("@")) {
       return (
