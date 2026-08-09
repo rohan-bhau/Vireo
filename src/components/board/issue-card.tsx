@@ -56,6 +56,17 @@ export function IssueCard({ task, onClick, assigneeName, members = [], onAssigne
   const isDone = task.status === "done";
   const isSubtask = task.type === "subtask";
   const displayName = assigneeName || task.assignee || "";
+  const suppressClickUntil = useRef(0);
+
+  useEffect(() => {
+    if (isDragging) suppressClickUntil.current = Date.now() + 300;
+  }, [isDragging]);
+
+  function handleTitleClick(e: React.MouseEvent<HTMLElement>) {
+    e.stopPropagation();
+    if (Date.now() < suppressClickUntil.current) return;
+    onClick?.();
+  }
 
   return (
     <div
@@ -63,9 +74,8 @@ export function IssueCard({ task, onClick, assigneeName, members = [], onAssigne
       style={style}
       {...attributes}
       {...listeners}
-      onClick={onClick}
       className={clsx(
-        "relative cursor-pointer rounded-lg bg-white text-left shadow-card border border-[#C3C6D7]/30 hover:border-[#2563EB]/40 hover:shadow-card-hover transition-all duration-150 touch-none select-none group p-2.5",
+        "relative rounded-lg bg-white text-left shadow-card border border-[#C3C6D7]/30 group p-2.5 touch-action-manipulation [-webkit-tap-highlight-color:transparent]",
         dropOver && !isDragging && "border-t-2 border-t-[#2563EB]"
       )}
     >
@@ -76,11 +86,17 @@ export function IssueCard({ task, onClick, assigneeName, members = [], onAssigne
         />
       )}
 
-      <p className={clsx(
-        "text-sm font-medium text-[#121C28] line-clamp-2",
-        isSubtask && "text-xs ml-2",
-        isDone && "line-through text-[#737686]"
-      )}>
+      <p
+        onClick={handleTitleClick}
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        className={clsx(
+          "text-sm font-medium text-[#121C28] line-clamp-2 cursor-pointer hover:text-[#2563EB] select-none",
+          isSubtask && "text-xs ml-2",
+          isDone && "line-through text-[#737686]"
+        )}
+      >
         {task.title}
       </p>
 
@@ -247,7 +263,7 @@ function CardAssignee({
 
 export function IssueCardOverlay({ task }: { task: Task }) {
   return (
-    <div className="rounded-lg bg-white p-3 shadow-lg border border-[#2563EB]/30 w-72 opacity-90">
+    <div className="rounded-lg bg-white p-2.5 shadow-lg border border-[#2563EB]/30 w-68 max-sm:w-60 opacity-90">
       <p className="text-sm font-medium text-[#121C28] line-clamp-2">{task.title}</p>
       <div className="mt-1 flex items-center gap-1.5">
         <TypeIcon type={task.type} className="h-3.5 w-3.5" />

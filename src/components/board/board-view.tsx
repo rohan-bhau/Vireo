@@ -10,7 +10,7 @@ import {
   DragEndEvent,
   DragStartEvent,
   DragOverEvent,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -36,7 +36,6 @@ import { BoardColumn } from "./board-column";
 import { IssueCard, IssueCardOverlay } from "./issue-card";
 import { SwimlaneRow } from "./swimlane-row";
 import { BoardConfigPanel } from "./board-config-panel";
-import { TaskDetailOverlay } from "@/components/tasks/task-detail-overlay";
 import { toastError } from "@/lib/toast";
 import {
   connectSocket,
@@ -98,7 +97,6 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hoverColumnId, setHoverColumnId] = useState<string | null>(null);
   const [createColumnId, setCreateColumnId] = useState<string>("");
-  const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(null);
 
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
@@ -158,7 +156,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   }, [boards, activeBoardId]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8, delay: 0 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8, delay: 0 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 10 } })
   );
 
@@ -498,7 +496,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                   name={groupName}
                   tasks={groupTasks}
                   columns={columns}
-                  onTaskClick={(taskKey) => setSelectedTaskKey(taskKey)}
+                  onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
                 />
               ))}
               {swimlaneGroups.length === 0 && (
@@ -515,14 +513,14 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <div className="flex gap-3 overflow-x-auto pb-4 h-full items-start max-sm:flex-col max-sm:overflow-x-hidden max-sm:overflow-y-auto max-sm:gap-6 max-sm:px-1">
+<div className="scrollbar-hide flex gap-3 overflow-x-auto pb-4 h-full items-start">
                 <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                   {columns.map((column) => (
                     <BoardColumn
                       key={column.id}
                       column={column}
                       tasks={getColumnTasks(column.id)}
-onTaskClick={(taskKey) => setSelectedTaskKey(taskKey)}
+                      onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
                       onCreateTask={handleCreateTask}
                       isOver={hoverColumnId === column.id}
                       workspaceId={workspaceId}
@@ -536,7 +534,7 @@ onTaskClick={(taskKey) => setSelectedTaskKey(taskKey)}
                   ))}
                 </SortableContext>
 
-                <div className="flex-shrink-0 w-72 max-sm:w-full max-sm:max-w-md max-sm:mx-auto">
+                <div className="flex-shrink-0 w-72">
                   {showAddColumn ? (
                     <div className="rounded-lg bg-surface p-3 shadow-card border border-border-light">
                       <input
@@ -583,15 +581,6 @@ onTaskClick={(taskKey) => setSelectedTaskKey(taskKey)}
 
       {boardForConfig && (
         <BoardConfigPanel open={showConfig} onClose={() => setShowConfig(false)} board={boardForConfig} projectId={projectId} />
-      )}
-
-      {selectedTaskKey && (
-        <TaskDetailOverlay
-          key={selectedTaskKey}
-          taskKey={selectedTaskKey}
-          workspaceId={workspaceId}
-          onClose={() => setSelectedTaskKey(null)}
-        />
       )}
     </div>
   );

@@ -40,7 +40,7 @@ export function SwimlaneRow({ name, tasks, columns, onTaskClick, defaultOpen = t
         </span>
       </button>
       {!collapsed && (
-        <div className="flex gap-4 overflow-x-auto pb-2 mt-2">
+        <div className="scrollbar-hide flex gap-4 overflow-x-auto pb-2 mt-2">
           {columns.map((col) => {
             const colTasks = tasks.filter((t) => t.columnId === col.id || t.status === col.id);
             return (
