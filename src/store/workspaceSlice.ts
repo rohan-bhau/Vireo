@@ -47,7 +47,7 @@ const DEFAULT_TABS: WorkspaceTab[] = [
   { id: "board", label: "Board", type: "builtin" },
   { id: "list", label: "List", type: "builtin" },
   { id: "summary", label: "Summary", type: "builtin" },
-  { id: "roadmap", label: "Roadmap", type: "builtin" },
+  { id: "timeline", label: "Timeline", type: "builtin" },
   { id: "reports", label: "Reports", type: "builtin" },
 ];
 

@@ -7,7 +7,7 @@ import { WorkspaceTabs } from "@/components/workspace/workspace-tabs";
 import { BoardTab } from "@/components/workspace/board-tab";
 import { ListTab } from "@/components/workspace/list-tab";
 import { SummaryTab } from "@/components/workspace/summary-tab";
-import { RoadmapTab } from "@/components/workspace/roadmap-tab";
+import { TimelineTab } from "@/components/workspace/timeline-tab";
 import { ReportsTab } from "@/components/workspace/reports-tab";
 
 function TabContent({ workspaceId, tabId }: { workspaceId: string; tabId: string }) {
@@ -18,8 +18,8 @@ function TabContent({ workspaceId, tabId }: { workspaceId: string; tabId: string
       return <ListTab workspaceId={workspaceId} />;
     case "summary":
       return <SummaryTab workspaceId={workspaceId} />;
-    case "roadmap":
-      return <RoadmapTab workspaceId={workspaceId} />;
+    case "timeline":
+      return <TimelineTab workspaceId={workspaceId} />;
     case "reports":
       return <ReportsTab workspaceId={workspaceId} />;
     default:

@@ -160,7 +160,7 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
   });
   useHotkeySequence(["g", "t"], () => {
     if (sidebarProps?.workspaceId) {
-      router.push(`/w/${sidebarProps.workspaceId}/roadmap`);
+      router.push(`/w/${sidebarProps.workspaceId}/timeline`);
     }
   });
 

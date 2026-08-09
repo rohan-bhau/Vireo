@@ -36,6 +36,7 @@ const TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   list: ListTodo,
   summary: LayoutDashboard,
   roadmap: Map,
+  timeline: Map,
   reports: BarChart3,
 };
 
