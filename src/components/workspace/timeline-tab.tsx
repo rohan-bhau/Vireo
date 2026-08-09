@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useGetWorkspaceProjectsQuery, useGetOrSeedDefaultProjectMutation } from "@/store/projectApi";
 import { useGetWorkspaceTasksQuery, type Task, type TaskType } from "@/store/taskApi";
 import { SkeletonSummaryCards } from "@/components/ui/skeleton";
@@ -170,6 +171,25 @@ function columnIndexFor(taskDate: Date, columns: Column[]): number {
   return -1;
 }
 
+function getTooltipStyle(
+  pos: { x: number; y: number },
+  _task: Task,
+  tooltipWidth: number
+): React.CSSProperties {
+  const margin = 10;
+  const top = Math.max(margin, pos.y);
+  let left = pos.x + margin;
+  if (left + tooltipWidth > window.innerWidth - margin) {
+    left = pos.x - tooltipWidth - margin;
+  }
+  if (typeof document !== "undefined") {
+    const estHeight = 120;
+    const maxTop = window.innerHeight - estHeight - margin;
+    return { top: Math.min(top, Math.max(margin, maxTop)), left: Math.max(margin, left) };
+  }
+  return { top, left };
+}
+
 export function TimelineTab({ workspaceId }: TimelineTabProps) {
   const { data: projects = [], isLoading: projectsLoading } = useGetWorkspaceProjectsQuery(workspaceId);
   const { data: tasks = [], isLoading: tasksLoading } = useGetWorkspaceTasksQuery(workspaceId);
@@ -177,6 +197,8 @@ export function TimelineTab({ workspaceId }: TimelineTabProps) {
 
   const [zoom, setZoom] = useState<Zoom>("month");
   const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [hoveredTask, setHoveredTask] = useState<Task | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!projectsLoading && !tasksLoading && projects.length === 0) {
@@ -357,34 +379,17 @@ export function TimelineTab({ workspaceId }: TimelineTabProps) {
                               return (
                                 <div
                                   key={t._id}
-                                  className="group relative flex w-full items-center gap-1.5 rounded border-l-2 bg-[#F8F9FF] px-1.5 py-0.5 transition-colors hover:bg-white cursor-default"
+                                  onMouseEnter={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setTooltipPos({ x: rect.left + rect.width, y: rect.top });
+                                    setHoveredTask(t);
+                                  }}
+                                  onMouseLeave={() => setHoveredTask(null)}
+                                  className="flex w-full cursor-default items-center gap-1.5 rounded border-l-2 bg-[#F8F9FF] px-1.5 py-0.5 transition-colors hover:bg-white"
                                   style={{ borderLeftColor: cfg.color }}
                                 >
                                   <Icon className="h-2.5 w-2.5 shrink-0" style={{ color: cfg.color }} />
                                   <span className="truncate text-[10px] text-[#434655]">{t.taskKey}</span>
-
-                                  {/* hover tooltip */}
-                                  <div className="pointer-events-none absolute left-0 top-full z-30 mt-1 hidden w-56 rounded-lg border border-[#C3C6D7]/20 bg-white p-3 shadow-dropdown group-hover:block">
-                                    <div className="mb-1 flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-[#2563EB]">{t.taskKey}</span>
-                                      <span
-                                        className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
-                                        style={{ backgroundColor: cfg.color }}
-                                      >
-                                        <Icon className="h-2.5 w-2.5" />
-                                        {cfg.label}
-                                      </span>
-                                    </div>
-                                    <p className="text-xs font-medium text-[#121C28]">{t.title}</p>
-                                    <p className="mt-1 text-[10px] text-[#737686]">
-                                      Created {new Date(t.createdAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-                                    </p>
-                                    {t.assignee && (
-                                      <p className="mt-0.5 text-[10px] text-[#737686]">
-                                        Assignee: <span className="text-[#434655]">{t.assignee}</span>
-                                      </p>
-                                    )}
-                                  </div>
                                 </div>
                               );
                             })}
@@ -405,6 +410,47 @@ export function TimelineTab({ workspaceId }: TimelineTabProps) {
           </div>
         </div>
       )}
+
+      {typeof document !== "undefined" &&
+        hoveredTask &&
+        createPortal(
+          <div
+            className="pointer-events-none fixed z-[100] w-56 rounded-lg border border-[#C3C6D7]/30 bg-white p-3 shadow-dropdown"
+            style={getTooltipStyle(tooltipPos, hoveredTask, 224)}
+          >
+            {(() => {
+              const cfg = TYPE_CONFIG[hoveredTask.type];
+              const Icon = cfg.icon;
+              return (
+                <>
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-[#2563EB]">{hoveredTask.taskKey}</span>
+                    <span
+                      className="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
+                      style={{ backgroundColor: cfg.color }}
+                    >
+                      <Icon className="h-2.5 w-2.5" />
+                      {cfg.label}
+                    </span>
+                  </div>
+                  <p className="text-xs font-medium text-[#121C28]">{hoveredTask.title}</p>
+                  <p className="mt-1 text-[10px] text-[#737686]">
+                    Created {new Date(hoveredTask.createdAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[#737686]">
+                    Project: <span className="text-[#434655]">{projectNameById[hoveredTask.projectId] || hoveredTask.projectId}</span>
+                  </p>
+                  {hoveredTask.assignee && (
+                    <p className="mt-0.5 text-[10px] text-[#737686]">
+                      Assignee: <span className="text-[#434655]">{hoveredTask.assignee}</span>
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
