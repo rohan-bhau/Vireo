@@ -7,7 +7,8 @@ import { WorkspaceTabs } from "@/components/workspace/workspace-tabs";
 import { BoardTab } from "@/components/workspace/board-tab";
 import { ListTab } from "@/components/workspace/list-tab";
 import { SummaryTab } from "@/components/workspace/summary-tab";
-import { PlaceholderTab } from "@/components/workspace/placeholder-tab";
+import { RoadmapTab } from "@/components/workspace/roadmap-tab";
+import { ReportsTab } from "@/components/workspace/reports-tab";
 
 function TabContent({ workspaceId, tabId }: { workspaceId: string; tabId: string }) {
   switch (tabId) {
@@ -18,21 +19,9 @@ function TabContent({ workspaceId, tabId }: { workspaceId: string; tabId: string
     case "summary":
       return <SummaryTab workspaceId={workspaceId} />;
     case "roadmap":
-      return (
-        <PlaceholderTab
-          title="Roadmap"
-          description="Visualize your team's strategy with a Gantt-chart roadmap. Plan sprints, milestones, and dependencies across projects."
-          icon="roadmap"
-        />
-      );
+      return <RoadmapTab workspaceId={workspaceId} />;
     case "reports":
-      return (
-        <PlaceholderTab
-          title="Reports"
-          description="Track team performance with burndown charts, velocity reports, and custom analytics dashboards."
-          icon="reports"
-        />
-      );
+      return <ReportsTab workspaceId={workspaceId} />;
     default:
       return <BoardTab workspaceId={workspaceId} />;
   }

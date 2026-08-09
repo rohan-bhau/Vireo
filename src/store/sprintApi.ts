@@ -23,9 +23,18 @@ interface SprintsResponse {
   data: { sprints: Sprint[] };
 }
 
+interface WorkspaceSprintsResponse {
+  status: string;
+  data: { sprints: WorkspaceSprint[] };
+}
+
 interface SprintTasksResponse {
   status: string;
   data: { tasks: Task[] };
+}
+
+export interface WorkspaceSprint extends Sprint {
+  project: { id: string; name: string; key: string } | null;
 }
 
 interface AssignResult {
@@ -40,6 +49,11 @@ interface AssignResponse {
 
 export const sprintApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getWorkspaceSprints: builder.query<WorkspaceSprint[], string>({
+      query: (workspaceId) => `/sprints/workspace/${workspaceId}`,
+      transformResponse: (response: WorkspaceSprintsResponse) => response.data.sprints,
+      providesTags: (_result, _error, workspaceId) => [{ type: "Sprint", id: `workspace-${workspaceId}` }],
+    }),
     getProjectSprints: builder.query<Sprint[], string>({
       query: (projectId) => `/sprints/project/${projectId}`,
       transformResponse: (response: SprintsResponse) => response.data.sprints,
@@ -140,6 +154,7 @@ export const sprintApi = api.injectEndpoints({
 });
 
 export const {
+  useGetWorkspaceSprintsQuery,
   useGetProjectSprintsQuery,
   useGetSprintQuery,
   useGetSprintTasksQuery,
