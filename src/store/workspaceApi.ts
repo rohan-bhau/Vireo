@@ -5,6 +5,7 @@ interface Workspace {
   id: string;
   name: string;
   description: string | null;
+  avatar?: string | null;
   ownerId: string;
   template: ProjectTemplate;
   createdAt: string;
@@ -77,12 +78,28 @@ export const workspaceApi = api.injectEndpoints({
       transformResponse: (response: WorkspaceResponse) => response.data.workspace,
       invalidatesTags: ["Workspace"],
     }),
-    updateWorkspace: builder.mutation<Workspace, { workspaceId: string; name?: string; description?: string; template?: ProjectTemplate }>({
+    updateWorkspace: builder.mutation<Workspace, { workspaceId: string; name?: string; description?: string; template?: ProjectTemplate; avatar?: string }>({
       query: ({ workspaceId, ...body }) => ({
         url: `/workspaces/${workspaceId}`,
         method: "PUT",
         body,
       }),
+      transformResponse: (response: WorkspaceResponse) => response.data.workspace,
+      invalidatesTags: (_result, _error, { workspaceId }) => [
+        "Workspace",
+        { type: "Workspace", id: workspaceId },
+      ],
+    }),
+    uploadWorkspaceAvatar: builder.mutation<Workspace, { workspaceId: string; file: File }>({
+      query: ({ workspaceId, file }) => {
+        const form = new FormData();
+        form.append("avatar", file);
+        return {
+          url: `/workspaces/${workspaceId}/avatar`,
+          method: "POST",
+          body: form,
+        };
+      },
       transformResponse: (response: WorkspaceResponse) => response.data.workspace,
       invalidatesTags: (_result, _error, { workspaceId }) => [
         "Workspace",
@@ -95,6 +112,19 @@ export const workspaceApi = api.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: ["Workspace"],
+    }),
+    transferOwnership: builder.mutation<Workspace, { workspaceId: string; userId: string }>({
+      query: ({ workspaceId, userId }) => ({
+        url: `/workspaces/${workspaceId}/transfer`,
+        method: "POST",
+        body: { userId },
+      }),
+      transformResponse: (response: WorkspaceResponse) => response.data.workspace,
+      invalidatesTags: (_result, _error, { workspaceId }) => [
+        "Workspace",
+        { type: "Workspace", id: workspaceId },
+        { type: "Members", id: workspaceId },
+      ],
     }),
     getMembers: builder.query<WorkspaceMember[], string>({
       query: (workspaceId) => `/workspaces/${workspaceId}/members`,
@@ -169,7 +199,9 @@ export const {
   useGetWorkspaceQuery,
   useCreateWorkspaceMutation,
   useUpdateWorkspaceMutation,
+  useUploadWorkspaceAvatarMutation,
   useDeleteWorkspaceMutation,
+  useTransferOwnershipMutation,
   useGetMembersQuery,
   useRemoveMemberMutation,
   useUpdateMemberRoleMutation,

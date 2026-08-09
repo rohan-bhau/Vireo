@@ -94,9 +94,14 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
     <>
       <div className="flex items-center justify-between gap-2 border-b border-border-light bg-surface px-4 py-3 md:px-6 md:py-4 max-sm:flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-bg text-sm font-bold text-primary">
-            {workspace.name.charAt(0).toUpperCase()}
-          </div>
+          {workspace.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={workspace.avatar} alt={workspace.name} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+          ) : (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-bg text-sm font-bold text-primary">
+              {workspace.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="min-w-0">
             <h1 className="truncate text-base font-semibold text-text">
               {workspace.name}

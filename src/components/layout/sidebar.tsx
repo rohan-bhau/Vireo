@@ -8,6 +8,7 @@ import type { RootState, AppDispatch } from "@/store";
 import {
   useGetWorkspacesQuery,
   useCreateWorkspaceMutation,
+  useGetMembersQuery,
 } from "@/store/workspaceApi";
 import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
 import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picker";
@@ -266,7 +267,16 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   const { data: projects = [], isLoading: projectsLoading } =
     useGetWorkspaceProjectsQuery(currentWsId ?? "", { skip: !currentWsId });
 
+  const { data: members = [] } = useGetMembersQuery(currentWsId ?? "", {
+    skip: !currentWsId,
+  });
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
+  const currentMember = members.find((m) => m.userId === currentUserId);
+  const isWorkspaceAdmin = currentMember?.role === "ADMIN";
+
   const isInWorkspace = pathname.startsWith("/w/") && !!workspaceId;
+  const canAccessSettings =
+    isInWorkspace && !!currentWsId && isWorkspaceAdmin;
 
   const starredList = workspaces.filter((ws) => starredWorkspaces[ws.id]);
   const recentList = workspaces.filter((ws) =>
@@ -599,6 +609,23 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
         </nav>
 
         <div className="border-t border-border-light px-2 py-2 space-y-1">
+          {canAccessSettings && (
+            <Link
+              href={`/w/${currentWsId}/settings`}
+              onClick={() => onNavigate?.()}
+              className={clsx(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-tertiary hover:bg-bg-light hover:text-text transition-colors min-h-[44px]",
+                collapsed && "justify-center",
+                pathname.startsWith(`/w/${currentWsId}/settings`) &&
+                  "bg-bg-light text-text"
+              )}
+              title={collapsed ? "Settings" : undefined}
+            >
+              <Settings2 className="h-4 w-4 shrink-0" />
+              {!collapsed && <span>Settings</span>}
+            </Link>
+          )}
+
           {!collapsed && (
             <button
               onClick={() => setShowCustomize(true)}

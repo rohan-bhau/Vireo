@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { clsx } from "clsx";
 import { useCreateTaskMutation, type TaskType } from "@/store/taskApi";
+import { useGetProjectQuery } from "@/store/projectApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
 import type { WorkspaceMember } from "@/store/workspaceApi";
 import { TypeIcon } from "@/components/tasks/type-icons";
@@ -34,6 +35,11 @@ function getInitials(name: string | undefined): string {
 export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, onClose }: BoardQuickCreateProps) {
   const [createTask, { isLoading }] = useCreateTaskMutation();
   const { data: members = [] } = useGetMembersQuery(workspaceId);
+  const { data: project } = useGetProjectQuery(projectId, { skip: !projectId });
+
+  const typeOptions = project?.enabledIssueTypes?.length
+    ? TYPE_OPTIONS.filter((t) => project!.enabledIssueTypes!.includes(t.value))
+    : TYPE_OPTIONS;
 
   const [title, setTitle] = useState("");
   const [type, setType] = useState<TaskType>("task");
@@ -75,7 +81,8 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
     if (kind === "due") setDueOpen(false);
   }
 
-  const selectedType = TYPE_OPTIONS.find((t) => t.value === type) || TYPE_OPTIONS[0];
+  const selectedType = typeOptions.find((t) => t.value === type) || typeOptions[0];
+  const effectiveType = selectedType.value;
   const assigneeMember = members.find((m) => m.userId === assignee);
 
   async function handleCreate() {
@@ -83,7 +90,7 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
     try {
       await createTask({
         title: title.trim(),
-        type,
+        type: effectiveType,
         workspaceId,
         projectId,
         boardId,
@@ -126,14 +133,14 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
             </svg>
           </button>
           <DropdownPanel open={typeOpen} triggerRef={typeAnchorRef} onClose={() => setTypeOpen(false)} width={176}>
-            {TYPE_OPTIONS.map((opt) => (
+            {typeOptions.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => { setType(opt.value); setTypeOpen(false); }}
                 className={clsx(
                   "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F8F9FF] text-left",
-                  opt.value === type && "bg-[#F0F6FF] font-medium"
+                  opt.value === effectiveType && "bg-[#F0F6FF] font-medium"
                 )}
               >
                 <TypeIcon type={opt.value} className="h-3.5 w-3.5 shrink-0" />

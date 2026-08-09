@@ -58,6 +58,7 @@ export interface Project {
   isTeamManaged: boolean;
   permissionSchemeId?: string;
   issueSecuritySchemeId?: string;
+  enabledIssueTypes?: string[];
   createdAt: string;
   updatedAt: string;
   boards: Board[];
@@ -163,6 +164,18 @@ export const projectApi = api.injectEndpoints({
         { type: "Project", id: `workspace-${workspaceId}` },
       ],
     }),
+    setEnabledIssueTypes: builder.mutation<Project, { workspaceId: string; projectId: string; enabledIssueTypes: string[] }>({
+      query: ({ workspaceId, projectId, enabledIssueTypes }) => ({
+        url: `/workspaces/${workspaceId}/projects/${projectId}/issue-types`,
+        method: "PATCH",
+        body: { enabledIssueTypes },
+      }),
+      transformResponse: (response: ProjectResponse) => response.data.project,
+      invalidatesTags: (_result, _error, { workspaceId, projectId }) => [
+        { type: "Project", id: projectId },
+        { type: "Project", id: `workspace-${workspaceId}` },
+      ],
+    }),
 
     getProjectBoards: builder.query<Board[], string>({
       query: (projectId) => `/projects/${projectId}/boards`,
@@ -252,6 +265,7 @@ export const {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
+  useSetEnabledIssueTypesMutation,
   useGetProjectBoardsQuery,
   useGetBoardQuery,
   useCreateBoardMutation,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { Dialog } from "@/components/ui/dialog";
@@ -95,6 +95,17 @@ export function CreateTaskDialog({
   const project = projects?.find((p) => p.id === selectedProjectId);
   const isScrum = project?.template === "SCRUM";
 
+  const availableIssueTypes = useMemo(() => {
+    const enabled = project?.enabledIssueTypes;
+    if (!enabled || enabled.length === 0) return ISSUE_TYPES;
+    return ISSUE_TYPES.filter((t) => enabled.includes(t.value));
+  }, [project]);
+
+  const effectiveType =
+    availableIssueTypes.some((t) => t.value === type) && !editTask
+      ? type
+      : availableIssueTypes[0]?.value || type;
+
   useEffect(() => {
     if (open) {
       if (editTask) {
@@ -140,7 +151,7 @@ export function CreateTaskDialog({
       const payload = {
         title: title.trim(),
         description,
-        type,
+        type: effectiveType,
         status,
         priority,
         assignee: assignee || undefined,
@@ -212,13 +223,13 @@ export function CreateTaskDialog({
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-text-secondary">Issue type</label>
           <div className="flex flex-wrap gap-1.5">
-            {ISSUE_TYPES.map((t) => (
+            {availableIssueTypes.map((t) => (
               <button
                 key={t.value}
                 type="button"
                 onClick={() => setType(t.value)}
                 className={`flex items-center gap-1.5 rounded-[3px] border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                  type === t.value
+                  effectiveType === t.value
                     ? "border-primary bg-primary/5 text-primary"
                     : "border-border-input text-text-secondary hover:border-border-default hover:bg-bg-light"
                 }`}
