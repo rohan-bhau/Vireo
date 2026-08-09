@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useSuggestLabelsQuery } from "@/store/labelApi";
+import { DropdownPanel } from "@/components/ui/dropdown";
 
 interface LabelEditorProps {
   value: string[];
@@ -78,20 +79,18 @@ export function LabelEditor({ value, onChange, workspaceId, projectId }: LabelEd
           className="min-w-[80px] flex-1 border-0 bg-transparent text-xs text-text placeholder:text-text-placeholder focus:outline-none"
         />
       </div>
-      {open && input && filtered.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-[3px] border border-border-light bg-surface shadow-modal max-h-40 overflow-y-auto">
-          {filtered.slice(0, 8).map((label) => (
-            <button
-              key={label}
-              type="button"
-              onMouseDown={(e) => { e.preventDefault(); addLabel(label); }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text hover:bg-bg-light"
-            >
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <DropdownPanel open={Boolean(open && input && filtered.length > 0)} triggerRef={ref} onClose={() => setOpen(false)} maxHeight={160}>
+        {filtered.slice(0, 8).map((label) => (
+          <button
+            key={label}
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); addLabel(label); }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text hover:bg-bg-light"
+          >
+            <span>{label}</span>
+          </button>
+        ))}
+      </DropdownPanel>
     </div>
   );
 }

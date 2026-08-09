@@ -47,12 +47,13 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
     >
       <div
         className={clsx(
-          "w-full max-w-md rounded-[3px] bg-surface shadow-modal max-sm:fixed max-sm:inset-0 max-sm:max-w-none max-sm:rounded-none max-sm:flex max-sm:flex-col",
+          "w-full max-w-md overflow-hidden bg-surface shadow-modal max-h-[calc(100dvh-2rem)] flex flex-col",
+          "max-sm:fixed max-sm:inset-0 max-sm:max-w-none max-sm:max-h-none max-sm:rounded-none",
           className
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-border-light px-6 py-4 max-sm:min-h-[56px]">
+          <div className="flex shrink-0 items-center justify-between border-b border-border-light px-6 py-4 max-sm:min-h-[56px]">
             <h2 className="text-lg font-semibold text-text">{title}</h2>
             <button
               onClick={onClose}
@@ -69,7 +70,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
             </button>
           </div>
         )}
-        <div className="px-6 py-4 max-sm:flex-1 max-sm:overflow-y-auto">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">{children}</div>
       </div>
     </div>
   );

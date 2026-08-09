@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDropdown, DropdownPanel } from "@/components/ui/dropdown";
 import type { Task, TaskStatus, TaskPriority } from "@/store/taskApi";
 import { useUpdateTaskMutation } from "@/store/taskApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
@@ -92,59 +93,49 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
   );
 
   function StatusEditor() {
-    const [open, setOpen] = useState(false);
+    const { open, setOpen, triggerRef } = useDropdown();
     return (
       <div className="relative">
-        <button type="button" onClick={() => setOpen(!open)} className="w-full text-left">
+        <button ref={triggerRef} type="button" onClick={() => setOpen(!open)} className="w-full text-left">
           <StatusBadge status={task.status} size="md" />
         </button>
-        {open && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-[3px] border border-border-light bg-surface shadow-modal">
-              {STATUSES.map((s) => (
-                <button
-                  key={s.value}
-                  type="button"
-                  onClick={() => { handleSave("status", s.value); setOpen(false); }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${s.value === task.status ? "bg-bg-light font-medium" : ""}`}
-                >
-                  <StatusBadge status={s.value} />
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+        <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)}>
+          {STATUSES.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => { handleSave("status", s.value); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${s.value === task.status ? "bg-bg-light font-medium" : ""}`}
+            >
+              <StatusBadge status={s.value} />
+            </button>
+          ))}
+        </DropdownPanel>
       </div>
     );
   }
 
   function PriorityEditor() {
-    const [open, setOpen] = useState(false);
+    const { open, setOpen, triggerRef } = useDropdown();
     return (
       <div className="relative">
-        <button type="button" onClick={() => setOpen(!open)} className="w-full text-left flex items-center gap-1.5">
+        <button ref={triggerRef} type="button" onClick={() => setOpen(!open)} className="w-full text-left flex items-center gap-1.5">
           <PriorityIcon priority={task.priority} />
           <span className="text-xs text-text capitalize">{task.priority}</span>
         </button>
-        {open && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-[3px] border border-border-light bg-surface shadow-modal">
-              {PRIORITIES.map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => { handleSave("priority", p.value); setOpen(false); }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${p.value === task.priority ? "bg-bg-light font-medium" : ""}`}
-                >
-                  <PriorityIcon priority={p.value} />
-                  <span>{p.label}</span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+        <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)}>
+          {PRIORITIES.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => { handleSave("priority", p.value); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${p.value === task.priority ? "bg-bg-light font-medium" : ""}`}
+            >
+              <PriorityIcon priority={p.value} />
+              <span>{p.label}</span>
+            </button>
+          ))}
+        </DropdownPanel>
       </div>
     );
   }

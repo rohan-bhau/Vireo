@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { DropdownPanel } from "@/components/ui/dropdown";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import {
@@ -90,6 +91,7 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
   const [mentionOpen, setMentionOpen] = useState(false);
   const [mentionSearch, setMentionSearch] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const mentionAnchorRef = useRef<HTMLDivElement>(null);
 
   const filteredUsers = (members || [])
     .map((m) => m.user?.name)
@@ -180,7 +182,7 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
           </div>
         )}
         <div className="flex flex-1 flex-col gap-2 relative">
-          <div>
+          <div ref={mentionAnchorRef}>
             <textarea
               ref={inputRef}
               data-shortcut="comment-input"
@@ -196,8 +198,8 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
                 }
               }}
             />
-            {mentionOpen && (
-              <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-[3px] border border-border-light bg-surface shadow-modal max-h-32 overflow-y-auto">
+            {mentionOpen && filteredUsers.length > 0 && (
+              <DropdownPanel open={mentionOpen} triggerRef={mentionAnchorRef} onClose={() => setMentionOpen(false)} maxHeight={128} width={300}>
                 {filteredUsers.map((u) => (
                   <button
                     key={u}
@@ -219,7 +221,7 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
                     {u}
                   </button>
                 ))}
-              </div>
+              </DropdownPanel>
             )}
           </div>
           <div className="flex items-center justify-between gap-2 mt-2">

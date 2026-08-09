@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { clsx } from "clsx";
+import { useDropdown, DropdownPanel } from "@/components/ui/dropdown";
 import type { RootState } from "@/store";
 import { useGetWorkspaceTasksQuery, useUpdateTaskMutation, type Task } from "@/store/taskApi";
 import type { WorkspaceMember } from "@/store/workspaceApi";
@@ -425,25 +426,19 @@ function ListAssigneeCell({
   onToggleEdit,
   onChange,
 }: ListAssigneeCellProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const { open, setOpen, triggerRef } = useDropdown();
 
   useEffect(() => {
-    if (!editing) return;
-    function handleOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onToggleEdit();
-      }
-    }
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [editing, onToggleEdit]);
+    if (!editing) setOpen(false);
+  }, [editing, setOpen]);
 
   const assignedMember = members.find((m) => m.userId === assignee);
   const displayName = assigneeName || assignedMember?.user?.name || "";
 
   return (
-    <div ref={ref} className="relative flex items-center">
+    <div className="relative flex items-center">
       <button
+        ref={triggerRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
@@ -471,49 +466,46 @@ function ListAssigneeCell({
         <span className="ml-2 text-sm text-[#C3C6D7]">Unassigned</span>
       )}
 
-      {editing && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="absolute left-0 top-full z-50 mt-1 w-48 rounded-[3px] border border-[#C3C6D7]/30 bg-white py-1 shadow-modal max-h-56 overflow-y-auto"
+      <DropdownPanel open={Boolean(open && editing)} triggerRef={triggerRef} onClose={onToggleEdit} width={192}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onChange(null);
+            setOpen(false);
+          }}
+          className={clsx(
+            "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
+            !assignee && "bg-[#F0F6FF] font-medium"
+          )}
         >
+          <svg className="h-3.5 w-3.5 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+          </svg>
+          Unassigned
+        </button>
+        {members.map((m) => (
           <button
+            key={m.userId}
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onChange(null);
+              onChange(m.userId);
+              setOpen(false);
             }}
             className={clsx(
               "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
-              !assignee && "bg-[#F0F6FF] font-medium"
+              assignee === m.userId && "bg-[#F0F6FF] font-medium"
             )}
           >
-            <svg className="h-3.5 w-3.5 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
-            </svg>
-            Unassigned
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2563EB] text-[8px] font-semibold text-white">
+              {getInitials(m.user?.name || "")}
+            </span>
+            <span className="truncate">{m.user?.name || "Unknown"}</span>
           </button>
-          {members.map((m) => (
-            <button
-              key={m.userId}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onChange(m.userId);
-              }}
-              className={clsx(
-                "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
-                assignee === m.userId && "bg-[#F0F6FF] font-medium"
-              )}
-            >
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2563EB] text-[8px] font-semibold text-white">
-                {getInitials(m.user?.name || "")}
-              </span>
-              <span className="truncate">{m.user?.name || "Unknown"}</span>
-            </button>
-          ))}
-        </div>
-      )}
+        ))}
+      </DropdownPanel>
     </div>
   );
 }

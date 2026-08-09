@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useGetProjectVersionsQuery, type Version } from "@/store/versionApi";
+import { useDropdown, DropdownPanel } from "@/components/ui/dropdown";
 
 interface VersionSelectorProps {
   value: string;
@@ -11,47 +11,43 @@ interface VersionSelectorProps {
 
 export function VersionSelector({ value, onChange, projectId }: VersionSelectorProps) {
   const { data: versions } = useGetProjectVersionsQuery(projectId || "", { skip: !projectId });
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, triggerRef } = useDropdown();
 
   const unreleasedVersions = versions?.filter((v) => v.status === "unreleased") || [];
 
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full rounded-[3px] border border-border-input bg-surface px-2.5 py-1.5 text-sm text-text hover:border-border-default transition-colors text-left"
       >
         {value || <span className="text-text-placeholder">None</span>}
       </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-[3px] border border-border-light bg-surface shadow-modal max-h-40 overflow-y-auto">
+      <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)} maxHeight={160}>
+        <button
+          type="button"
+          onClick={() => { onChange(""); setOpen(false); }}
+          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-placeholder hover:bg-bg-light"
+        >
+          None
+        </button>
+        {unreleasedVersions.length === 0 ? (
+          <div className="px-3 py-2 text-xs text-text-placeholder">No versions</div>
+        ) : (
+          unreleasedVersions.map((v) => (
             <button
+              key={v._id}
               type="button"
-              onClick={() => { onChange(""); setOpen(false); }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-placeholder hover:bg-bg-light"
+              onClick={() => { onChange(v.name); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${v.name === value ? "bg-bg-light font-medium" : ""}`}
             >
-              None
+              {v.name}
             </button>
-            {unreleasedVersions.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-text-placeholder">No versions</div>
-            ) : (
-              unreleasedVersions.map((v) => (
-                <button
-                  key={v._id}
-                  type="button"
-                  onClick={() => { onChange(v.name); setOpen(false); }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${v.name === value ? "bg-bg-light font-medium" : ""}`}
-                >
-                  {v.name}
-                </button>
-              ))
-            )}
-          </div>
-        </>
-      )}
+          ))
+        )}
+      </DropdownPanel>
     </div>
   );
 }
@@ -64,7 +60,7 @@ interface MultiVersionSelectorProps {
 
 export function MultiVersionSelector({ value, onChange, projectId }: MultiVersionSelectorProps) {
   const { data: versions } = useGetProjectVersionsQuery(projectId || "", { skip: !projectId });
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, triggerRef } = useDropdown();
 
   const unreleasedVersions = versions?.filter((v) => v.status === "unreleased") || [];
 
@@ -79,6 +75,7 @@ export function MultiVersionSelector({ value, onChange, projectId }: MultiVersio
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full rounded-[3px] border border-border-input bg-surface px-2.5 py-1.5 text-sm text-text hover:border-border-default transition-colors text-left"
@@ -95,34 +92,29 @@ export function MultiVersionSelector({ value, onChange, projectId }: MultiVersio
           <span className="text-text-placeholder">None</span>
         )}
       </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-[3px] border border-border-light bg-surface shadow-modal max-h-40 overflow-y-auto">
-            {unreleasedVersions.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-text-placeholder">No versions</div>
-            ) : (
-              unreleasedVersions.map((v) => (
-                <button
-                  key={v._id}
-                  type="button"
-                  onClick={() => toggle(v)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${value.includes(v.name) ? "bg-bg-light font-medium" : ""}`}
-                >
-                  <span className="flex h-4 w-4 items-center justify-center rounded border border-border-light">
-                    {value.includes(v.name) && (
-                      <svg className="h-3 w-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    )}
-                  </span>
-                  {v.name}
-                </button>
-              ))
-            )}
-          </div>
-        </>
-      )}
+      <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)} maxHeight={160}>
+        {unreleasedVersions.length === 0 ? (
+          <div className="px-3 py-2 text-xs text-text-placeholder">No versions</div>
+        ) : (
+          unreleasedVersions.map((v) => (
+            <button
+              key={v._id}
+              type="button"
+              onClick={() => toggle(v)}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${value.includes(v.name) ? "bg-bg-light font-medium" : ""}`}
+            >
+              <span className="flex h-4 w-4 items-center justify-center rounded border border-border-light">
+                {value.includes(v.name) && (
+                  <svg className="h-3 w-3 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                )}
+              </span>
+              {v.name}
+            </button>
+          ))
+        )}
+      </DropdownPanel>
     </div>
   );
 }
