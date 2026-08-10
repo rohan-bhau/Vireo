@@ -39,6 +39,7 @@ export interface Task {
   attachments: Attachment[];
   workspaceId: string;
   sprintId: string | null;
+  customFields?: Record<string, string | number | null>;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,6 +107,7 @@ interface CreateTaskInput {
   storyPoints?: number;
   parentTask?: string;
   workspaceId: string;
+  customFields?: Record<string, string | number | null>;
 }
 
 interface UpdateTaskInput {
@@ -123,6 +125,7 @@ interface UpdateTaskInput {
   parentTask?: string | null;
   columnId?: string | null;
   position?: number;
+  customFields?: Record<string, string | number | null>;
 }
 
 export const taskApi = api.injectEndpoints({

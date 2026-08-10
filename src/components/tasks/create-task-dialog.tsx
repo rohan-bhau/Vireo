@@ -16,6 +16,7 @@ import {
 } from "@/store/taskApi";
 import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
 import { useGetProjectEpicsQuery } from "@/store/epicApi";
+import { useGetWorkspaceCustomFieldsQuery, type CustomField as WorkspaceCustomField } from "@/store/customFieldApi";
 import { RichTextEditor } from "./rich-text-editor";
 import { IssueTypeIcon } from "./issue-type-icon";
 import { PriorityIcon } from "./priority-icon";
@@ -69,6 +70,9 @@ export function CreateTaskDialog({
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
   const { data: projects } = useGetWorkspaceProjectsQuery(workspaceId);
+  const { data: workspaceCustomFields = [] } = useGetWorkspaceCustomFieldsQuery(workspaceId, {
+    skip: !workspaceId,
+  });
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId || "");
@@ -91,6 +95,8 @@ export function CreateTaskDialog({
   const [showMore, setShowMore] = useState(false);
   const [createAnother, setCreateAnother] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
+  const [customError, setCustomError] = useState<string | null>(null);
 
   const project = projects?.find((p) => p.id === selectedProjectId);
   const isScrum = project?.template === "SCRUM";
@@ -123,6 +129,12 @@ export function CreateTaskDialog({
         setDueDate(editTask.dueDate ? editTask.dueDate.split("T")[0] : "");
         setStoryPoints(editTask.storyPoints?.toString() || "");
         setSelectedProjectId(editTask.projectId);
+        setCustomValues(
+          Object.fromEntries(
+            Object.entries((editTask.customFields as Record<string, string | number | null>) || {}).map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])
+          )
+        );
+        setCustomError(null);
       } else {
         setTitle("");
         setDescription("");
@@ -140,12 +152,26 @@ export function CreateTaskDialog({
         setSelectedProjectId(defaultProjectId || projects?.[0]?.id || "");
         setShowMore(false);
         setCreateAnother(false);
+        setCustomValues({});
+        setCustomError(null);
       }
     }
   }, [editTask, open, defaultProjectId, projects, currentUser]);
 
   async function handleSubmit() {
     if (!title.trim() || submitting) return;
+    if (workspaceCustomFields.length > 0) {
+      const missing = workspaceCustomFields.find((f) => {
+        if (!f.required) return false;
+        const v = (customValues[f._id] || "").trim();
+        return v === "";
+      });
+      if (missing) {
+        setCustomError(`"${missing.name}" is required`);
+        return;
+      }
+    }
+    setCustomError(null);
     setSubmitting(true);
     try {
       const payload = {
@@ -166,6 +192,12 @@ export function CreateTaskDialog({
         boardId,
         columnId,
         workspaceId,
+        customFields:
+          workspaceCustomFields.length > 0
+            ? Object.fromEntries(
+                Object.entries(customValues).map(([k, v]) => [k, v.trim() === "" ? null : v])
+              )
+            : undefined,
       };
 
       if (editTask) {
@@ -285,6 +317,7 @@ export function CreateTaskDialog({
         )}
 
         {(showMore || editTask) && (
+          <>
           <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-text-secondary">Status</label>
@@ -386,6 +419,31 @@ export function CreateTaskDialog({
               </select>
             </div>
           </div>
+
+          {workspaceCustomFields.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
+                Custom fields
+              </p>
+              <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+                {workspaceCustomFields.map((field) => (
+                  <CustomFieldEditor
+                    key={field._id}
+                    field={field}
+                    value={customValues[field._id] || ""}
+                    onChange={(v) => {
+                      setCustomValues((prev) => ({ ...prev, [field._id]: v }));
+                      setCustomError(null);
+                    }}
+                  />
+                ))}
+              </div>
+              {customError && (
+                <p className="text-xs font-medium text-danger">{customError}</p>
+              )}
+            </div>
+          )}
+          </>
         )}
 
         <div className="flex items-center justify-between pt-2 border-t border-border-light">
@@ -415,5 +473,97 @@ export function CreateTaskDialog({
         </div>
       </div>
     </Dialog>
+  );
+}
+
+function CustomFieldEditor({
+  field,
+  value,
+  onChange,
+}: {
+  field: WorkspaceCustomField;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const inputClass =
+    "rounded-[3px] border border-border-input bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-placeholder focus:outline-none focus:ring-2 focus:ring-primary";
+
+  const selected = value.split(",").filter(Boolean);
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-semibold text-text-secondary">
+        {field.name}
+        {field.required && <span className="ml-1 text-danger">*</span>}
+      </label>
+      {field.type === "TEXT" && (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={field.name}
+          className={inputClass}
+        />
+      )}
+      {field.type === "TEXTAREA" && (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={3}
+          placeholder={field.name}
+          className={inputClass}
+        />
+      )}
+      {field.type === "NUMBER" && (
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="0"
+          className={inputClass}
+        />
+      )}
+      {field.type === "DATE" && (
+        <input type="date" value={value} onChange={(e) => onChange(e.target.value)} className={inputClass} />
+      )}
+      {field.type === "SELECT" && (
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={inputClass}
+        >
+          <option value="">—</option>
+          {field.options.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      )}
+      {field.type === "MULTISELECT" && (
+        <div className="flex flex-wrap gap-1.5">
+          {field.options.map((opt) => {
+            const active = selected.includes(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  const next = active
+                    ? selected.filter((s) => s !== opt)
+                    : [...selected, opt];
+                  onChange(next.join(","));
+                }}
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border-input text-text-secondary hover:border-border-default hover:bg-bg-light"
+                }`}
+              >
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

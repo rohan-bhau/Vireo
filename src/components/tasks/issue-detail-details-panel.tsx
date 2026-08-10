@@ -6,6 +6,7 @@ import { useDropdown, DropdownPanel } from "@/components/ui/dropdown";
 import type { Task, TaskStatus, TaskPriority } from "@/store/taskApi";
 import { useUpdateTaskMutation } from "@/store/taskApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
+import { useGetWorkspaceCustomFieldsQuery } from "@/store/customFieldApi";
 import { StatusBadge } from "./status-badge";
 import { PriorityIcon } from "./priority-icon";
 import { IssueTypeIcon } from "./issue-type-icon";
@@ -39,6 +40,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
   const router = useRouter();
   const [updateTask] = useUpdateTaskMutation();
   const { data: members } = useGetMembersQuery(workspaceId);
+  const { data: workspaceCustomFields = [] } = useGetWorkspaceCustomFieldsQuery(workspaceId);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldValue, setFieldValue] = useState<any>(null);
 
@@ -330,6 +332,21 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
               ))}
             </div>
           </DetailRow>
+        )}
+
+        {workspaceCustomFields.length > 0 && (
+          <>
+            {workspaceCustomFields.map((field) => {
+              const raw = task.customFields?.[field._id];
+              const display =
+                raw === null || raw === undefined || raw === "" ? "None" : String(raw).replace(/,/g, ", ");
+              return (
+                <DetailRow key={field._id} label={field.name} field={field._id}>
+                  <span className="text-xs text-text">{display}</span>
+                </DetailRow>
+              );
+            })}
+          </>
         )}
       </div>
     </div>
