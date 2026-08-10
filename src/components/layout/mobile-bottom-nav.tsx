@@ -5,7 +5,11 @@ import { usePathname, useParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
 import { setActiveTab } from "@/store/workspaceSlice";
-import { useCreateWorkspaceMutation } from "@/store/workspaceApi";
+import {
+  useCreateWorkspaceMutation,
+  useGetMembersQuery,
+  useGetWorkspaceQuery,
+} from "@/store/workspaceApi";
 import {
   LayoutDashboard,
   Sparkles,
@@ -17,6 +21,7 @@ import {
   BarChart3,
   FileText,
 } from "lucide-react";
+import { settingsNavItems, type SettingsSection } from "@/lib/settings-nav";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog } from "@/components/ui/dialog";
@@ -24,6 +29,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const MAX_VISIBLE = 5;
+
+const ADMIN_ONLY_SETTINGS: SettingsSection[] = [
+  "permissions",
+  "issue-types",
+  "workflows",
+  "fields",
+  "roles",
+  "versions",
+  "components",
+  "automation",
+];
 
 const dashboardNav = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -51,6 +67,18 @@ export function MobileBottomNav() {
   const params = useParams();
   const dispatch = useDispatch<AppDispatch>();
   const workspaceId = params?.workspaceId as string | undefined;
+
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { data: workspace } = useGetWorkspaceQuery(workspaceId ?? "", {
+    skip: !workspaceId,
+  });
+  const { data: members = [] } = useGetMembersQuery(workspaceId ?? "", {
+    skip: !workspaceId,
+  });
+
+  const currentMember = members.find((m) => m.userId === user?.id);
+  const isWorkspaceAdmin = currentMember?.role === "ADMIN";
+  const isWorkspaceOwner = workspace?.ownerId === user?.id;
 
   const tabConfig = useSelector(
     (state: RootState) => state.workspace.tabsByWorkspace[workspaceId ?? ""]
@@ -146,6 +174,139 @@ export function MobileBottomNav() {
 
   const isInWorkspace =
     pathname.startsWith("/w/") && !!workspaceId && tabs.length > 0;
+
+  const settingsBase = `/w/${workspaceId}/settings`;
+  const isInSettings =
+    !!workspaceId && pathname.startsWith(settingsBase);
+
+  const settingsSegments = pathname.split("/").filter(Boolean);
+  const settingsLast = settingsSegments[settingsSegments.length - 1];
+  const activeSettings: SettingsSection =
+    settingsLast === "settings" ||
+    !settingsNavItems.some((n) => n.id === settingsLast)
+      ? "details"
+      : (settingsLast as SettingsSection);
+
+  const visibleSettings = settingsNavItems.filter(
+    (item) =>
+      !ADMIN_ONLY_SETTINGS.includes(item.id) || isWorkspaceAdmin || isWorkspaceOwner
+  );
+  const visibleSettingsItems = visibleSettings.slice(0, MAX_VISIBLE);
+  const hiddenSettingsItems = visibleSettings.slice(MAX_VISIBLE);
+
+  if (isInSettings) {
+    return (
+      <>
+        <nav className="fixed inset-x-3 bottom-3 z-50 md:hidden">
+          <div
+            className={clsx(
+              "flex items-center justify-around gap-1 rounded-2xl border border-border-light",
+              "bg-surface/95 px-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur",
+              "pb-[env(safe-area-inset-bottom)]"
+            )}
+          >
+            {visibleSettingsItems.map((item) => {
+              const isActive = activeSettings === item.id;
+              return (
+                <a
+                  key={item.id}
+                  href={`/w/${workspaceId}/settings/${item.id}`}
+                  className={clsx(
+                    "relative flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-colors",
+                    isActive
+                      ? "text-primary"
+                      : "text-text-tertiary hover:text-text"
+                  )}
+                >
+                  {isActive && (
+                    <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />
+                  )}
+                  <item.icon className="h-5 w-5" />
+                  <span className="max-w-full truncate leading-tight">
+                    {item.label}
+                  </span>
+                </a>
+              );
+            })}
+            {hiddenSettingsItems.length > 0 && (
+              <button
+                onClick={() => setShowMore(true)}
+                className={clsx(
+                  "flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-colors",
+                  "text-text-tertiary hover:text-text"
+                )}
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border-light bg-bg-light">
+                  <Plus className="h-3.5 w-3.5" />
+                </span>
+                <span className="max-w-full truncate leading-tight">More</span>
+              </button>
+            )}
+          </div>
+        </nav>
+
+        <AnimatePresence>
+          {showMore && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-40 bg-black/50 md:hidden"
+                onClick={() => setShowMore(false)}
+              />
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-surface pb-8 shadow-modal md:hidden"
+              >
+                <div className="flex items-center justify-center pt-3 pb-1">
+                  <div className="h-1 w-10 rounded-full bg-border-light" />
+                </div>
+                <div className="px-4 pb-2">
+                  <h3 className="text-sm font-semibold text-text">
+                    More settings
+                  </h3>
+                </div>
+                <div className="max-h-80 overflow-y-auto px-2">
+                  {hiddenSettingsItems.map((item, i) => {
+                    const isActive = activeSettings === item.id;
+                    return (
+                      <motion.a
+                        key={item.id}
+                        href={`/w/${workspaceId}/settings/${item.id}`}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.03 }}
+                        onClick={() => setShowMore(false)}
+                        className={clsx(
+                          "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors min-h-[48px]",
+                          isActive
+                            ? "bg-primary-bg text-primary"
+                            : "text-text-secondary hover:bg-bg-light"
+                        )}
+                      >
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                        {isActive && (
+                          <span className="ml-auto text-[11px] font-medium text-primary">
+                            Active
+                          </span>
+                        )}
+                      </motion.a>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   if (isInWorkspace) {
     return (
