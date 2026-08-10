@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Zap, Plus, Pencil, Trash2 } from "lucide-react";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { clsx } from "clsx";
+import { SkeletonSettingsPage } from "@/components/ui/skeleton";
 
 const TRIGGER_LABELS: Record<string, string> = {
   "task.created": "Issue created",
@@ -63,11 +64,7 @@ export function WorkspaceSettingsAutomation() {
         </Button>
       </div>
 
-      {isLoading && (
-        <div className="flex min-h-[240px] items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      )}
+      {isLoading && <SkeletonSettingsPage />}
 
       {!isLoading && rules.length === 0 && (
         <div className="rounded-xl border border-border-light bg-surface">

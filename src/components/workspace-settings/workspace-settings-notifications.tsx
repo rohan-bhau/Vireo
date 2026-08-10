@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Bell, Check, Loader2 } from "lucide-react";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { useSettings } from "@/lib/settings-context";
+import { SkeletonSettingsPage } from "@/components/ui/skeleton";
 import { clsx } from "clsx";
 
 const EVENT_LABELS: Partial<Record<NotificationEvent, string>> = {
@@ -99,11 +100,7 @@ export function WorkspaceSettingsNotifications() {
   }
 
   if (isLoading || prefLoading) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <SkeletonSettingsPage />;
   }
 
   return (

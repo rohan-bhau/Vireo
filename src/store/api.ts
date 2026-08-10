@@ -53,5 +53,6 @@ export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
   tagTypes: ["User", "Workspace", "Members", "Invitations", "Project", "Board", "Task", "Comments", "Notifications", "NotificationPreferences", "NotificationScheme", "Sprint", "Epic", "AuditLog", "Integration", "Dashboard", "Conversations", "Messages", "Subscription", "PermissionScheme", "ProjectRole", "IssueSecurity", "Component", "Version", "Automation", "Onboarding", "CustomField"],
+  keepUnusedDataFor: Infinity,
   endpoints: () => ({}),
 });

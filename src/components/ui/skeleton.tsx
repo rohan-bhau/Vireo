@@ -190,6 +190,51 @@ function SkeletonTableRows({ rows = 5 }: { rows?: number }) {
   );
 }
 
+function SkeletonWorkspaceTable({ rows = 4 }: { rows?: number }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border-light bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[520px]">
+          <thead>
+            <tr className="border-b border-border-light bg-bg-light/60">
+              <th className="w-10 px-3 py-3" />
+              <th className="px-3 py-3"><Skeleton className="h-3 w-20" /></th>
+              <th className="px-3 py-3"><Skeleton className="h-3 w-10" /></th>
+              <th className="px-3 py-3"><Skeleton className="h-3 w-10" /></th>
+              <th className="px-3 py-3"><Skeleton className="h-3 w-10" /></th>
+              <th className="w-12 px-3 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-light">
+            {Array.from({ length: rows }).map((_, i) => (
+              <tr key={i}>
+                <td className="px-3 py-3">
+                  <Skeleton className="mx-auto h-4 w-4" />
+                </td>
+                <td className="px-3 py-3">
+                  <div className="flex min-w-0 max-w-[320px] items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-lg" />
+                    <div className="min-w-0 space-y-1.5">
+                      <Skeleton className="h-3.5 w-36" />
+                      <Skeleton className="h-3 w-48" />
+                    </div>
+                  </div>
+                </td>
+                <td className="px-3 py-3"><Skeleton className="h-3 w-14" /></td>
+                <td className="px-3 py-3"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                <td className="px-3 py-3"><Skeleton className="h-3 w-20" /></td>
+                <td className="px-3 py-3">
+                  <Skeleton className="ml-auto h-7 w-7 rounded-md" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function SkeletonBoardColumn() {
   return (
     <div className="flex w-72 max-sm:w-64 flex-shrink-0 flex-col rounded-[3px] bg-bg-neutral">
@@ -334,6 +379,55 @@ function SkeletonSidebarItem() {
   );
 }
 
+function SkeletonSettingsPage() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-3 w-64" />
+      </div>
+      <div className="rounded-[3px] border border-border-light bg-surface p-6">
+        <div className="mb-5 space-y-1">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-56" />
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-9 w-full rounded-[3px]" />
+          </div>
+          <div className="space-y-1.5">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-9 w-full rounded-[3px]" />
+          </div>
+          <div className="space-y-1.5">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-24 w-full rounded-[3px]" />
+          </div>
+          <Skeleton className="h-9 w-32 rounded-[3px]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonList() {
+  return (
+    <div className="overflow-hidden rounded-[3px] border border-border-light bg-surface">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="flex items-center gap-3 border-b border-border-light px-5 py-3.5 last:border-b-0">
+          <Skeleton className="h-7 w-7 rounded-full" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-3 w-48" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export {
   Skeleton,
   SkeletonCard,
@@ -350,4 +444,7 @@ export {
   SkeletonWorkspaceCard,
   SkeletonSummaryCards,
   SkeletonSidebarItem,
+  SkeletonSettingsPage,
+  SkeletonList,
+  SkeletonWorkspaceTable,
 };

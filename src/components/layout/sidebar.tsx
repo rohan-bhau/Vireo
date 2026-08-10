@@ -34,6 +34,17 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { settingsNavItems, type SettingsSection } from "@/lib/settings-nav";
+
+const ADMIN_ONLY_SETTINGS: SettingsSection[] = [
+  "permissions",
+  "issue-types",
+  "workflows",
+  "fields",
+  "roles",
+  "versions",
+  "components",
+  "automation",
+];
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { Dialog } from "@/components/ui/dialog";
@@ -291,6 +302,14 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
 
   const isInWorkspace = pathname.startsWith("/w/") && !!workspaceId;
   const canAccessSettings = isInWorkspace && !!currentWsId;
+  const isWorkspaceAdmin = currentMember?.role === "ADMIN";
+  const isWorkspaceOwner =
+    !!currentWsId &&
+    workspaces.find((ws) => ws.id === currentWsId)?.ownerId === currentUserId;
+  const visibleSettingsItems = settingsNavItems.filter(
+    (item) =>
+      !ADMIN_ONLY_SETTINGS.includes(item.id) || isWorkspaceAdmin || isWorkspaceOwner
+  );
 
   const settingsBase = `/w/${currentWsId}/settings`;
   const inSettings = canAccessSettings && pathname.startsWith(settingsBase);
@@ -416,7 +435,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                 </p>
               )}
 
-              {settingsNavItems.map((item) => (
+              {visibleSettingsItems.map((item) => (
                 <Link
                   key={item.id}
                   href={`/w/${currentWsId}/settings/${item.id}`}

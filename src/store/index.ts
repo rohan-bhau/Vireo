@@ -15,32 +15,18 @@ export const store = configureStore({
     getDefaultMiddleware().concat(api.middleware),
 });
 
-function getInitialUserId(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const token = localStorage.getItem("vireo_access_token");
-    if (!token) return null;
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const decoded = JSON.parse(
-      atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
-    );
-    return decoded?.userId || null;
-  } catch {
-    return null;
-  }
-}
-
-let prevUserId: string | null = getInitialUserId();
+let prevUserId: string | null = null;
 
 store.subscribe(() => {
   const state = store.getState();
 
   const userId = state.auth.user?.id ?? null;
-  if (userId !== prevUserId) {
-    prevUserId = userId;
+  if (userId && prevUserId && userId !== prevUserId) {
     store.dispatch(api.util.resetApiState());
     store.dispatch(clearWorkspaceState());
+  }
+  if (userId) {
+    prevUserId = userId;
   }
 
   try {

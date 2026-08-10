@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ArrowDown, ArrowUp, Plus, GitBranch, Loader2 } from "lucide-react";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { clsx } from "clsx";
+import { SkeletonSettingsPage } from "@/components/ui/skeleton";
 
 const CATEGORY_LABELS: Record<WorkflowStatus["category"], string> = {
   todo: "To Do",
@@ -54,11 +55,7 @@ export function WorkspaceSettingsWorkflows() {
   const [newStatusError, setNewStatusError] = useState<string | null>(null);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <SkeletonSettingsPage />;
   }
 
   if (workflows.length === 0) {

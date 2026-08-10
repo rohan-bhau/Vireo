@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Check, Server } from "lucide-react";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { clsx } from "clsx";
+import { SkeletonSettingsPage } from "@/components/ui/skeleton";
 
 const ALL_ISSUE_TYPES = ["epic", "story", "task", "bug", "subtask"] as const;
 type IssueTypeKey = (typeof ALL_ISSUE_TYPES)[number];
@@ -44,11 +45,7 @@ export function WorkspaceSettingsIssueTypes() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <SkeletonSettingsPage />;
   }
 
   if (!selectedProject) {

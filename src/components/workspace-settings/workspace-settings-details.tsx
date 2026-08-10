@@ -16,6 +16,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Check, ImagePlus, Upload, Sparkles, Pencil } from "lucide-react";
 import { PRESET_AVATARS } from "@/lib/avatar-utils";
 import { useSettings } from "@/lib/settings-context";
+import { SkeletonSettingsPage } from "@/components/ui/skeleton";
 
 export function WorkspaceSettingsDetails() {
   const params = useParams();
@@ -44,11 +45,7 @@ export function WorkspaceSettingsDetails() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <SkeletonSettingsPage />;
   }
 
   if (!workspace) {

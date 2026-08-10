@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Package, Plus } from "lucide-react";
 import { toastSuccess } from "@/lib/toast";
 import { clsx } from "clsx";
+import { SkeletonSettingsPage } from "@/components/ui/skeleton";
 
 export function WorkspaceSettingsVersions() {
   const params = useParams();
@@ -23,11 +24,7 @@ export function WorkspaceSettingsVersions() {
   const { data: projects = [], isLoading } = useGetWorkspaceProjectsQuery(workspaceId);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <SkeletonSettingsPage />;
   }
 
   return (

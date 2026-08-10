@@ -12,7 +12,7 @@ import {
 } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SkeletonWorkspaceCard } from "@/components/ui/skeleton";
+import { SkeletonWorkspaceTable } from "@/components/ui/skeleton";
 import { Dialog } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/app-layout";
 import { OnboardingPopup } from "@/components/onboarding/onboarding-popup";
@@ -260,11 +260,7 @@ export default function DashboardPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <SkeletonWorkspaceCard key={i} />
-            ))}
-          </div>
+          <SkeletonWorkspaceTable />
         ) : workspaces.length === 0 ? (
           <div className="rounded-xl bg-white p-6 md:p-16 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
             <div className="mx-auto mb-6 flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#EEF4FF] to-[#D6E4FF]">
