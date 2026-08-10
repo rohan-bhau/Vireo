@@ -69,7 +69,7 @@ export const workspaceApi = api.injectEndpoints({
       transformResponse: (response: WorkspaceResponse) => response.data.workspace,
       providesTags: (_result, _error, id) => [{ type: "Workspace", id }],
     }),
-    createWorkspace: builder.mutation<Workspace, { name: string; description?: string; template?: ProjectTemplate }>({
+    createWorkspace: builder.mutation<Workspace, { name: string; description?: string; template?: ProjectTemplate; avatar?: string }>({
       query: (body) => ({
         url: "/workspaces",
         method: "POST",

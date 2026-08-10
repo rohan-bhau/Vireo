@@ -316,6 +316,7 @@ export default function IntegrationsPage() {
   const [deleteIntegration] = useDeleteIntegrationMutation();
   const [toggleIntegration] = useToggleIntegrationMutation();
   const [testIntegration, { isLoading: isTesting }] = useTestIntegrationMutation();
+  const [confirmDeleteType, setConfirmDeleteType] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [showCatalog, setShowCatalog] = useState(false);
 
@@ -346,6 +347,13 @@ export default function IntegrationsPage() {
   }
 
   async function handleDelete(idOrType: string) {
+    setConfirmDeleteType(idOrType);
+  }
+
+  async function confirmDelete() {
+    if (!confirmDeleteType) return;
+    const idOrType = confirmDeleteType;
+    setConfirmDeleteType(null);
     const types = ["slack", "github"] as const;
     if (types.includes(idOrType as "slack" | "github")) {
       try {
@@ -524,6 +532,22 @@ export default function IntegrationsPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={confirmDeleteType !== null} onClose={() => setConfirmDeleteType(null)} title="Remove integration?">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[#5E6C84]">
+            Are you sure you want to remove this integration? This cannot be undone.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setConfirmDeleteType(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={confirmDelete}>
+              Remove
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

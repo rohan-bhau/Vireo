@@ -55,7 +55,8 @@ export function UserList({
       )}
 
       <div className="overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px]">
           <thead>
             <tr className="border-b border-[#C3C6D7]/20">
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">User</th>
@@ -119,6 +120,7 @@ export function UserList({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -95,7 +95,8 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px]">
           <thead>
             <tr className="border-b border-[#C3C6D7]/20">
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">User</th>
@@ -161,6 +162,7 @@ export default function AdminUsersPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {data && data.totalPages > 1 && (

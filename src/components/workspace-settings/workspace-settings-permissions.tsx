@@ -32,7 +32,8 @@ export function WorkspaceSettingsPermissions() {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border-light bg-surface">
-        <table className="w-full table-fixed">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] table-fixed">
           <thead>
             <tr className="border-b border-border-light bg-bg-light/60">
               <th className="w-[40%] px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
@@ -61,6 +62,7 @@ export function WorkspaceSettingsPermissions() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <div className="flex items-start gap-2.5 rounded-lg border border-[#E9D5FF] bg-[#F5F3FF] px-4 py-3">

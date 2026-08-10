@@ -172,13 +172,14 @@ export function WorkspaceSettingsPeople() {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border-light bg-surface">
-        <table className="w-full table-fixed">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px]">
           <thead>
             <tr className="border-b border-border-light bg-bg-light/60">
-              <th className="w-[34%] px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Member</th>
-              <th className="w-[32%] px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Email</th>
-              <th className="w-[18%] px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Role</th>
-              <th className="w-[16%] px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Action</th>
+              <th className="whitespace-nowrap px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Member</th>
+              <th className="whitespace-nowrap px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Email</th>
+              <th className="whitespace-nowrap px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Role</th>
+              <th className="whitespace-nowrap px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-light">
@@ -195,6 +196,7 @@ export function WorkspaceSettingsPeople() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {invitations.length > 0 && (

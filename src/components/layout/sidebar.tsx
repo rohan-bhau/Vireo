@@ -41,6 +41,8 @@ import { Input } from "@/components/ui/input";
 import { SkeletonSidebarItem } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { SidebarCustomizeDialog } from "@/components/nav/sidebar-customize-dialog";
+import { PRESET_AVATARS } from "@/lib/avatar-utils";
+import { toastSuccess } from "@/lib/toast";
 import {
   addRecentWorkspace,
   toggleStarredWorkspace,
@@ -75,6 +77,7 @@ const hardcodedFilters = [
 function WorkspaceMenuItem({
   workspaceId,
   name,
+  avatar,
   collapsed,
   isStarred,
   onStarToggle,
@@ -83,6 +86,7 @@ function WorkspaceMenuItem({
 }: {
   workspaceId: string;
   name: string;
+  avatar?: string | null;
   collapsed: boolean;
   isStarred: boolean;
   onStarToggle: () => void;
@@ -117,9 +121,18 @@ function WorkspaceMenuItem({
         )}
         title={collapsed ? name : undefined}
       >
-        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] bg-primary-bg text-[10px] font-bold text-primary">
-          {name.charAt(0).toUpperCase()}
-        </div>
+        {avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatar}
+            alt={name}
+            className="h-4 w-4 shrink-0 rounded-[4px] object-cover"
+          />
+        ) : (
+          <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] bg-primary-bg text-[10px] font-bold text-primary">
+            {name.charAt(0).toUpperCase()}
+          </div>
+        )}
         {!collapsed && <span className="truncate flex-1">{name}</span>}
         {!collapsed && (
           <button
@@ -251,6 +264,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newTemplate, setNewTemplate] = useState<ProjectTemplate>("KANBAN");
+  const [newAvatar, setNewAvatar] = useState<string>("");
   const [createError, setCreateError] = useState<string | null>(null);
   const [forYouExpanded, setForYouExpanded] = useState(true);
   const [starredExpanded, setStarredExpanded] = useState(true);
@@ -325,13 +339,16 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
         name: newName.trim(),
         description: newDescription.trim() || undefined,
         template: newTemplate,
+        avatar: newAvatar || undefined,
       }).unwrap();
       setShowCreate(false);
       setNewName("");
       setNewDescription("");
       setNewTemplate("KANBAN");
+      setNewAvatar("");
       dispatch(setActiveWorkspace(ws.id));
       dispatch(addRecentWorkspace(ws.id));
+      toastSuccess(`Workspace "${ws.name}" created`);
       window.location.href = `/w/${ws.id}`;
     } catch (err: unknown) {
       const message =
@@ -435,6 +452,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                     key={ws.id}
                     workspaceId={ws.id}
                     name={ws.name}
+                    avatar={ws.avatar}
                     collapsed={collapsed}
                     isStarred={false}
                     isActive={pathname === `/w/${ws.id}`}
@@ -487,6 +505,7 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                   key={ws.id}
                   workspaceId={ws.id}
                   name={ws.name}
+                  avatar={ws.avatar}
                   collapsed={collapsed}
                   isStarred={true}
                   isActive={pathname === `/w/${ws.id}`}
@@ -521,7 +540,8 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                 <WorkspaceMenuItem
                   key={ws.id}
                   workspaceId={ws.id}
-                  name={ws.name}
+name={ws.name}
+                  avatar={ws.avatar}
                   collapsed={collapsed}
                   isStarred={!!starredWorkspaces[ws.id]}
                   isActive={pathname === `/w/${ws.id}`}
@@ -648,7 +668,8 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                 <WorkspaceMenuItem
                   key={ws.id}
                   workspaceId={ws.id}
-                  name={ws.name}
+name={ws.name}
+                  avatar={ws.avatar}
                   collapsed={collapsed}
                   isStarred={!!starredWorkspaces[ws.id]}
                   isActive={pathname === `/w/${ws.id}`}
@@ -729,6 +750,27 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
             onChange={(e) => setNewDescription(e.target.value)}
           />
           <WorkspaceTypePicker value={newTemplate} onChange={setNewTemplate} />
+          <div>
+            <label className="text-xs font-semibold text-text-secondary">Workspace icon</label>
+            <div className="mt-1.5 grid grid-cols-6 gap-2">
+              {PRESET_AVATARS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setNewAvatar(newAvatar === preset ? "" : preset)}
+                  className={`flex items-center justify-center rounded-lg border p-1 transition-colors ${
+                    newAvatar === preset
+                      ? "border-primary ring-2 ring-primary/40"
+                      : "border-border-light hover:border-border-default"
+                  }`}
+                  title="Use this icon"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={preset} alt="preset" className="h-8 w-8 rounded-md object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button
               type="button"

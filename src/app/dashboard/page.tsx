@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store";
-import { useGetWorkspacesQuery, useCreateWorkspaceMutation } from "@/store/workspaceApi";
+import {
+  useGetWorkspacesQuery,
+  useCreateWorkspaceMutation,
+  useDeleteWorkspaceMutation,
+  type WorkspaceMember,
+} from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SkeletonWorkspaceCard } from "@/components/ui/skeleton";
@@ -12,14 +17,149 @@ import { Dialog } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/app-layout";
 import { OnboardingPopup } from "@/components/onboarding/onboarding-popup";
 import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picker";
+import { useDropdown, DropdownPanel } from "@/components/ui/dropdown";
 import { setOnboardingNeeded } from "@/store/authSlice";
+import { toggleStarredWorkspace } from "@/store/workspaceSlice";
 import type { ProjectTemplate } from "@/store/projectApi";
-import { Plus, Home, Users } from "lucide-react";
+import { PRESET_AVATARS } from "@/lib/avatar-utils";
+import { toastSuccess, toastError } from "@/lib/toast";
+import { clsx } from "clsx";
+import {
+  Plus,
+  Home,
+  Star,
+  MoreHorizontal,
+  Settings2,
+  Trash2,
+} from "lucide-react";
+
+interface WorkspaceRowData {
+  id: string;
+  name: string;
+  description: string | null;
+  avatar?: string | null;
+  ownerId: string;
+  template: ProjectTemplate;
+  members?: WorkspaceMember[];
+}
+
+function workspaceKey(ws: WorkspaceRowData): string {
+  const initials = (ws.name || "WS")
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 3);
+  return `${initials || "WS"}-${ws.id.slice(0, 4).toUpperCase()}`;
+}
+
+function WorkspaceRow({
+  ws,
+  isOwner,
+  leadName,
+  starred,
+  onToggleStar,
+  onDeleteRequest,
+}: {
+  ws: WorkspaceRowData;
+  isOwner: boolean;
+  leadName: string;
+  starred: boolean;
+  onToggleStar: () => void;
+  onDeleteRequest: () => void;
+}) {
+  const { open, setOpen, triggerRef } = useDropdown();
+
+  return (
+    <tr className="transition-colors hover:bg-bg-light/50">
+      <td className="whitespace-nowrap px-3 py-3">
+        <button
+          onClick={onToggleStar}
+          title={starred ? "Unstar workspace" : "Star workspace"}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
+        >
+          <Star className={clsx("h-4 w-4", starred && "fill-yellow-400 text-yellow-400")} />
+        </button>
+      </td>
+      <td className="px-3 py-3">
+        <Link href={`/w/${ws.id}`} className="flex min-w-0 max-w-[320px] items-center gap-3 rounded-md">
+          {ws.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={ws.avatar} alt={ws.name} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+          ) : (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-bg text-sm font-bold text-primary">
+              {ws.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-text">{ws.name}</p>
+            {ws.description && (
+              <p className="truncate text-xs text-text-tertiary">{ws.description}</p>
+            )}
+          </div>
+        </Link>
+      </td>
+      <td className="whitespace-nowrap px-3 py-3">
+        <span className="font-mono text-xs text-text-secondary">{workspaceKey(ws)}</span>
+      </td>
+      <td className="whitespace-nowrap px-3 py-3">
+        <span className="inline-flex max-w-full rounded-full bg-bg-light px-2.5 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
+          {ws.template === "SCRUM" ? "Scrum" : "Kanban"}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-3 py-3 text-sm text-text-secondary">{leadName}</td>
+      <td className="whitespace-nowrap px-3 py-3">
+        <div className="flex items-center justify-end">
+          <div className="relative">
+            <button
+              ref={triggerRef}
+              type="button"
+              onClick={() => setOpen(!open)}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-bg-light hover:text-text"
+              title="Workspace actions"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+            <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)} width={200} align="right">
+              <div className="py-1">
+                <Link
+                  href={`/w/${ws.id}/settings`}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary transition-colors hover:bg-bg-light"
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                  Workspace settings
+                </Link>
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      onDeleteRequest();
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-xs text-danger transition-colors hover:bg-danger/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete workspace
+                  </button>
+                )}
+              </div>
+            </DropdownPanel>
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
 
 export default function DashboardPage() {
   const { data: workspaces = [], isLoading } = useGetWorkspacesQuery();
   const [createWorkspace, { isLoading: isCreating }] = useCreateWorkspaceMutation();
+  const [deleteWorkspace, { isLoading: isDeleting }] = useDeleteWorkspaceMutation();
   const onboardingNeeded = useSelector((state: RootState) => state.auth.onboardingNeeded);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const starredWorkspaces = useSelector((state: RootState) => state.workspace.starredWorkspaces);
   const dispatch = useDispatch();
 
   const [showCreate, setShowCreate] = useState(false);
@@ -28,7 +168,9 @@ export default function DashboardPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [template, setTemplate] = useState<ProjectTemplate>("KANBAN");
+  const [avatar, setAvatar] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WorkspaceRowData | null>(null);
 
   if (!isLoading && onboardingNeeded && workspaces.length === 0 && !autoOpened) {
     setAutoOpened(true);
@@ -48,6 +190,22 @@ export default function DashboardPage() {
     }
   }
 
+  useEffect(() => {
+    function handleCreateWorkspaceEvent() {
+      openCreate();
+    }
+    document.addEventListener("vireo:create-workspace", handleCreateWorkspaceEvent);
+    return () => {
+      document.removeEventListener("vireo:create-workspace", handleCreateWorkspaceEvent);
+    };
+  });
+
+  function leadName(ws: WorkspaceRowData): string {
+    if (ws.ownerId === user?.id) return user?.name || "You";
+    const owner = ws.members?.find((m) => m.userId === ws.ownerId);
+    return owner?.user?.name || ws.members?.[0]?.user?.name || "—";
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -56,20 +214,38 @@ export default function DashboardPage() {
       return;
     }
     try {
-      const ws = await createWorkspace({ name: name.trim(), description: description.trim() || undefined, template }).unwrap();
+      const ws = await createWorkspace({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        template,
+        avatar: avatar || undefined,
+      }).unwrap();
       setShowCreate(false);
       setName("");
       setDescription("");
       setTemplate("KANBAN");
+      setAvatar("");
+      toastSuccess(`Workspace "${ws.name}" created`);
       window.location.href = `/w/${ws.id}`;
     } catch (err: unknown) {
       setError((err as { data?: { message?: string } })?.data?.message || "Failed to create workspace");
     }
   }
 
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    try {
+      await deleteWorkspace(deleteTarget.id).unwrap();
+      toastSuccess(`Workspace "${deleteTarget.name}" deleted`);
+      setDeleteTarget(null);
+    } catch (err: unknown) {
+      toastError((err as { data?: { message?: string } })?.data?.message || "Could not delete workspace");
+    }
+  }
+
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-5xl">
+      <div className="w-full">
         <div className="mb-6 md:mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl md:text-2xl font-semibold text-[#121C28]">Dashboard</h1>
@@ -107,7 +283,7 @@ export default function DashboardPage() {
             <div className="mt-8 md:mt-10 grid gap-3 sm:grid-cols-3 max-w-lg mx-auto">
               <div className="rounded-lg bg-[#F8F9FF] p-4 text-left">
                 <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF4FF]">
-                  <Users className="h-4 w-4 text-[#2563EB]" />
+                  <Home className="h-4 w-4 text-[#2563EB]" />
                 </div>
                 <p className="text-xs font-semibold text-[#121C28]">Invite your team</p>
                 <p className="mt-0.5 text-[11px] text-[#737686]">Collaborate in real-time</p>
@@ -133,41 +309,43 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {workspaces.map((ws) => (
-              <Link
-                key={ws.id}
-                href={`/w/${ws.id}`}
-                className="group rounded-xl bg-white p-5 md:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
-              >
-                <div className="mb-3 flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg bg-[#EEF4FF] text-base md:text-lg font-bold text-[#004AC6] group-hover:bg-[#2563EB] group-hover:text-white transition-colors">
-                  {ws.name.charAt(0).toUpperCase()}
-                </div>
-                <h3 className="font-semibold text-[#121C28]">{ws.name}</h3>
-                {ws.description && (
-                  <p className="mt-1 text-sm text-[#737686] line-clamp-2">
-                    {ws.description}
-                  </p>
-                )}
-                <div className="mt-4 flex items-center gap-2 text-xs text-[#737686]">
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                    <path d="M16 3.13a4 4 0 010 7.75" />
-                  </svg>
-                  {ws.members?.length || 0} member{(ws.members?.length || 0) !== 1 ? "s" : ""}
-                </div>
-              </Link>
-            ))}
+          <div className="overflow-hidden rounded-xl border border-border-light bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px]">
+              <thead>
+                <tr className="border-b border-border-light bg-bg-light/60">
+                  <th className="w-10 px-3 py-3" />
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Workspace</th>
+                  <th className="whitespace-nowrap px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Key</th>
+                  <th className="whitespace-nowrap px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Type</th>
+                  <th className="whitespace-nowrap px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">Lead</th>
+                  <th className="w-12 px-3 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-light">
+                {workspaces.map((ws) => (
+                  <WorkspaceRow
+                    key={ws.id}
+                    ws={ws}
+                    isOwner={ws.ownerId === user?.id}
+                    leadName={leadName(ws)}
+                    starred={!!starredWorkspaces[ws.id]}
+                    onToggleStar={() => dispatch(toggleStarredWorkspace(ws.id))}
+                    onDeleteRequest={() => setDeleteTarget(ws)}
+                  />
+                ))}
+              </tbody>
+            </table>
+            </div>
           </div>
         )}
       </div>
 
-      <Dialog open={showCreate} onClose={() => setShowCreate(false)} title="Create workspace">
+      {/* Create workspace dialog */}
+      <Dialog open={showCreate} onClose={() => setShowCreate(false)} title="Create workspace" className="max-w-lg">
         <form onSubmit={handleCreate} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+            <div className="rounded-lg bg-danger-bg p-3 text-sm text-danger">{error}</div>
           )}
           <Input
             label="Workspace name"
@@ -183,6 +361,27 @@ export default function DashboardPage() {
             onChange={(e) => setDescription(e.target.value)}
           />
           <WorkspaceTypePicker value={template} onChange={setTemplate} />
+          <div>
+            <label className="text-xs font-semibold text-text-secondary">Workspace icon</label>
+            <div className="mt-1.5 grid grid-cols-6 gap-2">
+              {PRESET_AVATARS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setAvatar(avatar === preset ? "" : preset)}
+                  className={`flex items-center justify-center rounded-lg border p-1 transition-colors ${
+                    avatar === preset
+                      ? "border-primary ring-2 ring-primary/40"
+                      : "border-border-light hover:border-border-default"
+                  }`}
+                  title="Use this icon"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={preset} alt="preset" className="h-10 w-10 rounded-md object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>
               Cancel
@@ -192,6 +391,32 @@ export default function DashboardPage() {
             </Button>
           </div>
         </form>
+      </Dialog>
+
+      {/* Delete workspace confirm dialog */}
+      <Dialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete workspace"
+        className="max-w-sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-secondary">
+            Are you sure you want to delete <strong className="text-text">{deleteTarget?.name}</strong>?
+            This will permanently remove all projects, tasks, and member associations. This action
+            cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button
+              variant="danger"
+              isLoading={isDeleting}
+              onClick={handleDelete}
+            >
+              <Trash2 className="mr-1.5 h-4 w-4" /> Delete
+            </Button>
+          </div>
+        </div>
       </Dialog>
 
       <OnboardingPopup open={showOnboarding} onClose={closeOnboarding} />

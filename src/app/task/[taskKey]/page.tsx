@@ -9,6 +9,7 @@ import {
   useDeleteTaskMutation,
 } from "@/store/taskApi";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { SkeletonTaskDetail } from "@/components/ui/skeleton";
 import { IssueDetailMain } from "@/components/tasks/issue-detail-main";
 import { IssueDetailDetailsPanel } from "@/components/tasks/issue-detail-details-panel";
@@ -30,6 +31,7 @@ export default function TaskDetailPage() {
 
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -85,7 +87,6 @@ export default function TaskDetailPage() {
 
   async function handleDelete() {
     if (!task) return;
-    if (!confirm(`Are you sure you want to delete ${task.taskKey}?`)) return;
     setDeleting(true);
     try {
       await deleteTask(taskKey).unwrap();
@@ -173,7 +174,7 @@ export default function TaskDetailPage() {
                   </button>
                   <div className="border-t border-border-light" />
                   <button
-                    onClick={() => { setShowMoreMenu(false); handleDelete(); }}
+                    onClick={() => { setShowMoreMenu(false); setShowDeleteDialog(true); }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-danger hover:bg-bg-light"
                   >
                     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -203,6 +204,25 @@ export default function TaskDetailPage() {
         taskKey={taskKey}
         existingLinks={task.linkedTasks}
       />
+      <Dialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        title="Delete this task?"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-text-secondary">
+            Are you sure you want to delete <span className="font-mono font-medium text-text">{task.taskKey}</span>? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
       <AIContextualLauncher context="issue" taskKey={taskKey} workspaceId={workspaceId || task.workspaceId} projectId={task.projectId} />
     </div>
   );

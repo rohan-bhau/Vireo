@@ -223,7 +223,8 @@ export default function MembersPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px]">
             <thead>
               <tr className="border-b border-[#C3C6D7]/20">
                 <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Member</th>
@@ -282,6 +283,7 @@ export default function MembersPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -289,7 +291,8 @@ export default function MembersPage() {
         <div className="mt-10">
           <h3 className="mb-4 text-base font-semibold text-[#121C28]">Pending Invitations</h3>
           <div className="overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-            <table className="w-full">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px]">
               <thead>
                 <tr className="border-b border-[#C3C6D7]/20">
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Email</th>
@@ -322,6 +325,7 @@ export default function MembersPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}

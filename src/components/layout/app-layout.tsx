@@ -191,7 +191,7 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
               workspaceName={sidebarProps?.workspaceName}
             />
           </div>
-          <main className="flex-1 overflow-y-auto min-w-0 px-3 pt-4 pb-10 md:px-8 md:py-8 md:pb-12">
+          <main className="flex-1 overflow-y-auto min-w-0 px-3 pt-4 pb-24 md:px-8 md:py-8 md:pb-12">
             <ErrorBoundary>
               {children}
             </ErrorBoundary>

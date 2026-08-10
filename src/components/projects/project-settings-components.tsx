@@ -95,7 +95,8 @@ export function ProjectSettingsComponents({ project }: { project: Project }) {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-[#C3C6D7]/20">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-sm">
             <thead>
               <tr className="bg-[#F8F9FF] text-left text-xs font-medium uppercase tracking-wider text-[#737686]">
                 <th className="px-4 py-2.5">Name</th>
@@ -148,6 +149,7 @@ export function ProjectSettingsComponents({ project }: { project: Project }) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

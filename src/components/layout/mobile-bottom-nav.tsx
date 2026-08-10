@@ -150,8 +150,14 @@ export function MobileBottomNav() {
   if (isInWorkspace) {
     return (
       <>
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border-light md:hidden safe-area-bottom">
-          <div className="flex items-center justify-around px-1">
+        <nav className="fixed inset-x-3 bottom-3 z-50 md:hidden">
+          <div
+            className={clsx(
+              "flex items-center justify-around gap-1 rounded-2xl border border-border-light",
+              "bg-surface/95 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur",
+              "px-2 pb-[env(safe-area-inset-bottom)]"
+            )}
+          >
             {maxVisible.map((tab) => {
               const Icon = getTabIcon(tab.id, tab.label);
               const isActive = activeTab === tab.id;
@@ -160,14 +166,17 @@ export function MobileBottomNav() {
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
                   className={clsx(
-                    "flex flex-col items-center justify-center gap-0.5 rounded-lg text-[10px] font-medium transition-colors min-w-0 flex-1 min-h-[52px] px-1",
+                    "relative flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-colors",
                     isActive
                       ? "text-primary"
                       : "text-text-tertiary hover:text-text"
                   )}
                 >
+                  {isActive && (
+                    <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />
+                  )}
                   <Icon className="h-5 w-5" />
-                  <span className="truncate max-w-full leading-tight">
+                  <span className="max-w-full truncate leading-tight">
                     {tab.label}
                   </span>
                 </button>
@@ -177,14 +186,14 @@ export function MobileBottomNav() {
               <button
                 onClick={() => setShowMore(true)}
                 className={clsx(
-                  "flex flex-col items-center justify-center gap-0.5 rounded-lg text-[10px] font-medium transition-colors min-w-0 flex-1 min-h-[52px] px-1",
+                  "flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-colors",
                   "text-text-tertiary hover:text-text"
                 )}
               >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-bg">
-                  <span className="text-xs font-bold text-primary">+</span>
-                </div>
-                <span className="truncate max-w-full leading-tight">More</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border-light bg-bg-light">
+                  <Plus className="h-3.5 w-3.5" />
+                </span>
+                <span className="max-w-full truncate leading-tight">More</span>
               </button>
             )}
           </div>
@@ -255,39 +264,53 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center justify-around border-t border-border-light bg-surface md:hidden">
-        {dashboardNav.map((item) => {
-          const isActive =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
-
-          return (
-            <a
-              key={item.label}
-              href={item.href}
-              className={clsx(
-                "flex flex-col items-center justify-center gap-0.5 px-3 text-[10px] font-medium transition-colors min-h-[44px] min-w-[64px]",
-                isActive
-                  ? "text-primary"
-                  : "text-text-tertiary hover:text-text"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="leading-tight">{item.label}</span>
-            </a>
-          );
-        })}
-
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex flex-col items-center justify-center gap-0.5 px-3 text-[10px] font-medium text-primary transition-colors hover:text-primary-dark min-h-[44px] min-w-[64px]"
+      <nav className="fixed inset-x-3 bottom-3 z-50 md:hidden">
+        <div
+          className={clsx(
+            "flex items-center justify-around gap-1 rounded-2xl border border-border-light",
+            "bg-surface/95 px-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur",
+            "pb-[env(safe-area-inset-bottom)]"
+          )}
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white shadow-lg">
-            <Plus className="h-5 w-5" />
-          </div>
-          <span className="leading-tight">Create</span>
-        </button>
+          {dashboardNav.map((item) => {
+            const isActive =
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname.startsWith(item.href);
+
+            return (
+              <a
+                key={item.label}
+                href={item.href}
+                className={clsx(
+                  "flex flex-col items-center justify-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition-colors min-h-[48px] min-w-[60px]",
+                  isActive
+                    ? "text-primary"
+                    : "text-text-tertiary hover:text-text"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="leading-tight">{item.label}</span>
+              </a>
+            );
+          })}
+
+          <button
+            onClick={() => {
+              if (pathname === "/dashboard") {
+                document.dispatchEvent(new CustomEvent("vireo:create-workspace"));
+                return;
+              }
+              setShowCreate(true);
+            }}
+            className="flex flex-col items-center justify-center gap-0.5 px-3 text-[10px] font-medium text-primary transition-colors hover:text-primary-dark min-h-[48px] min-w-[60px]"
+          >
+            <span className="-mt-4 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white shadow-lg ring-4 ring-surface">
+              <Plus className="h-5 w-5" />
+            </span>
+            <span className="leading-tight">Create</span>
+          </button>
+        </div>
       </nav>
 
       <Dialog open={showCreate} onClose={() => setShowCreate(false)} title="Create workspace">

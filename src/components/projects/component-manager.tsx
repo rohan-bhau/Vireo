@@ -154,7 +154,8 @@ export function ComponentManager({ projectId, workspaceId }: ComponentManagerPro
         </div>
       ) : (
         <div className="overflow-hidden rounded-[3px] border border-border-light">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-sm">
             <thead>
               <tr className="bg-bg-light text-left text-xs font-medium uppercase tracking-wider text-text-placeholder">
                 <th className="px-4 py-2.5">Name</th>
@@ -223,6 +224,7 @@ export function ComponentManager({ projectId, workspaceId }: ComponentManagerPro
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

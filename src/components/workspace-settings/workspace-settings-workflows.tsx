@@ -224,7 +224,7 @@ export function WorkspaceSettingsWorkflows() {
           <h3 className="text-sm font-semibold text-text">Transitions</h3>
           <p className="mt-0.5 text-xs text-text-tertiary">Check a cell to allow moving from the row status to the column status.</p>
         </div>
-        <table className="w-full table-fixed">
+        <table className="w-full min-w-[560px] table-fixed">
           <thead>
             <tr className="border-b border-border-light bg-bg-light/60">
               <th className="w-32 px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">From → To</th>
