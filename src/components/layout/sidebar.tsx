@@ -23,6 +23,7 @@ import {
   ChevronRight,
   MoreHorizontal,
   Settings2,
+  ArrowLeft,
   Folders,
   Columns3,
   ListOrdered,
@@ -32,6 +33,7 @@ import {
   Filter,
   ExternalLink,
 } from "lucide-react";
+import { settingsNavItems, type SettingsSection } from "@/lib/settings-nav";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { Dialog } from "@/components/ui/dialog";
@@ -272,11 +274,19 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   });
   const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
   const currentMember = members.find((m) => m.userId === currentUserId);
-  const isWorkspaceAdmin = currentMember?.role === "ADMIN";
 
   const isInWorkspace = pathname.startsWith("/w/") && !!workspaceId;
-  const canAccessSettings =
-    isInWorkspace && !!currentWsId && isWorkspaceAdmin;
+  const canAccessSettings = isInWorkspace && !!currentWsId;
+
+  const settingsBase = `/w/${currentWsId}/settings`;
+  const inSettings = canAccessSettings && pathname.startsWith(settingsBase);
+  const settingsSegments = pathname.split("/").filter(Boolean);
+  const settingsLast = settingsSegments[settingsSegments.length - 1];
+  const activeSettings: SettingsSection =
+    settingsLast === "settings" ||
+    !settingsNavItems.some((n) => n.id === settingsLast)
+      ? "details"
+      : (settingsLast as SettingsSection);
 
   const starredList = workspaces.filter((ws) => starredWorkspaces[ws.id]);
   const recentList = workspaces.filter((ws) =>
@@ -368,6 +378,48 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
         className={embedded ? "flex flex-col bg-surface" : "flex h-full flex-col border-r border-border-light bg-surface shrink-0 overflow-hidden"}
       >
         <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-2 py-3">
+          {inSettings ? (
+            <>
+              <Link
+                href={`/w/${currentWsId}`}
+                onClick={onNavigate}
+                className={clsx(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] text-text-secondary hover:bg-bg-light hover:text-text",
+                  collapsed && "justify-center"
+                )}
+                title={collapsed ? "Back to workspace" : undefined}
+              >
+                <ArrowLeft className="h-4 w-4 shrink-0" />
+                {!collapsed && <span>Back</span>}
+              </Link>
+
+              {!collapsed && (
+                <p className="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
+                  Settings
+                </p>
+              )}
+
+              {settingsNavItems.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/w/${currentWsId}/settings/${item.id}`}
+                  onClick={onNavigate}
+                  className={clsx(
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
+                    collapsed && "justify-center",
+                    activeSettings === item.id
+                      ? "bg-primary-bg text-primary"
+                      : "text-text-secondary hover:bg-bg-light hover:text-text"
+                  )}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              ))}
+            </>
+          ) : (
+            <>
           {/* For You */}
           {visibleSections.forYou && (
             <CollapsibleSection
@@ -605,7 +657,9 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
                 />
               ))}
             </CollapsibleSection>
-          )}
+            )}
+          </>
+        )}
         </nav>
 
         <div className="border-t border-border-light px-2 py-2 space-y-1">

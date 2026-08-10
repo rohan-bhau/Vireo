@@ -162,10 +162,12 @@ export function WorkspaceSettingsPeople() {
               Transfer ownership
             </Button>
           )}
-          <Button size="sm" onClick={() => { setInviteError(null); setShowInvite(true); }}>
-            <Users className="h-3.5 w-3.5" />
-            Invite member
-          </Button>
+          {isAdmin && (
+            <Button size="sm" onClick={() => { setInviteError(null); setShowInvite(true); }}>
+              <Users className="h-3.5 w-3.5" />
+              Invite member
+            </Button>
+          )}
         </div>
       </div>
 

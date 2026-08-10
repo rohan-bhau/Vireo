@@ -157,6 +157,23 @@ export const notificationApi = api.injectEndpoints({
       transformResponse: (response: any) => response.data,
       invalidatesTags: ["NotificationPreferences"],
     }),
+    getWorkspaceNotificationPreference: builder.query<{ events: string[] }, string>({
+      query: (workspaceId) => `/notification-preferences/workspace/${workspaceId}`,
+      transformResponse: (response: { data: { events: string[] } }) => response.data,
+      providesTags: ["NotificationPreferences"],
+    }),
+    updateWorkspaceNotificationPreference: builder.mutation<
+      { events: string[] },
+      { workspaceId: string; events: string[] }
+    >({
+      query: ({ workspaceId, events }) => ({
+        url: `/notification-preferences/workspace/${workspaceId}`,
+        method: "PUT",
+        body: { events },
+      }),
+      transformResponse: (response: { data: { events: string[] } }) => response.data,
+      invalidatesTags: ["NotificationPreferences"],
+    }),
   }),
 });
 
@@ -170,4 +187,6 @@ export const {
   useUpdateNotificationPreferencesMutation,
   useUpdateProjectNotificationOverrideMutation,
   useRemoveProjectNotificationOverrideMutation,
+  useGetWorkspaceNotificationPreferenceQuery,
+  useUpdateWorkspaceNotificationPreferenceMutation,
 } = notificationApi;

@@ -10,6 +10,7 @@ import {
 import { IssueTypeIcon } from "./issue-type-icon";
 import { StatusBadge } from "./status-badge";
 import { Button } from "@/components/ui/button";
+import { useGetProjectQuery } from "@/store/projectApi";
 
 interface SubtaskListProps {
   taskKey: string;
@@ -24,6 +25,9 @@ export function SubtaskList({ taskKey, workspaceId, projectId, boardId, columnId
   const { data: subtleSubtasks = [], refetch } = useGetSubtasksByParentQuery(taskKey);
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
+  const { data: project } = useGetProjectQuery(projectId, { skip: !projectId });
+  const subtasksEnabled =
+    !project?.enabledIssueTypes?.length || project.enabledIssueTypes.includes("subtask");
   const [newSummary, setNewSummary] = useState("");
   const [adding, setAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -104,31 +108,35 @@ export function SubtaskList({ taskKey, workspaceId, projectId, boardId, columnId
         </div>
       )}
 
-      {adding ? (
-        <div className="flex gap-2">
-          <input
-            value={newSummary}
-            onChange={(e) => setNewSummary(e.target.value)}
-            placeholder="What needs to be done?"
-            className="flex-1 rounded-[3px] border border-border-input bg-surface px-2.5 py-1.5 text-xs text-text placeholder:text-text-placeholder focus:outline-none focus:ring-1 focus:ring-primary"
-            onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") setAdding(false); }}
-            autoFocus
-          />
-          <Button size="sm" onClick={handleAdd} isLoading={submitting} disabled={!newSummary.trim()}>
-            Add
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setAdding(false)}>Cancel</Button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 rounded-[3px] px-2 py-1.5 text-xs text-text-placeholder hover:bg-bg-light hover:text-text-secondary transition-colors"
-        >
-          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Add subtask
-        </button>
+            {subtasksEnabled && (
+        <>
+          {adding ? (
+            <div className="flex gap-2">
+              <input
+                value={newSummary}
+                onChange={(e) => setNewSummary(e.target.value)}
+                placeholder="What needs to be done?"
+                className="flex-1 rounded-[3px] border border-border-input bg-surface px-2.5 py-1.5 text-xs text-text placeholder:text-text-placeholder focus:outline-none focus:ring-1 focus:ring-primary"
+                onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") setAdding(false); }}
+                autoFocus
+              />
+              <Button size="sm" onClick={handleAdd} isLoading={submitting} disabled={!newSummary.trim()}>
+                Add
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setAdding(false)}>Cancel</Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAdding(true)}
+              className="flex items-center gap-1.5 rounded-[3px] px-2 py-1.5 text-xs text-text-placeholder hover:bg-bg-light hover:text-text-secondary transition-colors"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Add subtask
+            </button>
+          )}
+        </>
       )}
     </div>
   );

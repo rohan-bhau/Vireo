@@ -145,16 +145,14 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
                   />
                   {isStarred ? "Unstar workspace" : "Star workspace"}
                 </button>
-                {isAdmin && (
-                  <Link
-                    href={`/w/${workspaceId}/settings`}
-                    onClick={() => setShowMenu(false)}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light"
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                    Settings
-                  </Link>
-                )}
+                <Link
+                  href={`/w/${workspaceId}/settings`}
+                  onClick={() => setShowMenu(false)}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Settings
+                </Link>
                 {isOwner && (
                   <button
                     onClick={() => {

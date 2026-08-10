@@ -13,16 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
 import { Avatar } from "@/components/ui/avatar";
-import { Loader2, Check, ImagePlus, Upload, Sparkles } from "lucide-react";
-import { AVATAR_COLORS, generateAvatarSvg } from "@/lib/avatar-utils";
+import { Check, ImagePlus, Upload, Sparkles, Pencil } from "lucide-react";
+import { PRESET_AVATARS } from "@/lib/avatar-utils";
+import { useSettings } from "@/lib/settings-context";
 
 export function WorkspaceSettingsDetails() {
   const params = useParams();
   const workspaceId = params.workspaceId as string;
+  const { isAdmin } = useSettings();
 
   const { data: workspace, isLoading } = useGetWorkspaceQuery(workspaceId);
   const [updateWorkspace, { isLoading: isUpdating }] = useUpdateWorkspaceMutation();
-  const [uploadAvatar, { isLoading: isAvatarUploading }] = useUploadWorkspaceAvatarMutation();
+  const [uploadAvatar] = useUploadWorkspaceAvatarMutation();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -80,11 +82,11 @@ export function WorkspaceSettingsDetails() {
     }
   }
 
-  async function handlePickPreset(color: string) {
+  async function handlePickPreset(preset: string) {
     try {
       await updateWorkspace({
         workspaceId,
-        avatar: generateAvatarSvg(name || workspace?.name || "", color),
+        avatar: preset,
       }).unwrap();
       setShowAvatarPicker(false);
     } catch {
@@ -127,73 +129,90 @@ export function WorkspaceSettingsDetails() {
           <div>
             <p className="text-sm font-semibold text-text">Workspace icon</p>
             <p className="mt-1 text-sm text-text-tertiary">
-              Pick a color or upload an image (PNG/JPG, up to 5MB).
+              {isAdmin ? "Pick a preset icon or upload your own image (PNG/JPG, up to 5MB)." : "Set by a workspace admin."}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Avatar
-                name={workspace.name}
-                avatar={workspace.avatar}
-                size="lg"
-                className={isAvatarUploading ? "opacity-50" : undefined}
-              />
-              {isAvatarUploading && (
-                <Loader2 className="absolute inset-0 m-auto h-5 w-5 animate-spin text-primary" />
-              )}
-            </div>
-            <Button variant="outline" size="sm" onClick={() => { setAvatarError(null); setShowAvatarPicker(true); }}>
-              Change
-            </Button>
+            <Avatar name={workspace.name} avatar={workspace.avatar} size="lg" />
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={() => { setAvatarError(null); setShowAvatarPicker(true); }}>
+                <Pencil className="mr-1 h-3.5 w-3.5" /> Change
+              </Button>
+            )}
           </div>
         </div>
 
-        <Input
-          label="Name"
-          value={name}
-          onChange={(e) => { setName(e.target.value); setNameError(null); }}
-          error={nameError || undefined}
-          placeholder="Acme Inc."
-        />
+        {isAdmin ? (
+          <>
+            <Input
+              label="Name"
+              value={name}
+              onChange={(e) => { setName(e.target.value); setNameError(null); }}
+              error={nameError || undefined}
+              placeholder="Acme Inc."
+            />
 
-        <Input
-          label="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="What is this workspace about?"
-        />
+            <Input
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What is this workspace about?"
+            />
 
-        <WorkspaceTypePicker value={template} onChange={setTemplate} />
+            <WorkspaceTypePicker value={template} onChange={setTemplate} />
 
-        {saveState === "success" && (
-          <p className="flex items-center gap-1.5 text-sm text-green-600">
-            <Check className="h-4 w-4" /> Changes saved
-          </p>
+            {saveState === "success" && (
+              <p className="flex items-center gap-1.5 text-sm text-green-600">
+                <Check className="h-4 w-4" /> Changes saved
+              </p>
+            )}
+            {saveState === "error" && (
+              <p className="text-sm text-danger">Could not save changes. Please try again.</p>
+            )}
+
+            <Button type="submit" isLoading={isUpdating}>Save changes</Button>
+          </>
+        ) : (
+          <dl className="space-y-4">
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Name</dt>
+              <dd className="mt-1 text-sm font-medium text-text">{workspace.name}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Description</dt>
+              <dd className="mt-1 text-sm text-text-secondary">{workspace.description || "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Working style</dt>
+              <dd className="mt-1 text-sm text-text-secondary">
+                {workspace.template === "SCRUM" ? "Scrum" : "Kanban"}
+              </dd>
+            </div>
+          </dl>
         )}
-        {saveState === "error" && (
-          <p className="text-sm text-danger">Could not save changes. Please try again.</p>
-        )}
-
-        <Button type="submit" isLoading={isUpdating}>Save changes</Button>
       </form>
 
       <Dialog open={showAvatarPicker} onClose={() => setShowAvatarPicker(false)} title="Change workspace icon" className="max-w-md">
         <div className="space-y-5">
           <div>
             <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
-              <Sparkles className="h-3.5 w-3.5" /> Preset colors
+              <Sparkles className="h-3.5 w-3.5" /> Preset icons
             </p>
-            <div className="grid grid-cols-5 gap-3">
-              {AVATAR_COLORS.map((color) => (
+            <div className="grid grid-cols-4 gap-3">
+              {PRESET_AVATARS.map((preset) => (
                 <button
-                  key={color}
+                  key={preset}
                   type="button"
-                  onClick={() => handlePickPreset(color)}
-                  title="Use this color"
-                  className="rounded-lg border border-border-light transition-transform hover:scale-105"
+                  onClick={() => handlePickPreset(preset)}
+                  title="Use this icon"
+                  className={`rounded-lg border border-border-light transition-transform hover:scale-105 ${
+                    workspace.avatar === preset
+                      ? "border-primary ring-2 ring-primary/40"
+                      : ""
+                  }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={generateAvatarSvg(name || workspace.name, color)} alt="preset" className="h-full w-full rounded-lg" />
+                  <img src={preset} alt="preset" className="h-full w-full rounded-lg" />
                 </button>
               ))}
             </div>
@@ -226,7 +245,7 @@ export function WorkspaceSettingsDetails() {
 
       <p className="flex items-center gap-1.5 text-xs text-text-tertiary">
         <Check className="h-3.5 w-3.5" />
-        The default icon is generated from your workspace name — change it anytime.
+        New workspaces get a preset icon automatically — swap it anytime.
       </p>
     </div>
   );
