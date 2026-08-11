@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useGetWorkspaceQuery, useGetMembersQuery } from "@/store/workspaceApi";
-import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
+import { useGetWorkspaceProjectsQuery, useGetOrSeedDefaultProjectMutation } from "@/store/projectApi";
 import { useGetWorkspaceTasksQuery } from "@/store/taskApi";
-import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
+import { CreateTaskDialog, type TaskPrefill } from "@/components/tasks/create-task-dialog";
 import { SkeletonSummaryCards } from "@/components/ui/skeleton";
 import { AITicketWriter } from "@/components/ai/ai-ticket-writer";
 import { AITriage } from "@/components/ai/ai-triage";
@@ -21,19 +21,37 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
   const { data: members = [], isLoading: membersLoading } = useGetMembersQuery(workspaceId);
   const { data: projects = [], isLoading: projectsLoading } = useGetWorkspaceProjectsQuery(workspaceId);
   const { data: tasks = [], isLoading: tasksLoading } = useGetWorkspaceTasksQuery(workspaceId);
+  const [ensureDefault, { isLoading: isEnsuring }] = useGetOrSeedDefaultProjectMutation();
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [taskPrefill, setTaskPrefill] = useState<TaskPrefill | null>(null);
   const [ticketWriterOpen, setTicketWriterOpen] = useState(false);
   const [triageOpen, setTriageOpen] = useState(false);
   const [sprintPlannerOpen, setSprintPlannerOpen] = useState(false);
 
   const projectId = projects.length > 0 ? projects[0].id : "";
 
+  useEffect(() => {
+    if (!projectsLoading && projects.length === 0) {
+      ensureDefault(workspaceId);
+    }
+  }, [projectsLoading, projects.length, workspaceId, ensureDefault]);
+
+  const openCreateDialog = useCallback((prefill: TaskPrefill | null = null) => {
+    setTaskPrefill(prefill);
+    setCreateDialogOpen(true);
+  }, []);
+
+  const handleCloseCreateDialog = useCallback(() => {
+    setCreateDialogOpen(false);
+    setTaskPrefill(null);
+  }, []);
+
   const openTasks = tasks.filter(
     (t) => t.status === "todo" || t.status === "in_progress" || t.status === "in_review"
   ).length;
 
-  const loading = membersLoading || projectsLoading || tasksLoading;
+  const loading = membersLoading || projectsLoading || tasksLoading || isEnsuring;
 
   if (loading) {
     return (
@@ -82,7 +100,7 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
           <h2 className="mb-3 text-sm font-semibold text-[#121C28]">Quick Actions</h2>
           <div className="space-y-2">
             <button
-              onClick={() => setCreateDialogOpen(true)}
+              onClick={() => openCreateDialog()}
               className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -150,8 +168,9 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
 
       <CreateTaskDialog
         open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
+        onClose={handleCloseCreateDialog}
         workspaceId={workspaceId}
+        prefill={taskPrefill}
       />
 
       {projectId && (
@@ -161,14 +180,29 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
             onClose={() => setTicketWriterOpen(false)}
             projectId={projectId}
             onApply={(result) => {
-              setCreateDialogOpen(true);
+              openCreateDialog({
+                title: result.title,
+                type: result.type as TaskPrefill["type"],
+                description: result.acceptanceCriteria.length > 0
+                  ? `${result.description}\n\n**Acceptance Criteria**\n${result.acceptanceCriteria.map((c) => `- ${c}`).join("\n")}`
+                  : result.description,
+                labels: result.suggestedLabels,
+              });
             }}
           />
           <AITriage
             open={triageOpen}
             onClose={() => setTriageOpen(false)}
             workspaceId={workspaceId}
-            onApply={() => {}}
+            onApply={(result) => {
+              openCreateDialog({
+                title: result.title,
+                description: result.description,
+                type: result.suggestedType as TaskPrefill["type"],
+                priority: result.suggestedPriority as TaskPrefill["priority"],
+                labels: result.suggestedLabels,
+              });
+            }}
           />
           <AISprintPlanner
             open={sprintPlannerOpen}

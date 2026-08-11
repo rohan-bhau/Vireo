@@ -13,6 +13,93 @@ interface Message {
   timestamp?: string;
 }
 
+function formatHistoryResponse(response: string): string {
+  let text = response.trim();
+
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) text = fenced[1].trim();
+
+  let parsed: Record<string, unknown> | null = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return response.trim();
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return response.trim();
+  }
+
+  const lines: string[] = [];
+  const push = (label: string, value: unknown, bullet = false) => {
+    if (value === undefined || value === null || value === "") return;
+    if (typeof value === "string") {
+      lines.push(bullet ? `• ${value}` : `${label}: ${value}`);
+    } else if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item && typeof item === "object") {
+          const obj = item as Record<string, unknown>;
+          const taskKey = obj.taskKey;
+          const reason = obj.reason;
+          lines.push(`• ${taskKey ? `${taskKey} — ` : ""}${reason ?? ""}`.trim());
+        } else if (typeof item === "string" && item.trim()) {
+          lines.push(bullet ? `• ${item}` : item);
+        }
+      });
+    }
+  };
+
+  if (typeof parsed.summary === "string") {
+    lines.push(parsed.summary);
+  }
+  push("", parsed.keyPoints, true);
+  if (typeof parsed.suggestedAction === "string") {
+    lines.push(`Next action: ${parsed.suggestedAction}`);
+  }
+
+  if (typeof parsed.description === "string") {
+    lines.push(parsed.description);
+  }
+  if (Array.isArray(parsed.acceptanceCriteria)) {
+    lines.push("Acceptance criteria:");
+    (parsed.acceptanceCriteria as string[]).forEach((c) => lines.push(`• ${c}`));
+  }
+  if (Array.isArray(parsed.suggestedLabels) && (parsed.suggestedLabels as string[]).length > 0) {
+    lines.push(`Labels: ${(parsed.suggestedLabels as string[]).join(", ")}`);
+  }
+
+  if (typeof parsed.reasoning === "string") {
+    lines.push(parsed.reasoning);
+  }
+  if (typeof parsed.suggestedType === "string") {
+    lines.push(`Type: ${parsed.suggestedType}`);
+  }
+  if (typeof parsed.suggestedPriority === "string") {
+    lines.push(`Priority: ${parsed.suggestedPriority}`);
+  }
+  if (typeof parsed.suggestedAssignee === "string" && parsed.suggestedAssignee) {
+    lines.push(`Assignee: ${parsed.suggestedAssignee}`);
+  }
+
+  if (typeof parsed.goal === "string") {
+    lines.push(`Sprint goal: ${parsed.goal}`);
+  }
+  if (typeof parsed.estimatedPoints === "number") {
+    lines.push(`Estimated points: ${parsed.estimatedPoints}`);
+  }
+  if (Array.isArray(parsed.suggestedTasks)) {
+    lines.push("Suggested tasks:");
+    push("", parsed.suggestedTasks);
+  }
+
+  const formatted = lines.filter(Boolean).join("\n").trim();
+  return formatted.length > 0 ? formatted : response.trim();
+}
+
+function historyPreview(response: string): string {
+  return formatHistoryResponse(response).replace(/\s+/g, " ").trim();
+}
+
 function AIAssistantContent() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -88,14 +175,14 @@ function AIAssistantContent() {
                     setMessages((prev) => [
                       ...prev,
                       { role: "user" as const, content: item.prompt },
-                      { role: "assistant" as const, content: item.response },
+                      { role: "assistant" as const, content: formatHistoryResponse(item.response) },
                     ]);
                     setShowHistory(false);
                   }}
                   className="rounded-lg px-2 py-2 text-left hover:bg-[#F8F9FF] transition-colors"
                 >
                   <p className="text-xs font-medium text-[#121C28] line-clamp-1">{item.prompt}</p>
-                  <p className="text-[11px] text-[#737686] line-clamp-1 mt-0.5">{item.response}</p>
+                  <p className="text-[11px] text-[#737686] line-clamp-1 mt-0.5">{historyPreview(item.response)}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <Clock className="h-3 w-3 text-[#C3C6D7]" />
                     <span className="text-[10px] text-[#C3C6D7]">{item.feature}</span>

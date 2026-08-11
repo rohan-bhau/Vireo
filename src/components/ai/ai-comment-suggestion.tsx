@@ -27,9 +27,9 @@ export function AICommentSuggestion({
       const context = threadContext
         ? `Context: ${threadContext.substring(0, 1000)}\n\n`
         : "";
-      const prompt = `You are a professional project management assistant. ${context}Suggest a professional reply for this comment thread on task ${taskKey}. The user is drafting: "${commentText || "(empty - suggest a general response)"}". Provide a single, concise, professional response (2-3 sentences).`;
+      const prompt = `You are a professional project management assistant. ${context}Suggest a professional reply for this comment thread on task ${taskKey}. The user is drafting: "${commentText || "(empty - suggest a general response)"}". Return ONLY the reply text itself, with no preamble, no labels, no quotes, no "Here is" type introductions. Just the plain response (2-3 sentences).`;
       const res = await chat({ message: prompt, context: { taskKey } }).unwrap();
-      setSuggestion(res.reply);
+      setSuggestion(cleanSuggestion(res.reply));
     } catch {
       setError("Failed to generate suggestion.");
     }
@@ -91,4 +91,21 @@ export function AICommentSuggestion({
       )}
     </button>
   );
+}
+
+function cleanSuggestion(text: string): string {
+  let value = text.trim();
+  const preamblePatterns = [
+    /^(here(?:'s| is) (?:a |an )?(?:professional|suggested|polite)?[\s\S]{0,80}?[:.]\s*)/i,
+    /^(you can (?:use|say)[\s\S]{0,60}?[:.]\s*)/i,
+    /^(sure,?\s+|absolutely[.,]?\s+)/i,
+    /^(reply:?\s*)/i,
+    /^(suggested reply:?\s*)/i,
+  ];
+  for (const pattern of preamblePatterns) {
+    value = value.replace(pattern, "");
+  }
+  value = value.replace(/^["'`]+/, "").replace(/["'`]+$/, "").trim();
+  if (value.length === 0) return text.trim();
+  return value;
 }

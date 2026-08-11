@@ -12,6 +12,8 @@ interface AITriageProps {
   onClose: () => void;
   workspaceId: string;
   onApply: (result: {
+    title: string;
+    description: string;
     suggestedAssignee: string | null;
     suggestedPriority: string;
     suggestedLabels: string[];
@@ -45,7 +47,11 @@ export function AITriage({ open, onClose, workspaceId, onApply }: AITriageProps)
 
   function handleApply() {
     if (result) {
-      onApply(result);
+      onApply({
+        title: taskTitle.trim(),
+        description: taskDescription,
+        ...result,
+      });
       onClose();
     }
   }

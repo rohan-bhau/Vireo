@@ -579,6 +579,14 @@ name={ws.name}
             active={isDashboardActive()}
           />
 
+          {/* AI Assistant */}
+          <SidebarNavItem
+            href="/ai-assistant"
+            icon={Sparkles}
+            label="AI Assistant"
+            active={pathname.startsWith("/ai-assistant")}
+          />
+
           {/* Projects */}
           {visibleSections.projects && isInWorkspace && (
             <CollapsibleSection

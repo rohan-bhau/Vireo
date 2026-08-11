@@ -11,7 +11,13 @@ interface AITicketWriterProps {
   open: boolean;
   onClose: () => void;
   projectId: string;
-  onApply: (result: { description: string; acceptanceCriteria: string[]; suggestedLabels: string[] }) => void;
+  onApply: (result: {
+    title: string;
+    type: string;
+    description: string;
+    acceptanceCriteria: string[];
+    suggestedLabels: string[];
+  }) => void;
 }
 
 const TYPES = [
@@ -41,7 +47,11 @@ export function AITicketWriter({ open, onClose, projectId, onApply }: AITicketWr
 
   function handleApply() {
     if (result) {
-      onApply(result);
+      onApply({
+        title: title.trim(),
+        type,
+        ...result,
+      });
       onClose();
     }
   }

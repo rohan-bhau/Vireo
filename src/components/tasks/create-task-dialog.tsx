@@ -34,6 +34,15 @@ interface CreateTaskDialogProps {
   boardId?: string;
   columnId?: string;
   editTask?: Task | null;
+  prefill?: TaskPrefill | null;
+}
+
+export interface TaskPrefill {
+  title?: string;
+  description?: string;
+  type?: TaskType;
+  priority?: TaskPriority;
+  labels?: string[];
 }
 
 const ISSUE_TYPES: { value: TaskType; label: string }[] = [
@@ -67,6 +76,7 @@ export function CreateTaskDialog({
   boardId,
   columnId,
   editTask,
+  prefill,
 }: CreateTaskDialogProps) {
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
@@ -181,9 +191,16 @@ export function CreateTaskDialog({
       } else {
         resetFields();
         setSelectedProjectId(resolveDefaultProject());
+        if (prefill) {
+          if (prefill.title) setTitle(prefill.title);
+          if (prefill.description !== undefined) setDescription(prefill.description);
+          if (prefill.type) setType(prefill.type);
+          if (prefill.priority) setPriority(prefill.priority);
+          if (prefill.labels && prefill.labels.length > 0) setLabels(prefill.labels);
+        }
       }
     }
-  }, [editTask, open, resetFields, resolveDefaultProject]);
+  }, [editTask, open, resetFields, resolveDefaultProject, prefill]);
 
   async function handleSubmit() {
     if (!title.trim() || submitting) return;
