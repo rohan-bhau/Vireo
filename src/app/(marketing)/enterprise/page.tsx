@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Building2, ShieldCheck, UserCheck, Globe, Server, Headset, ChartNoAxesColumn } from "lucide-react";
 import { PageHero } from "@/components/sections/marketing/page-hero";
+import { FaqSection } from "@/components/sections/marketing/faq-section";
 
 const features = [
   {
@@ -116,6 +117,18 @@ export default function EnterprisePage() {
           </motion.div>
         </div>
       </section>
+
+      <FaqSection
+        faqs={[
+          { q: "What's the minimum team size for Enterprise?", a: "Enterprise is designed for organisations with 100+ users, but teams below that can still unlock SSO, audit logs, and self-hosting through a Business plan with an add-on." },
+          { q: "Can we migrate from Jira, ServiceNow, or a custom system?", a: "Yes. We provide guided migration tooling, CSV/JSON import, and full REST API access. Our team will build a migration plan alongside yours to minimise downtime." },
+          { q: "What deployment options are available?", a: "Vireo Cloud with your choice of EU or US residency, or self-hosted on your own AWS, GCP, Azure, or on-premises infrastructure with dedicated hosting and monitoring." },
+          { q: "What does the 99.9% uptime SLA include?", a: "It covers availability of the Vireo cloud service, with credits if we miss the target, plus proactive monitoring and priority incident notification to your team." },
+          { q: "Can we keep our data for compliance audits?", a: "Audit logs are retained for 365 days on paid plans, and full workspace exports are available at any time. Data deletion and retention policies can be configured from the admin console." },
+        ]}
+        eyebrow="Enterprise FAQ"
+        title="Questions about going enterprise"
+      />
     </div>
   );
 }

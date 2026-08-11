@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Shield, Lock, Eye, KeyRound, UserCheck, Database, FileCheck, Globe } from "lucide-react";
 import { PageHero } from "@/components/sections/marketing/page-hero";
+import { FaqSection } from "@/components/sections/marketing/faq-section";
 
 const pillars = [
   {
@@ -104,6 +105,18 @@ export default function SecurityPage() {
           </motion.div>
         </div>
       </section>
+
+      <FaqSection
+        faqs={[
+          { q: "Where is Vireo hosted and where does my data live?", a: "Vireo runs on AWS and Google Cloud. On Business and Enterprise plans you choose EU or US data residency, with encrypted backups stored across multiple availability zones." },
+          { q: "Do you support SSO and SCIM provisioning?", a: "Yes. SAML and OIDC single sign-on with SCIM provisioning is available for Okta, Azure AD, and Google Workspace, plus enforced 2FA on every plan." },
+          { q: "How do you handle security vulnerabilities?", a: "We run annual penetration tests and maintain a responsible-disclosure bug bounty program. Critical issues are patched within 72 hours of confirmation." },
+          { q: "Can we get a SOC 2 report and DPA?", a: "Yes — the SOC 2 Type II report, DPA, and sub-processor list are available under NDA. Reach out at security@vireo.app for the review package." },
+          { q: "Can Vireo be self-hosted for air-gapped environments?", a: "Enterprise self-hosted deployment on your own infrastructure — AWS, GCP, Azure, or on-premises — is available with dedicated hosting and SLA support." },
+        ]}
+        eyebrow="Security FAQ"
+        title="Questions about our security posture"
+      />
     </div>
   );
 }

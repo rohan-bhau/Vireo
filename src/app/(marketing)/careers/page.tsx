@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Globe, Users, Lightbulb, MapPin, ArrowUpRight } from "lucide-react";
 import { PageHero } from "@/components/sections/marketing/page-hero";
+import { FaqSection } from "@/components/sections/marketing/faq-section";
 
 const roles = [
   {
@@ -135,6 +136,17 @@ export default function CareersPage() {
           </motion.div>
         </div>
       </section>
+
+      <FaqSection
+        faqs={[
+          { q: "Does Vireo hire remotely?", a: "Yes. We're remote-first and async by default, hiring across EU and global timezones with a few well-placed windows for real-time collaboration." },
+          { q: "What does the interview process look like?", a: "A short intro call, a technical conversation with your future team, then a paid working session on a real problem. No whiteboard hazing and no week-long take-homes." },
+          { q: "Do you hire junior engineers?", a: "Today we hire senior specialists, but we sponsor bootcamps and maintain 38 open-source libraries where junior engineers regularly contribute and get mentored." },
+          { q: "How much ownership do I get?", a: "Full. You take a feature from design review through release notes and the changelog — you'll see your work shipped, not thrown over a wall." },
+        ]}
+        eyebrow="Working at Vireo"
+        title="Questions about joining the team"
+      />
     </div>
   );
 }

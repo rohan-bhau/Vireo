@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Zap, GitBranch, MessageSquare, Palette, Shield, Bug, LineChart, Sparkles } from "lucide-react";
 import { PageHero } from "@/components/sections/marketing/page-hero";
+import { FaqSection } from "@/components/sections/marketing/faq-section";
 
 interface Integration {
   name: string;
@@ -119,6 +120,18 @@ export default function IntegrationsPage() {
           </motion.div>
         </div>
       </section>
+
+      <FaqSection
+        faqs={[
+          { q: "How do I connect an integration?", a: "Open Workspace settings and go to the Integrations tab, pick the tool you want, and follow the OAuth or webhook flow. Most integrations are connected in under two minutes." },
+          { q: "Do you support custom webhooks?", a: "Yes. Webhooks deliver events for issues, comments, sprints, releases, and more to your own systems, with per-event delivery logs and automatic retries." },
+          { q: "Can I sync issues with GitHub?", a: "Yes. The GitHub integration links branches, commits, and pull requests to issues, and can auto-close issues when a linked PR merges. GitLab behaves the same way." },
+          { q: "Is there a public API?", a: "A full REST API covers users, workspaces, projects, issues, sprints, attachments, and automation — all documented at /docs#api and authenticated with API tokens." },
+          { q: "Which identity providers work with SSO?", a: "Okta, Azure AD, and Google Workspace are supported via SAML and OIDC, with SCIM provisioning to keep members in sync automatically." },
+        ]}
+        eyebrow="Integrations FAQ"
+        title="Questions about connecting tools"
+      />
     </div>
   );
 }

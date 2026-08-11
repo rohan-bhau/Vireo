@@ -3,8 +3,50 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useParams, notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Shield, Users, Sparkles, Bug, Columns, IterationCcw, Route, BarChart3, MessageSquareMore, RefreshCw, GitBranch, Workflow, Lock, ChevronDown } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Shield, Users, Sparkles, Bug, Columns, IterationCcw, Route, BarChart3, MessageSquareMore, RefreshCw, GitBranch, Workflow, Lock } from "lucide-react";
 import { productCategories, getCategoryById, getItemBySlug, getCategoryForSlug } from "@/lib/product-data";
+import { FaqSection, type FaqItem } from "@/components/sections/marketing/faq-section";
+
+const categoryColors: Record<string, string> = {
+  features: "#2563EB",
+  developers: "#0EA5E9",
+  "product-manager": "#7C3AED",
+  "it-professionals": "#059669",
+  "business-teams": "#D97706",
+  "it-teams": "#DB2777",
+};
+
+function buildCategoryFaqs(category: { id: string; title: string; description: string; heroTitle?: string }): FaqItem[] {
+  return [
+    {
+      q: `How does ${category.title.toLowerCase()} actually help in practice?`,
+      a: `${category.heroTitle || category.title}. ${category.description}. Most teams set up a workspace and go from signup to a working project in under ten minutes — no configuration marathon required.`,
+    },
+    {
+      q: "Is migrating from our current tool painful?",
+      a: "Not at all. We offer CSV and JSON import, a full REST API for custom migrations, and dedicated guided import from Jira, Linear, and Trello for team-sized migrations.",
+    },
+    {
+      q: "What does Vireo cost?",
+      a: "There's a generous free tier with unlimited members and 3 active projects. Paid plans add advanced reports, automations, AI capabilities, and enterprise security. See the Pricing page for the full breakdown.",
+    },
+    {
+      q: "Can a large organisation standardise on Vireo?",
+      a: "Yes. Workspaces, shared projects, SSO, SCIM provisioning, granular permissions, and immutable audit logs make Vireo suitable for teams from five to five thousand people.",
+    },
+  ];
+}
+
+const itemFaqs: FaqItem[] = [
+  {
+    q: "Is this included in the free plan?",
+    a: "Core project management features are available on the free tier. Advanced capabilities such as AI assistance, custom dashboards, and enterprise security are part of paid plans — check the Pricing page for the full breakdown.",
+  },
+  {
+    q: "How do I get this configured quickly?",
+    a: "The interactive Guide walks you through the whole product end to end, the Docs cover every configuration option, and our support team replies within one business day.",
+  },
+];
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -287,24 +329,29 @@ export default function ProductArticlePage() {
 
         <section className="border-y border-[#C3C6D7]/20 bg-white py-12">
           <div className="mx-auto max-w-7xl px-6">
-            <p className="mb-8 text-center text-xs font-bold uppercase tracking-[0.12em] text-[#737686]">
-              What&apos;s included
-            </p>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {category.items.map((catItem, idx) => {
-                const Icon = iconMap[catItem.slug] || Check;
-                return (
-                  <Link key={catItem.slug} href={`/product/${catItem.slug}`}>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: idx * 0.08 }}
-                      whileHover={{ y: -4, scale: 1.02 }}
-                      className="rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
-                    >
-                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
-                        <Icon className="h-4 w-4" />
-                      </div>
+<p className="mb-8 text-center text-xs font-bold uppercase tracking-[0.12em] text-[#737686]">
+                  What&apos;s included
+                </p>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                  {category.items.map((catItem, idx) => {
+                    const Icon = iconMap[catItem.slug] || Check;
+                    const accent = categoryColors[category.id] || "#004AC6";
+                    return (
+                      <Link key={catItem.slug} href={`/product/${catItem.slug}`} className="h-full">
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: idx * 0.08 }}
+                          whileHover={{ y: -4, scale: 1.02 }}
+                          className="flex h-full flex-col rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
+                          style={{ borderColor: `${accent}1F` }}
+                        >
+                          <div
+                            className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg"
+                            style={{ backgroundColor: `${accent}1A`, color: accent }}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </div>
                       <h3 className="text-base font-semibold text-[#121C28]">{catItem.title}</h3>
                       <p className="mt-1.5 text-sm leading-relaxed text-[#434655]">
                         {catItem.description}
@@ -456,50 +503,10 @@ export default function ProductArticlePage() {
               </div>
             </section>
 
-            <section className="bg-white py-16 md:py-20">
-              <div className="mx-auto max-w-7xl px-6">
-                <motion.div
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-80px" }}
-                  variants={sectionVariants}
-                  className="mb-12 text-center"
-                >
-                  <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white px-4 py-1.5 text-sm font-medium text-[#005DA7] shadow-sm">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#005DA7]" />
-                    FAQ
-                  </div>
-                  <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
-                    Frequently asked questions
-                  </h2>
-                </motion.div>
-                {[
-                  { q: "How is Vireo different from Jira?", a: "Vireo combines the workflow rigor of Jira with modern real-time collaboration and built-in AI assistance — without the complexity of a decade-old codebase." },
-                  { q: "Can I migrate from my current tool?", a: "Yes. We offer CSV/JSON import, a REST API for custom migrations, and dedicated support for team-size imports from Jira, Linear, and Trello." },
-                  { q: "Is there a free plan?", a: "Yes. Our free tier includes unlimited members, 3 active projects, and core board/backlog features. Upgrade when you need advanced reports or AI capabilities." },
-                  { q: "Do you offer on-premise deployment?", a: "Enterprise plans include self-hosted options with dedicated infrastructure, SSO, and SLA guarantees. Contact sales for details." },
-                ].map((faq, idx) => (
-                  <motion.div
-                    key={faq.q}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="mx-auto max-w-3xl border-b border-[#C3C6D7]/20 py-5 last:border-0"
-                  >
-                    <details className="group">
-                      <summary className="flex cursor-pointer items-center justify-between text-base font-semibold text-[#121C28]">
-                        {faq.q}
-                        <ChevronDown className="h-5 w-5 text-[#737686] transition-transform group-open:rotate-180" />
-                      </summary>
-                      <p className="mt-3 text-sm leading-relaxed text-[#434655]">{faq.a}</p>
-                    </details>
-                  </motion.div>
-                ))}
-              </div>
-            </section>
-          </>
+            </>
         )}
+
+        <FaqSection faqs={buildCategoryFaqs(category)} eyebrow="FAQ" />
 
         <CTASection />
       </div>
@@ -614,14 +621,14 @@ export default function ProductArticlePage() {
               {relatedItems.map((related, idx) => {
                 const Icon = iconMap[related.slug] || Check;
                 return (
-                  <Link key={related.slug} href={`/product/${related.slug}`}>
+                  <Link key={related.slug} href={`/product/${related.slug}`} className="h-full">
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: "-80px" }}
                       transition={{ delay: idx * 0.08 }}
                       whileHover={{ y: -4 }}
-                      className="flex items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
+                      className="flex h-full items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
                         <Icon className="h-4 w-4" />
@@ -638,6 +645,8 @@ export default function ProductArticlePage() {
           </div>
         </section>
       )}
+
+      <FaqSection faqs={itemFaqs} eyebrow="Quick answers" />
 
       <CTASection />
     </div>

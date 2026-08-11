@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Compass, Users, HeartHandshake, Sparkles } from "lucide-react";
 import { PageHero } from "@/components/sections/marketing/page-hero";
+import { FaqSection } from "@/components/sections/marketing/faq-section";
 
 const values = [
   {
@@ -100,6 +101,17 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <FaqSection
+        faqs={[
+          { q: "What does Vireo actually do?", a: "Vireo is a Jira-class project management platform — boards, backlogs, sprints, reports, automation, and built-in AI assistance — designed for modern software teams. It's real-time, collaborative, and configurable." },
+          { q: "Is Vireo free to use?", a: "Yes. The free tier includes unlimited members and 3 active projects with core board and backlog features. Paid plans add advanced reports, automation, AI, and enterprise security." },
+          { q: "How large can Vireo scale?", a: "From two-person startups to financial services companies running thousands of seats. Today Vireo is used by over 2,500 engineering teams." },
+          { q: "Where is the team based?", a: "Vireo is founded in Amsterdam with 60+ people across 12 countries. We work remote-first and async by default." },
+        ]}
+        eyebrow="About Vireo"
+        title="Questions about Vireo the company"
+      />
     </div>
   );
 }

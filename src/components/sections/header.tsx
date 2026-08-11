@@ -6,19 +6,28 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { LogOut, ChevronDown, Check, ArrowRight, Menu, X, ChevronRight, LayoutDashboard } from "lucide-react";
+import { LogOut, ChevronDown, Check, ArrowRight, Menu, X, ChevronRight, LayoutDashboard, Code, Route, Server, ChartNoAxesColumn, Rocket, Boxes, Code2, NotebookPen, ShieldCheck, Building2, ServerCog } from "lucide-react";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
 import { productCategories, type ProductCategory } from "@/lib/product-data";
+import { solutionCategories, type SolutionCategory } from "@/lib/solutions-data";
 import { NotificationBell } from "@/components/nav/notification-bell";
 
 const otherNavItems = [
-  { label: "Solutions", href: "/solutions" },
   { label: "Pricing", href: "/pricing" },
   { label: "Docs", href: "/docs" },
   { label: "Guide", href: "/guide" },
 ];
+
+const productMenuConfig: Record<string, { icon: typeof Boxes; color: string; gradient: string }> = {
+  features: { icon: Boxes, color: "#2563EB", gradient: "from-[#2563EB] to-[#1d4ed8]" },
+  developers: { icon: Code2, color: "#0EA5E9", gradient: "from-[#0EA5E9] to-[#0284c7]" },
+  "product-manager": { icon: NotebookPen, color: "#7C3AED", gradient: "from-[#7C3AED] to-[#6d28d9]" },
+  "it-professionals": { icon: ShieldCheck, color: "#059669", gradient: "from-[#059669] to-[#047857]" },
+  "business-teams": { icon: Building2, color: "#D97706", gradient: "from-[#D97706] to-[#b45309]" },
+  "it-teams": { icon: ServerCog, color: "#DB2777", gradient: "from-[#DB2777] to-[#be185d]" },
+};
 
 function ProductMenu() {
   const pathname = usePathname();
@@ -51,6 +60,7 @@ function ProductMenu() {
   }
 
   const isActive = pathname.startsWith("/product");
+  const activeConfig = productMenuConfig[activeCategory.id] || productMenuConfig["features"];
 
   return (
     <div
@@ -75,66 +85,257 @@ function ProductMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.97 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[640px] overflow-hidden rounded-2xl border border-[#C3C6D7]/20 bg-white shadow-xl"
+            className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[720px] overflow-hidden rounded-2xl border border-[#C3C6D7]/20 bg-white shadow-xl"
           >
-            <div className="flex">
-              <div className="w-[200px] shrink-0 border-r border-[#C3C6D7]/10 bg-[#F8F9FF] p-2">
-                    {productCategories.map((cat) => {
-                      const isSelected = activeCategory.id === cat.id;
-                      return (
-                        <button
-                          key={cat.id}
-                          onMouseEnter={() => handleCategoryEnter(cat)}
-                          onClick={() => handleCategoryEnter(cat)}
-                          className={`flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
-                            isSelected
-                              ? "bg-white text-[#004AC6] shadow-sm"
-                              : "text-[#434655] hover:bg-white/60 hover:text-[#121C28]"
-                          }`}
-                        >
+            <div className="flex max-h-[min(520px,calc(100vh-120px))]">
+              <div className="w-[240px] shrink-0 border-r border-[#C3C6D7]/10 bg-[#F8F9FF] p-2">
+                <p className="px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wider text-[#737686]">
+                  Products
+                </p>
+                {productCategories.map((cat) => {
+                  const config = productMenuConfig[cat.id] || productMenuConfig["features"];
+                  const Icon = config.icon;
+                  const isSelected = activeCategory.id === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onMouseEnter={() => handleCategoryEnter(cat)}
+                      onClick={() => handleCategoryEnter(cat)}
+                      className={`flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                        isSelected
+                          ? "bg-white text-[#121C28] shadow-sm"
+                          : "text-[#434655] hover:bg-white/60 hover:text-[#121C28]"
+                      }`}
+                    >
                       <span
-                        className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                          isSelected ? "bg-[#004AC6]" : "bg-transparent"
-                        }`}
-                      />
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors"
+                        style={{
+                          backgroundColor: isSelected ? config.color : "#EAEDF4",
+                          color: isSelected ? "#FFFFFF" : "#737686",
+                        }}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
                       {cat.title}
                     </button>
                   );
                 })}
               </div>
-              <div className="flex-1 p-3">
-                <Link
-                  href={`/product/${activeCategory.id}`}
-                  className="mb-2 block cursor-pointer rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#737686] transition-colors hover:text-[#004AC6]"
-                  onClick={() => setOpen(false)}
-                >
-                  {activeCategory.title}
-                  <ArrowRight className="ml-1 inline h-3 w-3" />
-                </Link>
-                <div className="space-y-0.5">
-                  {activeCategory.items.map((item) => {
-                    const isItemActive = pathname === `/product/${item.slug}`;
-                    return (
-                      <Link
-                        key={item.slug}
-                        href={`/product/${item.slug}`}
-                        onClick={() => setOpen(false)}
-                        className={`flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 transition-colors ${
-                          isItemActive
-                            ? "bg-[#EEF4FF] text-[#004AC6]"
-                            : "text-[#434655] hover:bg-[#F8F9FF] hover:text-[#121C28]"
-                        }`}
+              <div className="min-w-0 flex-1 p-4">
+                <div className="relative flex h-full flex-col overflow-hidden rounded-xl bg-[#F1F4FB] p-5">
+                  <div
+                    className="pointer-events-none absolute -bottom-16 -right-16 h-44 w-44 rounded-full opacity-15"
+                    style={{ backgroundColor: activeConfig.color }}
+                  />
+                  <div className="relative">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
+                        style={{ backgroundColor: activeConfig.color }}
                       >
-                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#10B981]" />
-                        <div>
-                          <p className="text-sm font-semibold">{item.title}</p>
-                          <p className="mt-0.5 text-xs text-[#737686] line-clamp-1">
-                            {item.description}
-                          </p>
-                        </div>
+                        <activeConfig.icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-[#737686]">Product</p>
+                        <h3 className="text-base font-bold leading-tight text-[#121C28]">{activeCategory.title}</h3>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-[#434655]">
+                      {activeCategory.heroSubtitle || activeCategory.description}
+                    </p>
+                    <Link
+                      href={`/product/${activeCategory.id}`}
+                      onClick={() => setOpen(false)}
+                      className={`mt-4 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r ${activeConfig.gradient} px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:opacity-90`}
+                    >
+                      Explore {activeCategory.title}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+                <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                    {activeCategory.items.map((item) => {
+                      const isItemActive = pathname === `/product/${item.slug}`;
+                      return (
+                        <Link
+                          key={item.slug}
+                          href={`/product/${item.slug}`}
+                          onClick={() => setOpen(false)}
+                          className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 transition-colors ${
+                            isItemActive
+                              ? "bg-[#EEF4FF]"
+                              : "hover:bg-[#F8F9FF]"
+                          }`}
+                        >
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: activeConfig.color }} />
+                          <span className="truncate text-[13px] font-semibold text-[#434655]">{item.title}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  <Link
+                    href={`/product/${activeCategory.id}`}
+                    onClick={() => setOpen(false)}
+                    className="mt-auto inline-flex items-center gap-1.5 pt-3 text-xs font-semibold text-[#004AC6] transition-colors hover:text-[#003da8]"
+                  >
+                    View all {activeCategory.title}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const solutionMenuConfig: Record<string, { icon: typeof Code; color: string; gradient: string }> = {
+  "engineering-teams": { icon: Code, color: "#2563EB", gradient: "from-[#2563EB] to-[#1d4ed8]" },
+  "product-teams": { icon: Route, color: "#7C3AED", gradient: "from-[#7C3AED] to-[#6d28d9]" },
+  "it-operations": { icon: Server, color: "#059669", gradient: "from-[#059669] to-[#047857]" },
+  "business-leaders": { icon: ChartNoAxesColumn, color: "#D97706", gradient: "from-[#D97706] to-[#b45309]" },
+  startups: { icon: Rocket, color: "#DB2777", gradient: "from-[#DB2777] to-[#be185d]" },
+};
+
+function SolutionsMenu() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<SolutionCategory>(solutionCategories[0]);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleMouseEnter() {
+    clearTimeout(timeoutRef.current);
+    setOpen(true);
+  }
+
+  function handleMouseLeave() {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150);
+  }
+
+  function handleCategoryEnter(category: SolutionCategory) {
+    setActiveCategory(category);
+  }
+
+  const isActive = pathname.startsWith("/solutions");
+  const activeConfig = solutionMenuConfig[activeCategory.id] || solutionMenuConfig["engineering-teams"];
+
+  return (
+    <div
+      className="relative"
+      ref={menuRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Link
+        href="/solutions"
+        className={`cursor-pointer text-sm font-semibold transition-colors hover:text-[#004AC6] flex items-center gap-1 ${
+          isActive ? "text-[#004AC6]" : "text-[#434655]"
+        }`}
+      >
+        Solutions
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </Link>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.97 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[680px] overflow-hidden rounded-2xl border border-[#C3C6D7]/20 bg-white shadow-xl"
+          >
+            <div className="flex">
+              <div className="w-[240px] shrink-0 border-r border-[#C3C6D7]/10 bg-[#F8F9FF] p-2">
+                <p className="px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wider text-[#737686]">
+                  Solutions
+                </p>
+                {solutionCategories.map((cat) => {
+                  const config = solutionMenuConfig[cat.id] || solutionMenuConfig["engineering-teams"];
+                  const Icon = config.icon;
+                  const isSelected = activeCategory.id === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onMouseEnter={() => handleCategoryEnter(cat)}
+                      onClick={() => handleCategoryEnter(cat)}
+                      className={`flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                        isSelected
+                          ? "bg-white text-[#121C28] shadow-sm"
+                          : "text-[#434655] hover:bg-white/60 hover:text-[#121C28]"
+                      }`}
+                    >
+                      <span
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors"
+                        style={{
+                          backgroundColor: isSelected ? config.color : "#EAEDF4",
+                          color: isSelected ? "#FFFFFF" : "#737686",
+                        }}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                      {cat.title}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex-1 p-4">
+                <div className="relative h-full overflow-hidden rounded-xl bg-[#F1F4FB] p-6">
+                  <div
+                    className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 rounded-full opacity-15"
+                    style={{ backgroundColor: activeConfig.color }}
+                  />
+                  <div
+                    className="pointer-events-none absolute -right-6 top-8 h-24 w-24 rounded-full opacity-10 blur-sm"
+                    style={{ backgroundColor: activeConfig.color }}
+                  />
+                  <div className="relative">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
+                        style={{ backgroundColor: activeConfig.color }}
+                      >
+                        <activeConfig.icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-[#737686]">Best fit for</p>
+                        <h3 className="text-lg font-bold leading-tight text-[#121C28]">{activeCategory.title}</h3>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm leading-relaxed text-[#434655]">
+                      {activeCategory.heroSubtitle || activeCategory.description}
+                    </p>
+                    <div className="mt-5 flex flex-wrap items-center gap-3">
+                      <Link
+                        href={`/solutions/${activeCategory.id}`}
+                        onClick={() => setOpen(false)}
+                        className={`inline-flex items-center gap-2 rounded-lg bg-gradient-to-r ${activeConfig.gradient} px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:opacity-90`}
+                      >
+                        Explore {activeCategory.title}
+                        <ArrowRight className="h-4 w-4" />
                       </Link>
-                    );
-                  })}
+                      <Link
+                        href="/solutions"
+                        onClick={() => setOpen(false)}
+                        className="text-sm font-semibold text-[#737686] transition-colors hover:text-[#004AC6]"
+                      >
+                        View all solutions
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -151,6 +352,7 @@ function MobileMenu({ close }: { close: () => void }) {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [solutionsOpen, setSolutionsOpen] = useState(false);
 
   function handleLogout() {
     dispatch(logout());
@@ -294,8 +496,45 @@ function MobileMenu({ close }: { close: () => void }) {
 
                   <div className="my-3 border-t border-[#C3C6D7]/10" />
 
+                  <button
+                    onClick={() => setSolutionsOpen(!solutionsOpen)}
+                    className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
+                      pathname.startsWith("/solutions")
+                        ? "text-[#004AC6] bg-[#EEF4FF]"
+                        : "text-[#121C28] hover:bg-[#F8F9FF]"
+                    }`}
+                  >
+                    Solutions
+                    <ChevronDown className={`h-4 w-4 text-[#737686] transition-transform ${solutionsOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {solutionsOpen && (
+                    <div className="ml-4 space-y-0.5 border-l border-[#C3C6D7]/10 pl-3">
+                      {solutionCategories.map((cat) => {
+                        const isCatActive = pathname === `/solutions/${cat.id}`;
+                        return (
+                          <button
+                            key={cat.id}
+                            onClick={() => handleNavigate(`/solutions/${cat.id}`)}
+                            className={`flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                              isCatActive
+                                ? "text-[#004AC6] bg-[#EEF4FF]"
+                                : "text-[#434655] hover:bg-[#F8F9FF]"
+                            }`}
+                          >
+                            {cat.title}
+                          </button>
+                        );
+                      })}
+                      <button
+                        onClick={() => handleNavigate("/solutions")}
+                        className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs font-semibold text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#004AC6]"
+                      >
+                        View all solutions
+                      </button>
+                    </div>
+                  )}
+
                   {[
-                    { label: "Solutions", href: "/solutions" },
                     { label: "Pricing", href: "/pricing" },
                     { label: "Docs", href: "/docs" },
                     { label: "Guide", href: "/guide" },
@@ -380,7 +619,7 @@ export function Header() {
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           <Link
-            href={isAuthenticated ? "/dashboard" : "/"}
+            href="/"
             className="flex items-center gap-2"
           >
             <Image
@@ -394,6 +633,7 @@ export function Header() {
 
           <nav className="hidden items-center gap-8 md:flex">
             <ProductMenu />
+            <SolutionsMenu />
             {otherNavItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               return (

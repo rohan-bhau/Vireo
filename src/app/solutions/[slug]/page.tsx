@@ -224,13 +224,13 @@ export default function SolutionsArticlePage() {
               {category.items.map((catItem, idx) => {
                 const Icon = iconMap[catItem.slug] || Check;
                 return (
-                  <Link key={catItem.slug} href={`/solutions/${catItem.slug}`}>
+                  <Link key={catItem.slug} href={`/solutions/${catItem.slug}`} className="h-full">
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: idx * 0.08 }}
                       whileHover={{ y: -4, scale: 1.02 }}
-                      className="rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
+                      className="flex h-full flex-col rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
                     >
                       <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
                         <Icon className="h-4 w-4" />
@@ -491,14 +491,14 @@ export default function SolutionsArticlePage() {
               {relatedItems.map((related, idx) => {
                 const Icon = iconMap[related.slug] || Check;
                 return (
-                  <Link key={related.slug} href={`/solutions/${related.slug}`}>
+                  <Link key={related.slug} href={`/solutions/${related.slug}`} className="h-full">
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: "-80px" }}
                       transition={{ delay: idx * 0.08 }}
                       whileHover={{ y: -4 }}
-                      className="flex items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
+                      className="flex h-full items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
                         <Icon className="h-4 w-4" />
