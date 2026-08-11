@@ -1,11 +1,25 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useChatWithAIMutation, useGetAIHistoryQuery } from "@/store/aiApi";
-import { Sparkles, Send, User, Clock, History } from "lucide-react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import {
+  useChatWithAIMutation,
+  useGetAIConversationsQuery,
+  useLazyGetAIConversationQuery,
+  type AIConversationSummary,
+} from "@/store/aiApi";
+import {
+  Sparkles,
+  ArrowUp,
+  SquarePen,
+  Search,
+  ArrowLeft,
+  Menu,
+  MessageSquare,
+  X,
+} from "lucide-react";
 import { clsx } from "clsx";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { AISuggestedPrompts } from "@/components/ai/ai-suggested-prompts";
 
 interface Message {
   role: "user" | "assistant";
@@ -13,118 +27,225 @@ interface Message {
   timestamp?: string;
 }
 
-function formatHistoryResponse(response: string): string {
-  let text = response.trim();
+const SUGGESTED_PROMPTS = [
+  { icon: "TaskSquare", title: "What's happening this week?", prompt: "What's happening this week?" },
+  { icon: "ListChecks", title: "Show my tasks", prompt: "Show my tasks" },
+  { icon: "Sparkle", title: "Draft a ticket for dark mode", prompt: "Draft a ticket for dark mode" },
+  { icon: "Puzzle", title: "What's blocking my sprint?", prompt: "What's blocking my sprint?" },
+];
 
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced) text = fenced[1].trim();
-
-  let parsed: Record<string, unknown> | null = null;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    return response.trim();
-  }
-
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return response.trim();
-  }
-
-  const lines: string[] = [];
-  const push = (label: string, value: unknown, bullet = false) => {
-    if (value === undefined || value === null || value === "") return;
-    if (typeof value === "string") {
-      lines.push(bullet ? `• ${value}` : `${label}: ${value}`);
-    } else if (Array.isArray(value)) {
-      value.forEach((item) => {
-        if (item && typeof item === "object") {
-          const obj = item as Record<string, unknown>;
-          const taskKey = obj.taskKey;
-          const reason = obj.reason;
-          lines.push(`• ${taskKey ? `${taskKey} — ` : ""}${reason ?? ""}`.trim());
-        } else if (typeof item === "string" && item.trim()) {
-          lines.push(bullet ? `• ${item}` : item);
-        }
-      });
-    }
-  };
-
-  if (typeof parsed.summary === "string") {
-    lines.push(parsed.summary);
-  }
-  push("", parsed.keyPoints, true);
-  if (typeof parsed.suggestedAction === "string") {
-    lines.push(`Next action: ${parsed.suggestedAction}`);
-  }
-
-  if (typeof parsed.description === "string") {
-    lines.push(parsed.description);
-  }
-  if (Array.isArray(parsed.acceptanceCriteria)) {
-    lines.push("Acceptance criteria:");
-    (parsed.acceptanceCriteria as string[]).forEach((c) => lines.push(`• ${c}`));
-  }
-  if (Array.isArray(parsed.suggestedLabels) && (parsed.suggestedLabels as string[]).length > 0) {
-    lines.push(`Labels: ${(parsed.suggestedLabels as string[]).join(", ")}`);
-  }
-
-  if (typeof parsed.reasoning === "string") {
-    lines.push(parsed.reasoning);
-  }
-  if (typeof parsed.suggestedType === "string") {
-    lines.push(`Type: ${parsed.suggestedType}`);
-  }
-  if (typeof parsed.suggestedPriority === "string") {
-    lines.push(`Priority: ${parsed.suggestedPriority}`);
-  }
-  if (typeof parsed.suggestedAssignee === "string" && parsed.suggestedAssignee) {
-    lines.push(`Assignee: ${parsed.suggestedAssignee}`);
-  }
-
-  if (typeof parsed.goal === "string") {
-    lines.push(`Sprint goal: ${parsed.goal}`);
-  }
-  if (typeof parsed.estimatedPoints === "number") {
-    lines.push(`Estimated points: ${parsed.estimatedPoints}`);
-  }
-  if (Array.isArray(parsed.suggestedTasks)) {
-    lines.push("Suggested tasks:");
-    push("", parsed.suggestedTasks);
-  }
-
-  const formatted = lines.filter(Boolean).join("\n").trim();
-  return formatted.length > 0 ? formatted : response.trim();
+function groupLabel(iso: string): string {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "Older";
+  const now = new Date();
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startOfDay(now) - startOfDay(date)) / 86400000);
+  if (diffDays <= 1) return "Today";
+  if (diffDays <= 2) return "Yesterday";
+  if (diffDays <= 7) return "Previous 7 days";
+  if (diffDays <= 30) return "Previous 30 days";
+  return "Older";
 }
 
-function historyPreview(response: string): string {
-  return formatHistoryResponse(response).replace(/\s+/g, " ").trim();
+function groupConversations(items: AIConversationSummary[]) {
+  const order = ["Today", "Yesterday", "Previous 7 days", "Previous 30 days", "Older"];
+  const groups = new Map<string, AIConversationSummary[]>();
+  for (const item of items) {
+    const label = groupLabel(item.updatedAt);
+    const arr = groups.get(label) ?? [];
+    arr.push(item);
+    groups.set(label, arr);
+  }
+  return order
+    .filter((label) => groups.has(label))
+    .map((label) => ({ label, items: groups.get(label)! }));
+}
+
+function formatTime(iso: string): string {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "";
+  const now = new Date();
+  const sameDay = date.toDateString() === now.toDateString();
+  return sameDay
+    ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function WelcomeScreen({ onSelect }: { onSelect: (prompt: string) => void }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center pt-10 text-center">
+      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-purple shadow-md">
+        <Sparkles className="h-7 w-7 text-white" />
+      </div>
+      <h1 className="text-2xl font-light text-text sm:text-3xl">How can I help you today?</h1>
+      <div className="mt-8 grid w-full max-w-lg grid-cols-1 gap-2.5 sm:grid-cols-2">
+        {SUGGESTED_PROMPTS.map((item) => (
+          <button
+            key={item.title}
+            onClick={() => onSelect(item.prompt)}
+            className="flex items-center gap-2.5 rounded-xl border border-border-light bg-surface px-4 py-3 text-left text-sm text-text-secondary transition-colors hover:border-border hover:bg-surface-hover"
+          >
+            <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+            <span className="line-clamp-2">{item.title}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HistorySidebar({
+  conversations,
+  activeId,
+  onSelect,
+  onNewChat,
+  open,
+  onClose,
+}: {
+  conversations: AIConversationSummary[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  onNewChat: () => void;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter(
+      (c) => c.prompt.toLowerCase().includes(q) || c.response.toLowerCase().includes(q)
+    );
+  }, [conversations, query]);
+
+  const groups = groupConversations(filtered);
+
+  return (
+    <>
+      {open && (
+        <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={onClose} />
+      )}
+      <aside
+        className={clsx(
+          "flex w-[280px] shrink-0 flex-col border-r border-border-light bg-[#f9f9f9]",
+          "md:flex",
+          open ? "fixed inset-y-0 left-0 z-40 flex md:hidden" : "hidden"
+        )}
+      >
+        <div className="flex items-center gap-2 px-3 pb-2 pt-3">
+          <button
+            onClick={onNewChat}
+            className="flex w-full items-center gap-2.5 rounded-lg border border-border-light bg-white px-3 py-2.5 text-sm font-medium text-text shadow-sm transition-colors hover:bg-surface-hover"
+          >
+            <SquarePen className="h-4 w-4 text-text" />
+            New chat
+          </button>
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-hover md:hidden"
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="px-3 pb-2">
+          <div className="flex items-center gap-2 rounded-lg border border-border-light bg-white px-3 py-2">
+            <Search className="h-4 w-4 shrink-0 text-text-tertiary" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search conversations..."
+              className="w-full bg-transparent text-sm text-text outline-none placeholder:text-text-tertiary"
+            />
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 pb-3">
+          {groups.length === 0 ? (
+            <p className="px-3 py-6 text-center text-xs text-text-tertiary">
+              {query ? "No matching conversations." : "No conversations yet. Start a new chat!"}
+            </p>
+          ) : (
+            groups.map((group) => (
+              <div key={group.label} className="mb-2">
+                <p className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
+                  {group.label}
+                </p>
+                <div className="flex flex-col gap-0.5">
+                  {group.items.map((c) => (
+                    <button
+                      key={c.conversationId}
+                      onClick={() => onSelect(c.conversationId)}
+                      className={clsx(
+                        "flex w-full flex-col gap-0.5 rounded-lg px-3 py-2 text-left transition-colors",
+                        c.conversationId === activeId ? "bg-white shadow-sm" : "hover:bg-white/60"
+                      )}
+                    >
+                      <span className="line-clamp-1 text-sm text-text">{c.prompt}</span>
+                      <span className="line-clamp-1 text-xs text-text-tertiary">
+                        {formatTime(c.updatedAt)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </nav>
+      </aside>
+    </>
+  );
 }
 
 function AIAssistantContent() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Hi! I'm Vireo AI. Ask me about your projects, tasks, or sprints.",
-    },
-  ]);
+  const router = useRouter();
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [showHistory, setShowHistory] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chat, { isLoading }] = useChatWithAIMutation();
-  const { data: history } = useGetAIHistoryQuery({ limit: 10 });
+  const { data: conversations = [] } = useGetAIConversationsQuery({ limit: 50 });
+  const [fetchConversation, { isFetching: loadingConversation }] = useLazyGetAIConversationQuery();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const isNewChat = messages.length === 0;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loadingConversation]);
+
+  useEffect(() => {
+    if (!isNewChat && !loadingConversation) {
+      textareaRef.current?.focus();
+    }
+  }, [isNewChat, loadingConversation]);
+
+  function autoResize() {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`;
+  }
+
+  const resetComposer = useCallback(() => {
+    setInput("");
+    requestAnimationFrame(() => {
+      const ta = textareaRef.current;
+      if (ta) ta.style.height = "auto";
+    });
+  }, []);
 
   async function handleSend(message?: string) {
     const text = message || input.trim();
     if (!text || isLoading) return;
-    if (!message) setInput("");
+    if (!message) resetComposer();
     setMessages((prev) => [...prev, { role: "user", content: text, timestamp: new Date().toISOString() }]);
     try {
-      const res = await chat({ message: text }).unwrap();
+      const res = await chat({ message: text, conversationId: conversationId || undefined }).unwrap();
+      if (res.conversationId) setConversationId(res.conversationId);
       setMessages((prev) => [...prev, { role: "assistant", content: res.reply, timestamp: new Date().toISOString() }]);
     } catch (err: unknown) {
       const msg =
@@ -137,135 +258,148 @@ function AIAssistantContent() {
     }
   }
 
+  function handleNewChat() {
+    setConversationId(null);
+    setMessages([]);
+    setSidebarOpen(false);
+  }
+
+  async function handleSelectConversation(id: string) {
+    setConversationId(id);
+    setSidebarOpen(false);
+    try {
+      const result = await fetchConversation(id).unwrap();
+      if (result.length > 0) {
+        setMessages(
+          result.flatMap((item) => [
+            { role: "user" as const, content: item.prompt, timestamp: item.createdAt },
+            { role: "assistant" as const, content: item.response, timestamp: item.createdAt },
+          ])
+        );
+      } else {
+        setMessages([]);
+      }
+    } catch {
+      setMessages([{ role: "assistant", content: "Failed to load this conversation." }]);
+    }
+  }
+
+  const activeConversation = conversations.find((c) => c.conversationId === conversationId);
+  const activeTitle = activeConversation?.prompt || (isNewChat ? "New chat" : "");
+
   return (
-    <div className="mx-auto flex h-full max-w-4xl flex-col px-6 py-6 max-sm:px-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-[#121C28]">AI Assistant</h1>
-          <p className="text-sm text-[#737686]">
-            Ask questions, get suggestions, and manage your projects with AI
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
-              showHistory
-                ? "border-[#2563EB] bg-[#EEF4FF] text-[#2563EB]"
-                : "border-[#C3C6D7]/30 text-[#737686] hover:border-[#2563EB] hover:text-[#2563EB]"
-            }`}
-          >
-            <History className="h-3.5 w-3.5" />
-            History
-          </button>
-        </div>
-      </div>
+    <div className="flex h-screen w-full overflow-hidden bg-white">
+      <HistorySidebar
+        conversations={conversations}
+        activeId={conversationId}
+        onSelect={handleSelectConversation}
+        onNewChat={handleNewChat}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-      <div className="flex flex-1 gap-4 overflow-hidden">
-        {showHistory && history && history.length > 0 && (
-          <div className="w-64 shrink-0 overflow-y-auto rounded-lg border border-[#C3C6D7]/20 bg-white p-3 max-lg:hidden">
-            <h3 className="mb-2 text-xs font-semibold text-[#737686] uppercase tracking-wider">
-              Recent Conversations
-            </h3>
-            <div className="flex flex-col gap-1">
-              {history.map((item) => (
-                <button
-                  key={item._id}
-                  onClick={() => {
-                    setMessages((prev) => [
-                      ...prev,
-                      { role: "user" as const, content: item.prompt },
-                      { role: "assistant" as const, content: formatHistoryResponse(item.response) },
-                    ]);
-                    setShowHistory(false);
-                  }}
-                  className="rounded-lg px-2 py-2 text-left hover:bg-[#F8F9FF] transition-colors"
-                >
-                  <p className="text-xs font-medium text-[#121C28] line-clamp-1">{item.prompt}</p>
-                  <p className="text-[11px] text-[#737686] line-clamp-1 mt-0.5">{historyPreview(item.response)}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Clock className="h-3 w-3 text-[#C3C6D7]" />
-                    <span className="text-[10px] text-[#C3C6D7]">{item.feature}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-          <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-            {messages.length === 1 && (
-              <div className="mb-4">
-                <AISuggestedPrompts onSelect={(p) => handleSend(p)} />
-              </div>
-            )}
-            {messages.map((msg, i) => (
-              <div key={i} className={clsx("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
-                <div
-                  className={clsx(
-                    "max-w-[80%] rounded-xl px-4 py-3",
-                    msg.role === "user"
-                      ? "bg-[#2563EB] text-white"
-                      : "border border-[#C3C6D7]/20 bg-white text-[#434655]"
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    {msg.role === "assistant" ? (
-                      <Sparkles className="h-3.5 w-3.5 text-[#2563EB]" />
-                    ) : (
-                      <User className="h-3.5 w-3.5" />
-                    )}
-                    <span className="text-[10px] font-semibold uppercase tracking-wider opacity-70">
-                      {msg.role === "assistant" ? "VIREO AI" : "You"}
-                    </span>
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                </div>
-              </div>
-            ))}
-
-            {isLoading && (
-              <div className="flex items-center gap-2 px-1">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EEF4FF]">
-                  <Sparkles className="h-4 w-4 text-[#2563EB]" />
-                </div>
-                <div className="flex gap-1">
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-[#2563EB]" style={{ animationDelay: "0ms" }} />
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-[#2563EB]" style={{ animationDelay: "150ms" }} />
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-[#2563EB]" style={{ animationDelay: "300ms" }} />
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="flex items-center gap-2 border-t border-[#C3C6D7]/20 pt-3">
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder="Ask me anything about your projects..."
-              className="flex-1 rounded-lg border border-[#C3C6D7] bg-white px-3 py-2.5 text-sm text-[#121C28] placeholder:text-[#C3C6D7] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
-              disabled={isLoading}
-            />
+      <main className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border-light px-3 md:px-4">
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => handleSend()}
-              disabled={!input.trim() || isLoading}
-              className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2563EB] text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setSidebarOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-hover md:hidden"
+              aria-label="Open sidebar"
             >
-              <Send className="h-4 w-4" />
+              <Menu className="h-5 w-5" />
             </button>
+            <button
+              onClick={() => router.back()}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-hover"
+              title="Go back"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <span className="hidden truncate text-sm font-medium text-text sm:block">{activeTitle}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5 rounded-full bg-primary-bg px-2.5 py-1 text-[11px] font-medium text-primary">
+              <Sparkles className="h-3 w-3" />
+              Vireo AI
+            </span>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto flex h-full w-full max-w-3xl flex-col px-4 py-4 sm:px-6">
+            {isNewChat ? (
+              <WelcomeScreen onSelect={handleSend} />
+            ) : (
+              <div className="flex flex-col gap-6">
+                {messages.map((msg, i) => (
+                  <div key={i} className={clsx("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                    <div
+                      className={clsx(
+                        "max-w-full whitespace-pre-wrap text-[15px] leading-relaxed sm:max-w-[85%]",
+                        msg.role === "user"
+                          ? "rounded-2xl bg-[#f1f1f3] px-4 py-3 text-text"
+                          : "px-1 text-text"
+                      )}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+
+                {(isLoading || loadingConversation) && (
+                  <div className="flex gap-1.5 px-1 py-2">
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: "0ms" }} />
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: "150ms" }} />
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: "300ms" }} />
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </div>
         </div>
-      </div>
+
+        <div className="shrink-0 px-4 pb-4 pt-2 sm:px-6">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="flex items-end gap-2 rounded-3xl border border-border-light bg-white p-2 shadow-[0_0_0_0.5px_rgba(0,0,0,0.02),0_4px_20px_rgba(0,0,0,0.06)] focus-within:border-primary">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  autoResize();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                rows={1}
+                placeholder="Ask anything..."
+                className="max-h-[200px] flex-1 resize-none bg-transparent px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none"
+              />
+              <button
+                onClick={() => handleSend()}
+                disabled={!input.trim() || isLoading}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0f0f0f] text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-30"
+                aria-label="Send"
+              >
+                {isLoading ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <ArrowUp className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            <p className="mt-2 text-center text-[11px] text-text-tertiary">
+              Vireo AI can make mistakes. Check important information.
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

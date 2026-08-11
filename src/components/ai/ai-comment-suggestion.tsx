@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
-import { useChatWithAIMutation } from "@/store/aiApi";
+import { useSuggestCommentReplyMutation } from "@/store/aiApi";
 
 interface AICommentSuggestionProps {
   taskKey: string;
@@ -17,18 +17,18 @@ export function AICommentSuggestion({
   threadContext,
   onApply,
 }: AICommentSuggestionProps) {
-  const [chat, { isLoading }] = useChatWithAIMutation();
+  const [suggest, { isLoading }] = useSuggestCommentReplyMutation();
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSuggest() {
     setError(null);
     try {
-      const context = threadContext
-        ? `Context: ${threadContext.substring(0, 1000)}\n\n`
-        : "";
-      const prompt = `You are a professional project management assistant. ${context}Suggest a professional reply for this comment thread on task ${taskKey}. The user is drafting: "${commentText || "(empty - suggest a general response)"}". Return ONLY the reply text itself, with no preamble, no labels, no quotes, no "Here is" type introductions. Just the plain response (2-3 sentences).`;
-      const res = await chat({ message: prompt, context: { taskKey } }).unwrap();
+      const res = await suggest({
+        taskKey,
+        commentText,
+        threadContext: threadContext || "",
+      }).unwrap();
       setSuggestion(cleanSuggestion(res.reply));
     } catch {
       setError("Failed to generate suggestion.");

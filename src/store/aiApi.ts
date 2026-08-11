@@ -28,6 +28,22 @@ export interface SprintPlanResult {
 
 export interface ChatResult {
   reply: string;
+  conversationId?: string;
+}
+
+export interface AIConversationSummary {
+  conversationId: string;
+  prompt: string;
+  response: string;
+  createdAt: string;
+  updatedAt: string;
+  count: number;
+}
+
+export interface AIConversationMessage {
+  prompt: string;
+  response: string;
+  createdAt: string;
 }
 
 export interface AIHistoryItem {
@@ -80,6 +96,17 @@ export const aiApi = api.injectEndpoints({
       }),
       transformResponse: (response: { status: string; data: { summary: string; keyPoints: string[]; suggestedAction: string } }) => response.data,
     }),
+    suggestCommentReply: builder.mutation<
+      { reply: string },
+      { taskKey: string; commentText: string; threadContext?: string }
+    >({
+      query: (body) => ({
+        url: "/ai/comment-reply",
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: { status: string; data: { reply: string } }) => response.data,
+    }),
     smartTriage: builder.mutation<
       { suggestedAssignee: string | null; suggestedPriority: string; suggestedLabels: string[]; suggestedType: string; reasoning: string },
       { taskTitle: string; taskDescription: string; workspaceId: string }
@@ -103,15 +130,16 @@ export const aiApi = api.injectEndpoints({
       transformResponse: (response: { status: string; data: { suggestedTasks: { taskKey: string; reason: string }[]; goal: string; estimatedPoints: number } }) => response.data,
     }),
     chatWithAI: builder.mutation<
-      { reply: string },
-      { message: string; context?: { taskKey?: string; workspaceId?: string; projectId?: string } }
+      { reply: string; conversationId?: string },
+      { message: string; context?: { taskKey?: string; workspaceId?: string; projectId?: string }; conversationId?: string }
     >({
       query: (body) => ({
         url: "/ai/chat",
         method: "POST",
         body,
       }),
-      transformResponse: (response: { status: string; data: { reply: string } }) => response.data,
+      transformResponse: (response: { status: string; data: { reply: string; conversationId?: string } }) => response.data,
+      invalidatesTags: [{ type: "AIHistory", id: "LIST" }],
     }),
     getAIHistory: builder.query<
       { _id: string; feature: string; prompt: string; response: string; model: string; tokensUsed: number; duration: number; createdAt: string }[],
@@ -122,6 +150,30 @@ export const aiApi = api.injectEndpoints({
         params: params || {},
       }),
       transformResponse: (response: AIHistoryResponse) => response.data.history,
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ _id }) => ({ type: "AIHistory" as const, id: _id })), { type: "AIHistory", id: "LIST" }]
+          : [{ type: "AIHistory", id: "LIST" }],
+    }),
+    getAIConversations: builder.query<
+      AIConversationSummary[],
+      { limit?: number } | void
+    >({
+      query: (params) => ({
+        url: "/ai/conversations",
+        params: params || {},
+      }),
+      transformResponse: (response: { status: string; data: { conversations: AIConversationSummary[] } }) => response.data.conversations,
+      providesTags: [{ type: "AIHistory", id: "LIST" }],
+    }),
+    getAIConversation: builder.query<
+      AIConversationMessage[],
+      string
+    >({
+      query: (conversationId) => ({
+        url: `/ai/conversations/${conversationId}`,
+      }),
+      transformResponse: (response: { status: string; data: { messages: AIConversationMessage[] } }) => response.data.messages,
     }),
   }),
 });
@@ -129,8 +181,12 @@ export const aiApi = api.injectEndpoints({
 export const {
   useGenerateTicketDraftMutation,
   useSummarizeThreadMutation,
+  useSuggestCommentReplyMutation,
   useSmartTriageMutation,
   useSuggestSprintPlanMutation,
   useChatWithAIMutation,
   useGetAIHistoryQuery,
+  useGetAIConversationsQuery,
+  useGetAIConversationQuery,
+  useLazyGetAIConversationQuery,
 } = aiApi;

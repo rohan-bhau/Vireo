@@ -19,6 +19,7 @@ import { toggleSidebar } from "@/store/sidebarSlice";
 
 interface AppLayoutProps {
   children: ReactNode;
+  hideSidebar?: boolean;
   sidebarProps?: {
     workspaceId?: string;
     workspaceName?: string;
@@ -104,7 +105,7 @@ function MobileSidebarDrawer({
   );
 }
 
-export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
+export function AppLayout({ children, hideSidebar = false, sidebarProps }: AppLayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const router = useRouter();
@@ -185,12 +186,14 @@ export function AppLayout({ children, sidebarProps }: AppLayoutProps) {
       <div className="flex min-h-screen flex-col bg-bg-light">
         <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} onToggleChat={handleToggleChat} />
         <div className="flex flex-1 min-h-0">
-          <div className="hidden md:flex">
-            <Sidebar
-              workspaceId={sidebarProps?.workspaceId}
-              workspaceName={sidebarProps?.workspaceName}
-            />
-          </div>
+          {!hideSidebar && (
+            <div className="hidden md:flex">
+              <Sidebar
+                workspaceId={sidebarProps?.workspaceId}
+                workspaceName={sidebarProps?.workspaceName}
+              />
+            </div>
+          )}
           <main className="flex-1 overflow-y-auto min-w-0 px-3 pt-4 pb-24 md:px-8 md:py-8 md:pb-12">
             <ErrorBoundary>
               {children}

@@ -228,6 +228,10 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
             <AICommentSuggestion
               taskKey={taskKey}
               commentText={newComment}
+              threadContext={(comments || [])
+                .slice(-5)
+                .map((c) => `${getUserName(c.authorId)}: ${c.content}`)
+                .join("\n")}
               onApply={(suggestion) => {
                 setNewComment(suggestion);
               }}
