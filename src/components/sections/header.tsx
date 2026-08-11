@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { LogOut, ChevronDown, Check, ArrowRight, Menu, X, ChevronRight, LayoutDashboard, Code, Route, Server, ChartNoAxesColumn, Rocket, Boxes, Code2, NotebookPen, ShieldCheck, Building2, ServerCog } from "lucide-react";
+import { LogOut, ChevronDown, ArrowRight, LayoutDashboard, Code, Route, Server, ChartNoAxesColumn, Rocket, Boxes, Code2, NotebookPen, ShieldCheck, Building2, ServerCog } from "lucide-react";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
@@ -346,234 +346,12 @@ function SolutionsMenu() {
   );
 }
 
-function MobileMenu({ close }: { close: () => void }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [solutionsOpen, setSolutionsOpen] = useState(false);
-
-  function handleLogout() {
-    dispatch(logout());
-    clearTokens();
-    close();
-    router.push("/");
-  }
-
-  function handleNavigate(href: string) {
-    close();
-    router.push(href);
-  }
-
-  const activeCategory = productCategories.find((c) => c.id === selectedCategory);
-
-  function renderAuthButtons() {
-    if (isAuthenticated) {
-      return (
-        <div className="flex gap-3">
-          <button
-            onClick={() => handleNavigate("/dashboard")}
-            className="flex-1 cursor-pointer rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#003da8]"
-          >
-            Workspaces
-          </button>
-          <button
-            onClick={handleLogout}
-            className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#C3C6D7]/20 px-4 py-2.5 text-sm font-medium text-[#434655] transition-colors hover:bg-[#F8F9FF]"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
-        </div>
-      );
-    }
-    return (
-      <div className="flex flex-col gap-3">
-        <button
-          onClick={() => handleNavigate("/login")}
-          className="w-full cursor-pointer rounded-lg border border-[#C3C6D7]/20 py-2.5 text-sm font-semibold text-[#434655] transition-colors hover:bg-[#F8F9FF]"
-        >
-          Sign in
-        </button>
-        <button
-          onClick={() => handleNavigate("/register")}
-          className="w-full cursor-pointer rounded-lg bg-[#004AC6] py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10)] transition-colors hover:bg-[#003da8]"
-        >
-          Start free trial
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 top-16 z-30 bg-black/20 md:hidden"
-        onClick={close}
-      />
-      <motion.div
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed inset-y-0 right-0 top-16 z-40 w-full max-w-sm bg-white shadow-xl md:hidden"
-      >
-        <div className="flex h-full flex-col overflow-y-auto">
-          {selectedCategory && activeCategory ? (
-            <div className="flex flex-1 flex-col">
-              <div className="flex-1 px-4 py-4">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className="mb-3 flex cursor-pointer items-center gap-1.5 text-sm font-medium text-[#737686] transition-colors hover:text-[#004AC6]"
-                >
-                  <ChevronDown className="h-4 w-4 rotate-90" />
-                  All Products
-                </button>
-                <div className="mb-3 border-b border-[#C3C6D7]/10 pb-3">
-                  <Link
-                    href={`/product/${activeCategory.id}`}
-                    onClick={close}
-                    className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-base font-semibold text-[#004AC6] transition-colors hover:bg-[#EEF4FF]"
-                  >
-                    {activeCategory.title}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-                <div className="space-y-0.5">
-                  {activeCategory.items.map((item) => {
-                    const isItemActive = pathname === `/product/${item.slug}`;
-                    return (
-                      <button
-                        key={item.slug}
-                        onClick={() => handleNavigate(`/product/${item.slug}`)}
-                        className={`flex w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-3 text-left transition-colors ${
-                          isItemActive
-                            ? "bg-[#EEF4FF] text-[#004AC6]"
-                            : "text-[#434655] hover:bg-[#F8F9FF]"
-                        }`}
-                      >
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#10B981]" />
-                        <div>
-                          <p className="text-sm font-semibold">{item.title}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="border-t border-[#C3C6D7]/10 px-4 py-4">
-                {renderAuthButtons()}
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex-1 px-4 py-4">
-                <div className="mb-4 border-b border-[#C3C6D7]/10 pb-3">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[#737686]">Products</p>
-                </div>
-                <nav className="space-y-0.5">
-                  {productCategories.map((cat) => {
-                    const isCatActive = pathname === `/product/${cat.id}` || cat.items.some(item => pathname === `/product/${item.slug}`);
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
-                          isCatActive
-                            ? "text-[#004AC6] bg-[#EEF4FF]"
-                            : "text-[#121C28] hover:bg-[#F8F9FF]"
-                        }`}
-                      >
-                        {cat.title}
-                        <ChevronRight className="h-4 w-4 text-[#737686]" />
-                      </button>
-                    );
-                  })}
-
-                  <div className="my-3 border-t border-[#C3C6D7]/10" />
-
-                  <button
-                    onClick={() => setSolutionsOpen(!solutionsOpen)}
-                    className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
-                      pathname.startsWith("/solutions")
-                        ? "text-[#004AC6] bg-[#EEF4FF]"
-                        : "text-[#121C28] hover:bg-[#F8F9FF]"
-                    }`}
-                  >
-                    Solutions
-                    <ChevronDown className={`h-4 w-4 text-[#737686] transition-transform ${solutionsOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {solutionsOpen && (
-                    <div className="ml-4 space-y-0.5 border-l border-[#C3C6D7]/10 pl-3">
-                      {solutionCategories.map((cat) => {
-                        const isCatActive = pathname === `/solutions/${cat.id}`;
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={() => handleNavigate(`/solutions/${cat.id}`)}
-                            className={`flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
-                              isCatActive
-                                ? "text-[#004AC6] bg-[#EEF4FF]"
-                                : "text-[#434655] hover:bg-[#F8F9FF]"
-                            }`}
-                          >
-                            {cat.title}
-                          </button>
-                        );
-                      })}
-                      <button
-                        onClick={() => handleNavigate("/solutions")}
-                        className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs font-semibold text-[#737686] transition-colors hover:bg-[#F8F9FF] hover:text-[#004AC6]"
-                      >
-                        View all solutions
-                      </button>
-                    </div>
-                  )}
-
-                  {[
-                    { label: "Pricing", href: "/pricing" },
-                    { label: "Docs", href: "/docs" },
-                    { label: "Guide", href: "/guide" },
-                  ].map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <button
-                        key={item.href}
-                        onClick={() => handleNavigate(item.href)}
-                        className={`flex w-full cursor-pointer items-center rounded-lg px-3 py-3 text-left text-base font-semibold transition-colors ${
-                          isActive
-                            ? "text-[#004AC6] bg-[#EEF4FF]"
-                            : "text-[#121C28] hover:bg-[#F8F9FF]"
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-              <div className="border-t border-[#C3C6D7]/10 px-4 py-4">
-                {renderAuthButtons()}
-              </div>
-            </>
-          )}
-        </div>
-      </motion.div>
-    </>
-  );
-}
-
 export function Header() {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileAvatarOpen, setMobileAvatarOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileAvatarRef = useRef<HTMLDivElement>(null);
@@ -590,10 +368,6 @@ export function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
 
   function handleLogout() {
     dispatch(logout());
@@ -694,20 +468,28 @@ export function Header() {
                 </div>
               </>
             ) : (
-              <div className="hidden items-center gap-4 md:flex">
+              <>
+                <div className="hidden items-center gap-4 md:flex">
+                  <Link
+                    href="/login"
+                    className="cursor-pointer text-sm font-semibold text-[#434655] transition-colors hover:text-[#004AC6]"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="cursor-pointer rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
+                  >
+                    Start free trial
+                  </Link>
+                </div>
                 <Link
                   href="/login"
-                  className="cursor-pointer text-sm font-semibold text-[#434655] transition-colors hover:text-[#004AC6]"
+                  className="cursor-pointer text-sm font-semibold text-[#434655] transition-colors hover:text-[#004AC6] md:hidden"
                 >
                   Sign in
                 </Link>
-                <Link
-                  href="/register"
-                  className="cursor-pointer rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
-                >
-                  Start free trial
-                </Link>
-              </div>
+              </>
             )}
 
             {isAuthenticated && (
@@ -749,19 +531,9 @@ export function Header() {
                 )}
               </div>
             )}
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:hidden"
-              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
       </motion.header>
-
-      {mobileMenuOpen && <MobileMenu close={() => setMobileMenuOpen(false)} />}
     </>
   );
 }
