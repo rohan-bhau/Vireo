@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
+import { useGetWorkspacesQuery } from "@/store/workspaceApi";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +29,7 @@ import { VersionSelector } from "./version-selector";
 interface CreateTaskDialogProps {
   open: boolean;
   onClose: () => void;
-  workspaceId: string;
+  workspaceId?: string;
   projectId?: string;
   boardId?: string;
   columnId?: string;
@@ -69,15 +70,35 @@ export function CreateTaskDialog({
 }: CreateTaskDialogProps) {
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
-  const { data: projects } = useGetWorkspaceProjectsQuery(workspaceId);
-  const { data: workspaceCustomFields = [] } = useGetWorkspaceCustomFieldsQuery(workspaceId, {
-    skip: !workspaceId,
+  const { data: workspaces = [] } = useGetWorkspacesQuery(undefined, { skip: !open });
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(workspaceId || "");
+  const effectiveWorkspaceId =
+    selectedWorkspaceId || workspaceId || workspaces[0]?.id || "";
+  const { data: projects } = useGetWorkspaceProjectsQuery(effectiveWorkspaceId, {
+    skip: !effectiveWorkspaceId,
+  });
+  const { data: workspaceCustomFields = [] } = useGetWorkspaceCustomFieldsQuery(effectiveWorkspaceId, {
+    skip: !effectiveWorkspaceId,
   });
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
+  const ownedWorkspaces = workspaces.filter((ws) => ws.ownerId === currentUser?.id);
+  const alwaysIncludeCurrent =
+    workspaceId && !ownedWorkspaces.some((ws) => ws.id === workspaceId)
+      ? workspaces.filter((ws) => ws.id === workspaceId)
+      : [];
+  const availableWorkspaces =
+    ownedWorkspaces.length > 0 ? [...ownedWorkspaces, ...alwaysIncludeCurrent] : workspaces;
   const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId || "");
   const { data: epics = [] } = useGetProjectEpicsQuery(selectedProjectId, { skip: !selectedProjectId });
-  const { data: allTasks = [] } = useGetWorkspaceTasksQuery(workspaceId, { skip: !workspaceId });
+  const { data: allTasks = [] } = useGetWorkspaceTasksQuery(effectiveWorkspaceId, { skip: !effectiveWorkspaceId });
+
+  const resolveDefaultProject = useCallback(() => {
+    if (defaultProjectId) return defaultProjectId;
+    const firstWithBoard = projects?.find((p) => p.boards?.length > 0);
+    if (firstWithBoard) return firstWithBoard.id;
+    return projects?.[0]?.id || "";
+  }, [defaultProjectId, projects]);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -112,6 +133,28 @@ export function CreateTaskDialog({
       ? type
       : availableIssueTypes[0]?.value || type;
 
+  const resetFields = useCallback(() => {
+    const startingWorkspaceId = workspaceId || workspaces[0]?.id || "";
+    setSelectedWorkspaceId(startingWorkspaceId);
+    setTitle("");
+    setDescription("");
+    setType("task");
+    setStatus("todo");
+    setPriority("medium");
+    setAssignee(null);
+    setReporter(currentUser?.id || null);
+    setParentTask("");
+    setLabels([]);
+    setComponents([]);
+    setFixVersion("");
+    setDueDate("");
+    setStoryPoints("");
+    setShowMore(false);
+    setCreateAnother(false);
+    setCustomValues({});
+    setCustomError(null);
+  }, [workspaceId, workspaces, currentUser]);
+
   useEffect(() => {
     if (open) {
       if (editTask) {
@@ -136,27 +179,11 @@ export function CreateTaskDialog({
         );
         setCustomError(null);
       } else {
-        setTitle("");
-        setDescription("");
-        setType("task");
-        setStatus("todo");
-        setPriority("medium");
-        setAssignee(null);
-        setReporter(currentUser?.id || null);
-        setParentTask("");
-        setLabels([]);
-        setComponents([]);
-        setFixVersion("");
-        setDueDate("");
-        setStoryPoints("");
-        setSelectedProjectId(defaultProjectId || projects?.[0]?.id || "");
-        setShowMore(false);
-        setCreateAnother(false);
-        setCustomValues({});
-        setCustomError(null);
+        resetFields();
+        setSelectedProjectId(resolveDefaultProject());
       }
     }
-  }, [editTask, open, defaultProjectId, projects, currentUser]);
+  }, [editTask, open, resetFields, resolveDefaultProject]);
 
   async function handleSubmit() {
     if (!title.trim() || submitting) return;
@@ -174,6 +201,10 @@ export function CreateTaskDialog({
     setCustomError(null);
     setSubmitting(true);
     try {
+      const effectiveProjectId = selectedProjectId || resolveDefaultProject();
+      const selectedProject = projects?.find((p) => p.id === effectiveProjectId);
+      const effectiveBoard = selectedProject?.boards?.[0];
+      const effectiveColumn = effectiveBoard?.columns?.[0];
       const payload = {
         title: title.trim(),
         description,
@@ -188,10 +219,10 @@ export function CreateTaskDialog({
         fixVersion: fixVersion || undefined,
         dueDate: dueDate || undefined,
         storyPoints: storyPoints ? parseInt(storyPoints, 10) : undefined,
-        projectId: selectedProjectId || undefined,
-        boardId,
-        columnId,
-        workspaceId,
+        projectId: effectiveProjectId || undefined,
+        boardId: boardId || effectiveBoard?.id,
+        columnId: columnId || effectiveColumn?.id,
+        workspaceId: effectiveWorkspaceId,
         customFields:
           workspaceCustomFields.length > 0
             ? Object.fromEntries(
@@ -201,7 +232,11 @@ export function CreateTaskDialog({
       };
 
       if (editTask) {
-        await updateTask({ taskKey: editTask.taskKey, data: payload, workspaceId }).unwrap();
+        await updateTask({
+          taskKey: editTask.taskKey,
+          data: payload,
+          workspaceId: effectiveWorkspaceId,
+        }).unwrap();
         onClose();
       } else {
         await createTask(payload).unwrap();
@@ -235,20 +270,29 @@ export function CreateTaskDialog({
       className="max-w-2xl"
     >
       <div className="flex flex-col gap-4">
-        {!editTask && projects && projects.length > 0 && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-text-secondary">Project</label>
-            <select
-              value={selectedProjectId}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="rounded-[3px] border border-border-input bg-surface px-3 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.key})
-                </option>
-              ))}
-            </select>
+        {!editTask && availableWorkspaces.length > 0 && (
+          <div className="flex items-center gap-3 rounded-[3px] border border-border-light bg-bg-light px-3 py-2.5">
+            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-bg text-[10px] font-bold text-primary">
+              {availableWorkspaces.find((ws) => ws.id === effectiveWorkspaceId)?.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={availableWorkspaces.find((ws) => ws.id === effectiveWorkspaceId)?.avatar || ""}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                (availableWorkspaces.find((ws) => ws.id === effectiveWorkspaceId)?.name ||
+                  "").charAt(0).toUpperCase()
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-text-tertiary">
+                Workspace
+              </p>
+              <p className="truncate text-sm font-medium text-text">
+                {availableWorkspaces.find((ws) => ws.id === effectiveWorkspaceId)?.name || "Workspace"}
+              </p>
+            </div>
           </div>
         )}
 
@@ -349,17 +393,17 @@ export function CreateTaskDialog({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-text-secondary">Assignee</label>
-              <AssigneePicker workspaceId={workspaceId} value={assignee} onChange={setAssignee} />
+              <AssigneePicker workspaceId={effectiveWorkspaceId} value={assignee} onChange={setAssignee} />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-text-secondary">Reporter</label>
-              <AssigneePicker workspaceId={workspaceId} value={reporter} onChange={setReporter} />
+              <AssigneePicker workspaceId={effectiveWorkspaceId} value={reporter} onChange={setReporter} />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-text-secondary">Labels</label>
-              <LabelEditor value={labels} onChange={setLabels} workspaceId={workspaceId} projectId={selectedProjectId} />
+              <LabelEditor value={labels} onChange={setLabels} workspaceId={effectiveWorkspaceId} projectId={selectedProjectId} />
             </div>
 
             <div className="flex flex-col gap-1.5">

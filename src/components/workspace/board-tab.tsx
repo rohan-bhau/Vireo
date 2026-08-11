@@ -30,7 +30,7 @@ export function BoardTab({ workspaceId }: BoardTabProps) {
     );
   }
 
-  const firstProject = projects[0];
+  const firstProject = projects.find((p) => p.boards?.length > 0) || projects[0];
 
   if (!firstProject) {
     return null;

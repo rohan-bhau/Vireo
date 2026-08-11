@@ -65,7 +65,7 @@ export function ListTab({ workspaceId }: ListTabProps) {
   const { data: tasks = [], isLoading, refetch: refetchTasks } = useGetWorkspaceTasksQuery(workspaceId);
   const { data: projects = [] } = useGetWorkspaceProjectsQuery(workspaceId);
   const { data: members = [] } = useGetMembersQuery(workspaceId);
-  const firstProject = projects[0];
+  const firstProject = projects.find((p) => p.boards?.length > 0) || projects[0];
   const boards = useGetProjectBoardsQuery(firstProject?.id || "", { skip: !firstProject });
 
   const memberMap = useMemo(() => {
