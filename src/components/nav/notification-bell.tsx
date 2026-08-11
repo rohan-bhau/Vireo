@@ -37,9 +37,9 @@ function timeAgo(date: Date): string {
   return "just now";
 }
 
-export function NotificationBell() {
+export function NotificationBell({ limit = 10 }: { limit?: number }) {
   const { data: unreadCount = 0 } = useGetUnreadCountQuery();
-  const { data: notifData } = useGetNotificationsQuery({ limit: 10 });
+  const { data: notifData } = useGetNotificationsQuery({ limit });
   const [markRead] = useMarkNotificationReadMutation();
   const [markAllRead] = useMarkAllNotificationsReadMutation();
   const [open, setOpen] = useState(false);

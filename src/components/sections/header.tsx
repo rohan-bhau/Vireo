@@ -6,16 +6,18 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { Bell, LogOut, ChevronDown, Check, ArrowRight, Menu, X, ChevronRight, LayoutDashboard } from "lucide-react";
+import { LogOut, ChevronDown, Check, ArrowRight, Menu, X, ChevronRight, LayoutDashboard } from "lucide-react";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import { clearTokens } from "@/lib/auth";
 import { productCategories, type ProductCategory } from "@/lib/product-data";
+import { NotificationBell } from "@/components/nav/notification-bell";
 
 const otherNavItems = [
   { label: "Solutions", href: "/solutions" },
   { label: "Pricing", href: "/pricing" },
   { label: "Docs", href: "/docs" },
+  { label: "Guide", href: "/guide" },
 ];
 
 function ProductMenu() {
@@ -296,6 +298,7 @@ function MobileMenu({ close }: { close: () => void }) {
                     { label: "Solutions", href: "/solutions" },
                     { label: "Pricing", href: "/pricing" },
                     { label: "Docs", href: "/docs" },
+                    { label: "Guide", href: "/guide" },
                   ].map((item) => {
                     const isActive = pathname === item.href;
                     return (
@@ -410,15 +413,9 @@ export function Header() {
           <div className="flex items-center gap-2 md:gap-4">
             {isAuthenticated ? (
               <>
-                <Link
-                  href="/notifications"
-                  className="relative hidden h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#EEF4FF] hover:text-[#004AC6] md:flex"
-                >
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#004AC6] text-[8px] font-bold text-white">
-                    3
-                  </span>
-                </Link>
+                <div className="hidden md:block">
+                  <NotificationBell limit={4} />
+                </div>
                 <Link
                   href="/dashboard"
                   className="hidden cursor-pointer rounded-lg bg-[#004AC6] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8] md:block"
@@ -428,12 +425,10 @@ export function Header() {
                 <div className="relative hidden md:block" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#C3C6D7]/20 bg-white px-3 py-2 transition-colors hover:border-[#C3C6D7]/40"
+                    title={user?.name || "User menu"}
+                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[#004AC6] text-xs font-bold text-white transition-colors hover:bg-[#003da8]"
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#004AC6] text-[11px] font-bold text-white">
-                      {initials}
-                    </div>
-                    <ChevronDown className={`h-4 w-4 text-[#737686] transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                    {initials}
                   </button>
                   {dropdownOpen && (
                     <motion.div
