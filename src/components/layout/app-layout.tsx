@@ -183,7 +183,7 @@ export function AppLayout({ children, hideSidebar = false, sidebarProps }: AppLa
     <AuthGuard>
       <NotificationListener />
       <WorkspaceListener />
-      <div className="flex min-h-screen flex-col bg-bg-light">
+      <div className="flex h-screen flex-col bg-bg-light">
         <AppNavbar onMobileMenuToggle={handleMobileMenuToggle} onToggleChat={handleToggleChat} />
         <div className="flex flex-1 min-h-0">
           {!hideSidebar && (

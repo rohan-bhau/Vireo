@@ -8,7 +8,6 @@ import {
   Sparkles,
   Star,
   History,
-  Folders,
   LayoutDashboard,
   Filter,
 } from "lucide-react";
@@ -22,7 +21,6 @@ const sections = [
   { key: "forYou" as const, label: "For You", icon: Sparkles },
   { key: "starred" as const, label: "Starred", icon: Star },
   { key: "recent" as const, label: "Recent", icon: History },
-  { key: "projects" as const, label: "Projects", icon: Folders },
   { key: "dashboards" as const, label: "Dashboards", icon: LayoutDashboard },
   { key: "filters" as const, label: "Filters", icon: Filter },
 ];

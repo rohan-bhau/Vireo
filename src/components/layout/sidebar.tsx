@@ -10,7 +10,6 @@ import {
   useCreateWorkspaceMutation,
   useGetMembersQuery,
 } from "@/store/workspaceApi";
-import { useGetWorkspaceProjectsQuery } from "@/store/projectApi";
 import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picker";
 import type { ProjectTemplate } from "@/store/projectApi";
 import {
@@ -24,12 +23,6 @@ import {
   MoreHorizontal,
   Settings2,
   ArrowLeft,
-  Folders,
-  Columns3,
-  ListOrdered,
-  Bug,
-  BookOpen,
-  LayoutList,
   Filter,
   ExternalLink,
 } from "lucide-react";
@@ -67,13 +60,6 @@ interface SidebarProps {
   onNavigate?: () => void;
   embedded?: boolean;
 }
-
-const projectNavItems = [
-  { key: "board", label: "Board", icon: Columns3 },
-  { key: "backlog", label: "Backlog", icon: ListOrdered },
-  { key: "issues", label: "Issues", icon: Bug },
-  { key: "reports", label: "Reports", icon: LayoutList },
-];
 
 const dashboards = [
   { label: "Default Dashboard", href: "/dashboard" },
@@ -280,19 +266,14 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   const [forYouExpanded, setForYouExpanded] = useState(true);
   const [starredExpanded, setStarredExpanded] = useState(true);
   const [recentExpanded, setRecentExpanded] = useState(false);
-  const [projectsExpanded, setProjectsExpanded] = useState(true);
   const [dashboardsExpanded, setDashboardsExpanded] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
-  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
   const [forYouMessage, setForYouMessage] = useState<string | null>(null);
 
   const activeWorkspaceId = useSelector(
     (state: RootState) => state.workspace.activeWorkspaceId
   );
   const currentWsId = workspaceId || activeWorkspaceId;
-
-  const { data: projects = [], isLoading: projectsLoading } =
-    useGetWorkspaceProjectsQuery(currentWsId ?? "", { skip: !currentWsId });
 
   const { data: members = [] } = useGetMembersQuery(currentWsId ?? "", {
     skip: !currentWsId,
@@ -337,13 +318,6 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
     dispatch(setActiveWorkspace(wsId));
     dispatch(addRecentWorkspace(wsId));
     onNavigate?.();
-  }
-
-  function toggleProjectExpanded(projectId: string) {
-    setExpandedProjects((prev) => ({
-      ...prev,
-      [projectId]: !prev[projectId],
-    }));
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -586,65 +560,6 @@ name={ws.name}
             label="AI Assistant"
             active={pathname.startsWith("/ai-assistant")}
           />
-
-          {/* Projects */}
-          {visibleSections.projects && isInWorkspace && (
-            <CollapsibleSection
-              label="Projects"
-              icon={Folders}
-              collapsed={collapsed}
-              expanded={projectsExpanded}
-              onToggle={() => setProjectsExpanded(!projectsExpanded)}
-            >
-              {projectsLoading && (
-                <>
-                  <SkeletonSidebarItem />
-                  <SkeletonSidebarItem />
-                </>
-              )}
-              {projects.length === 0 && !projectsLoading && (
-                <p className="px-3 py-1.5 text-xs text-text-tertiary">
-                  No projects yet
-                </p>
-              )}
-              {projects.map((project) => (
-                <div key={project.id}>
-                  <button
-                    onClick={() => toggleProjectExpanded(project.id)}
-                    className={clsx(
-                      "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[38px]",
-                      "text-text-secondary hover:bg-bg-light hover:text-text"
-                    )}
-                  >
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] bg-gradient-to-br from-primary to-purple text-[9px] font-bold text-white">
-                      {project.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="truncate flex-1 text-left">{project.name}</span>
-                    {expandedProjects[project.id] ? (
-                      <ChevronDown className="h-3 w-3 shrink-0 text-text-tertiary" />
-                    ) : (
-                      <ChevronRight className="h-3 w-3 shrink-0 text-text-tertiary" />
-                    )}
-                  </button>
-                  {expandedProjects[project.id] && (
-                    <div className="ml-2 space-y-0.5 border-l border-border-light/30 pl-2">
-                      {projectNavItems.map((item) => (
-                        <Link
-                          key={item.key}
-                          href={`/w/${workspaceId}/${item.key}`}
-                          onClick={onNavigate}
-                          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-text-tertiary hover:bg-bg-light hover:text-text transition-colors min-h-[32px]"
-                        >
-                          <item.icon className="h-3.5 w-3.5 shrink-0" />
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </CollapsibleSection>
-          )}
 
           {/* Dashboards */}
           {visibleSections.dashboards && !collapsed && (
