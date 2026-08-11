@@ -7,19 +7,38 @@ import Image from "next/image";
 const columns = [
   {
     title: "Product",
-    links: ["Changelog", "Documentation", "Integrations", "Security"],
+    links: [
+      { label: "Changelog", href: "/changelog" },
+      { label: "Documentation", href: "/docs" },
+      { label: "Integrations", href: "/integrations" },
+      { label: "Security", href: "/security" },
+    ],
   },
   {
     title: "Solutions",
-    links: ["For Engineers", "For Managers", "For Startups", "Enterprise"],
+    links: [
+      { label: "For Engineers", href: "/solutions/engineering-teams" },
+      { label: "For Managers", href: "/solutions/product-teams" },
+      { label: "For Startups", href: "/solutions/startups" },
+      { label: "Enterprise", href: "/enterprise" },
+    ],
   },
   {
     title: "Company",
-    links: ["About Us", "Blog", "Careers", "Contact"],
+    links: [
+      { label: "About Us", href: "/about" },
+      { label: "Blog", href: "/blog" },
+      { label: "Careers", href: "/careers" },
+      { label: "Contact", href: "/contact" },
+    ],
   },
   {
     title: "Legal",
-    links: ["Privacy Policy", "Terms of Service", "GDPR"],
+    links: [
+      { label: "Privacy Policy", href: "/privacy-policy" },
+      { label: "Terms of Service", href: "/terms-of-service" },
+      { label: "GDPR", href: "/gdpr" },
+    ],
   },
 ];
 
@@ -60,12 +79,12 @@ export function FooterSection() {
               </h4>
               <ul className="space-y-2">
                 {column.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <Link
-                      href="/login"
+                      href={link.href}
                       className="text-sm text-[#5C6274] transition-colors hover:text-[#004AC6]"
                     >
-                      {link}
+                      {link.label}
                     </Link>
                   </li>
                 ))}
