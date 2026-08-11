@@ -9,6 +9,9 @@ import { ListTab } from "@/components/workspace/list-tab";
 import { SummaryTab } from "@/components/workspace/summary-tab";
 import { TimelineTab } from "@/components/workspace/timeline-tab";
 import { ReportsTab } from "@/components/workspace/reports-tab";
+import { UpgradePrompt } from "@/components/billing/upgrade-prompt";
+import { useGetSubscriptionQuery } from "@/store/billingApi";
+import { hasFeature } from "@/lib/plans";
 
 function TabContent({ workspaceId, tabId }: { workspaceId: string; tabId: string }) {
   switch (tabId) {
@@ -36,11 +39,20 @@ export default function WorkspaceHomePage() {
   );
   const activeTab = tabConfig?.activeTab ?? "board";
 
+  const { data: subscription } = useGetSubscriptionQuery(workspaceId, { skip: !workspaceId });
+  const canUseRoadmap = hasFeature(subscription?.plan, "roadmap");
+
+  const effectiveTab = activeTab === "timeline" && !canUseRoadmap ? "board" : activeTab;
+
   return (
     <div className="flex flex-1 flex-col">
       <WorkspaceTabs workspaceId={workspaceId} />
       <div className="flex-1 mt-4 max-sm:mt-3 max-sm:mb-2">
-        <TabContent workspaceId={workspaceId} tabId={activeTab} />
+        {activeTab === "timeline" && !canUseRoadmap ? (
+          <UpgradePrompt workspaceId={workspaceId} />
+        ) : (
+          <TabContent workspaceId={workspaceId} tabId={effectiveTab} />
+        )}
       </div>
     </div>
   );

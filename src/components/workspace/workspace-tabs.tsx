@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
 import { setActiveTab, addCustomTab, removeCustomTab } from "@/store/workspaceSlice";
+import { useGetSubscriptionQuery } from "@/store/billingApi";
+import { hasFeature } from "@/lib/plans";
 import { clsx } from "clsx";
 import { Plus, X } from "lucide-react";
 
@@ -18,6 +20,11 @@ export function WorkspaceTabs({ workspaceId }: WorkspaceTabsProps) {
   );
   const activeTab = tabConfig?.activeTab ?? "board";
   const tabs = tabConfig?.tabs ?? [];
+
+  const { data: subscription } = useGetSubscriptionQuery(workspaceId, { skip: !workspaceId });
+  const canUseRoadmap = hasFeature(subscription?.plan, "roadmap");
+
+  const visibleTabs = canUseRoadmap ? tabs : tabs.filter((t) => t.id !== "timeline");
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newTabLabel, setNewTabLabel] = useState("");
@@ -51,7 +58,7 @@ export function WorkspaceTabs({ workspaceId }: WorkspaceTabsProps) {
   return (
     <div className="border-b border-[#C3C6D7]/20 bg-white">
       <div className="relative flex items-center">
-        {tabs.length > 4 && (
+        {visibleTabs.length > 4 && (
           <button
             onClick={() => handleScroll("left")}
             className="flex h-full items-center px-2 text-[#737686] hover:text-[#121C28]"
@@ -65,7 +72,7 @@ export function WorkspaceTabs({ workspaceId }: WorkspaceTabsProps) {
           ref={scrollRef}
           className="flex flex-1 overflow-x-auto scrollbar-hide"
         >
-          {tabs.map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
@@ -125,7 +132,7 @@ export function WorkspaceTabs({ workspaceId }: WorkspaceTabsProps) {
             )}
           </div>
         </div>
-        {tabs.length > 4 && (
+        {visibleTabs.length > 4 && (
           <button
             onClick={() => handleScroll("right")}
             className="flex h-full items-center px-2 text-[#737686] hover:text-[#121C28]"

@@ -10,6 +10,7 @@ import {
   Package,
   Puzzle,
   Zap,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,7 +25,8 @@ export type SettingsSection =
   | "roles"
   | "versions"
   | "components"
-  | "automation";
+  | "automation"
+  | "billing";
 
 export interface SettingsNavItem {
   id: SettingsSection;
@@ -44,4 +46,5 @@ export const settingsNavItems: SettingsNavItem[] = [
   { id: "versions", label: "Versions", icon: Package },
   { id: "components", label: "Components", icon: Puzzle },
   { id: "automation", label: "Automation", icon: Zap },
+  { id: "billing", label: "Billing & Plan", icon: CreditCard },
 ];

@@ -22,6 +22,8 @@ import {
   FileText,
 } from "lucide-react";
 import { settingsNavItems, type SettingsSection } from "@/lib/settings-nav";
+import { useGetSubscriptionQuery } from "@/store/billingApi";
+import { hasFeature } from "@/lib/plans";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog } from "@/components/ui/dialog";
@@ -85,8 +87,16 @@ export function MobileBottomNav() {
   );
   const activeTab = tabConfig?.activeTab;
 
+  const { data: subscription } = useGetSubscriptionQuery(workspaceId ?? "", {
+    skip: !workspaceId,
+  });
+  const canUseRoadmap = hasFeature(subscription?.plan, "roadmap");
+
   const rawTabs = tabConfig?.tabs;
-  const tabs = useMemo(() => rawTabs ?? [], [rawTabs]);
+  const tabs = useMemo(
+    () => (rawTabs ?? []).filter((t) => t.id !== "timeline" || canUseRoadmap),
+    [rawTabs, canUseRoadmap]
+  );
 
   const [showMore, setShowMore] = useState(false);
   const [showCreate, setShowCreate] = useState(false);

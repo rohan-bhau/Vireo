@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useGetProjectTasksQuery } from "@/store/taskApi";
 import { useGetProjectQuery } from "@/store/projectApi";
 import { useGetProjectEpicsQuery } from "@/store/epicApi";
 import { useGetProjectSprintsQuery } from "@/store/sprintApi";
+import { useGetSubscriptionQuery } from "@/store/billingApi";
+import { hasFeature } from "@/lib/plans";
 import { RoadmapTimeline } from "@/components/roadmap/roadmap-timeline";
+import { UpgradePrompt } from "@/components/billing/upgrade-prompt";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +17,17 @@ import { useCreateEpicMutation } from "@/store/epicApi";
 
 export default function RoadmapPage() {
   const params = useParams();
-  const router = useRouter();
   const projectId = params.projectId as string;
 
   const { data: project, isLoading: projectLoading } = useGetProjectQuery(projectId);
   const { data: tasks = [], isLoading: tasksLoading } = useGetProjectTasksQuery(projectId);
   const { data: epics = [], isLoading: epicsLoading } = useGetProjectEpicsQuery(projectId);
   const { data: sprints = [], isLoading: sprintsLoading } = useGetProjectSprintsQuery(projectId);
+  const { data: subscription } = useGetSubscriptionQuery(project?.workspaceId ?? "", {
+    skip: !project?.workspaceId,
+  });
 
+  const canUseRoadmap = hasFeature(subscription?.plan, "roadmap");
   const loading = projectLoading || tasksLoading || epicsLoading || sprintsLoading;
 
   const [zoom, setZoom] = useState<"quarter" | "month" | "week">("month");
@@ -160,6 +166,10 @@ export default function RoadmapPage() {
         <div className="h-64 animate-pulse rounded-xl bg-bg-neutral" />
       </div>
     );
+  }
+
+  if (!canUseRoadmap) {
+    return <UpgradePrompt workspaceId={project!.workspaceId} />;
   }
 
   return (

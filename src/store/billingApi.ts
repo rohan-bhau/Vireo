@@ -1,21 +1,26 @@
 import { api } from "./api";
 
+export type PlanId = "free" | "pro" | "enterprise";
+export type SubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "canceled";
+
 interface Plan {
-  id: "free" | "pro" | "enterprise";
+  id: PlanId;
   name: string;
   description: string;
   price: number;
   currency: string;
   interval: "month" | "year";
-  memberLimit: number;
-  projectLimit: number;
   features: string[];
 }
 
 interface Subscription {
   workspaceId: string;
-  plan: "free" | "pro" | "enterprise";
-  status: "active" | "canceled" | "past_due" | "trialing" | "incomplete";
+  plan: PlanId;
+  status: SubscriptionStatus;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   trialEndsAt?: string;
@@ -23,8 +28,21 @@ interface Subscription {
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
   cancelAtPeriodEnd: boolean;
-  memberLimit: number;
-  projectLimit: number;
+  automationRunsUsedThisPeriod?: number;
+  aiCallsUsedThisPeriod?: number;
+  storageUsedMB?: number;
+}
+
+interface UsageStats {
+  memberCount: number;
+  storageUsed: number;
+  memberLimit: number | null;
+  storageLimit: number | null;
+  automationRunsUsed: number;
+  automationRunLimit: number | null;
+  aiCallsUsed: number;
+  aiCallLimit: number | null;
+  plan: PlanId;
 }
 
 interface PlansResponse {
@@ -35,6 +53,11 @@ interface PlansResponse {
 interface SubscriptionResponse {
   status: string;
   data: { subscription: Subscription };
+}
+
+interface UsageStatsResponse {
+  status: string;
+  data: UsageStats;
 }
 
 interface CheckoutSessionResponse {
@@ -62,6 +85,13 @@ export const billingApi = api.injectEndpoints({
       query: (workspaceId) => `/billing/${workspaceId}/subscription`,
       transformResponse: (response: SubscriptionResponse) =>
         response.data.subscription,
+      providesTags: (_result, _error, workspaceId) => [
+        { type: "Subscription", id: workspaceId },
+      ],
+    }),
+    getUsageStats: builder.query<UsageStats, string>({
+      query: (workspaceId) => `/billing/${workspaceId}/usage-stats`,
+      transformResponse: (response: UsageStatsResponse) => response.data,
       providesTags: (_result, _error, workspaceId) => [
         { type: "Subscription", id: workspaceId },
       ],
@@ -140,6 +170,7 @@ export const billingApi = api.injectEndpoints({
 export const {
   useGetPlansQuery,
   useGetSubscriptionQuery,
+  useGetUsageStatsQuery,
   useCreateCheckoutSessionMutation,
   useCancelSubscriptionMutation,
   useResumeSubscriptionMutation,

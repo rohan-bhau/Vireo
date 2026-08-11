@@ -3,59 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Check } from "lucide-react";
-
-const plans = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "For small teams getting started.",
-    features: [
-      "Up to 10 users",
-      "2 projects",
-      "10 MB storage",
-      "Basic boards",
-      "Community support",
-    ],
-    cta: "Get started",
-    href: "/register",
-    highlighted: false,
-  },
-  {
-    name: "Standard",
-    price: "$12",
-    period: "per user / month",
-    description: "For growing teams that need more power.",
-    features: [
-      "Unlimited projects",
-      "Advanced permissions",
-      "AI features included",
-      "Automation rules",
-      "All reports & dashboards",
-      "Priority support",
-    ],
-    cta: "Start free trial",
-    href: "/register",
-    highlighted: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    period: "contact us",
-    description: "For organizations with advanced needs.",
-    features: [
-      "Unlimited everything",
-      "SAML/SSO",
-      "Audit logs",
-      "Dedicated support",
-      "Custom integrations",
-      "SLA guarantee",
-    ],
-    cta: "Contact sales",
-    href: "/contact",
-    highlighted: false,
-  },
-];
+import { PRICING_PLANS } from "@/lib/pricing-data";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -83,7 +31,8 @@ export function PricingSection() {
             Simple, transparent pricing
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-[#434655]">
-            Start free, upgrade when you grow. No hidden fees, no surprises.
+            Start free, upgrade when you grow. Workspace-based pricing billed per user — no
+            hidden fees, no surprises.
           </p>
         </motion.div>
         <motion.div
@@ -93,7 +42,7 @@ export function PricingSection() {
           variants={containerVariants}
           className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3"
         >
-          {plans.map((plan) => (
+          {PRICING_PLANS.map((plan) => (
             <motion.div
               key={plan.name}
               variants={itemVariants}
@@ -113,7 +62,7 @@ export function PricingSection() {
               </div>
               <div className="mt-3">
                 <span className="text-4xl font-bold text-[#121C28]">
-                  {plan.price}
+                  {plan.price === 0 ? "$0" : `$${plan.price}`}
                 </span>
                 {plan.period && (
                   <span className="ml-1 text-sm text-[#434655]">

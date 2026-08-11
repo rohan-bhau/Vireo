@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   useGetWorkspaceWorkflowsQuery,
   useUpdateWorkflowMutation,
   type WorkflowStatus,
   type WorkflowTransition,
 } from "@/store/workflowApi";
+import { useGetSubscriptionQuery } from "@/store/billingApi";
+import { hasFeature } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
@@ -31,6 +34,9 @@ export function WorkspaceSettingsWorkflows() {
 
   const { data: workflows = [], isLoading } = useGetWorkspaceWorkflowsQuery(workspaceId);
   const [updateWorkflow, { isLoading: saving }] = useUpdateWorkflowMutation();
+
+  const { data: subscription } = useGetSubscriptionQuery(workspaceId, { skip: !workspaceId });
+  const canEditWorkflows = hasFeature(subscription?.plan, "customWorkflows");
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [statuses, setStatuses] = useState<WorkflowStatus[]>([]);
@@ -137,6 +143,21 @@ export function WorkspaceSettingsWorkflows() {
 
   return (
     <div className="space-y-6">
+      {!canEditWorkflows && (
+        <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            Custom workflows are a Pro feature. Your workspace is on the Free plan, so
+            workflows are view-only.
+          </p>
+          <Link
+            href={`/w/${workspaceId}/settings/billing`}
+            className="shrink-0 font-semibold text-[#2563EB] hover:text-[#004AC6] transition-colors"
+          >
+            Upgrade to edit
+          </Link>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-text">Workflows</h2>
@@ -169,7 +190,7 @@ export function WorkspaceSettingsWorkflows() {
             </h3>
             <p className="mt-0.5 text-xs text-text-tertiary">Drag-order via arrows, edit name or color inline.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { setNewStatusError(null); setShowAddStatus(true); }}>
+          <Button variant="outline" size="sm" disabled={!canEditWorkflows} onClick={() => { setNewStatusError(null); setShowAddStatus(true); }}>
             <Plus className="h-3.5 w-3.5" /> Add status
           </Button>
         </div>
@@ -261,7 +282,7 @@ export function WorkspaceSettingsWorkflows() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button onClick={handleSave} isLoading={saving}>Save changes</Button>
+        <Button onClick={handleSave} isLoading={saving} disabled={!canEditWorkflows}>Save changes</Button>
         {saving && <Loader2 className="h-4 w-4 animate-spin text-text-tertiary" />}
       </div>
 

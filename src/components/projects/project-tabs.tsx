@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import type { ProjectTemplate } from "@/store/projectApi";
+import { useGetSubscriptionQuery } from "@/store/billingApi";
+import { hasFeature } from "@/lib/plans";
 
 interface ProjectTab {
   label: string;
@@ -37,8 +39,12 @@ interface ProjectTabsProps {
 
 export function ProjectTabs({ projectId, projectName, workspaceId, template }: ProjectTabsProps) {
   const pathname = usePathname();
+  const { data: subscription } = useGetSubscriptionQuery(workspaceId, { skip: !workspaceId });
+  const canUseRoadmap = hasFeature(subscription?.plan, "roadmap");
 
-  const visibleTabs = tabs.filter((t) => t.showFor.includes(template));
+  const visibleTabs = tabs.filter(
+    (t) => t.showFor.includes(template) && (t.label !== "Timeline" || canUseRoadmap)
+  );
 
   return (
     <div>
