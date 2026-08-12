@@ -76,7 +76,7 @@ export function MobileMarketingNav() {
           <Link
             href={isAuthenticated ? "/dashboard" : "/register"}
             onClick={closeSheets}
-            className="flex flex-col items-center justify-center gap-0.5 px-2 text-[10px] font-bold min-h-[48px] min-w-[64px]"
+            className="flex flex-col items-center justify-center gap-0.5 px-2 text-[10px] font-bold min-h-[48px] min-w-[64px] cursor-pointer"
           >
             <span className="-mt-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#004AC6] text-white shadow-lg ring-4 ring-white">
               <ArrowRight className="h-5 w-5" />
@@ -96,7 +96,7 @@ export function MobileMarketingNav() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/50 md:hidden"
+              className="fixed inset-0 z-40 bg-black/50 md:hidden cursor-pointer"
               onClick={closeSheets}
             />
             <motion.div

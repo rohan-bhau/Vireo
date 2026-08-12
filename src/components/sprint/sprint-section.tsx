@@ -87,7 +87,7 @@ export function SprintSection({ sprint, tasks, projectId, workspaceId, epics, al
           </div>
           <div className="flex items-center gap-2 text-[11px] text-[#5E6C84] mt-0.5">
             {editingGoal ? (
-              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-1 cursor-pointer" onClick={(e) => e.stopPropagation()}>
                 <input
                   autoFocus
                   value={goalValue}

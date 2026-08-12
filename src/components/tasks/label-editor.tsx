@@ -50,7 +50,7 @@ export function LabelEditor({ value, onChange, workspaceId, projectId }: LabelEd
   return (
     <div ref={ref} className="relative">
       <div
-        className="flex flex-wrap items-center gap-1 rounded-[3px] border border-border-input bg-surface px-2 py-1.5 min-h-[32px] cursor-text"
+        className="flex flex-wrap items-center gap-1 rounded-[3px] border border-border-input bg-surface px-2 py-1.5 min-h-[32px] cursor-text cursor-pointer"
         onClick={() => (document.querySelector(`#label-input-${workspaceId}`) as HTMLInputElement)?.focus()}
       >
         {value.map((label) => (

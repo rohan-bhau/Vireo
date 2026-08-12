@@ -83,7 +83,7 @@ export function NotificationFilters({ filters, onFiltersChange, projects }: Noti
         </button>
         {showTypeFilter && (
           <>
-            <div className="fixed inset-0 z-40" onClick={() => setShowTypeFilter(false)} />
+            <div className="fixed inset-0 z-40 cursor-pointer" onClick={() => setShowTypeFilter(false)} />
             <div className="absolute left-0 top-full z-50 mt-1 w-44 rounded-[3px] border border-border-light bg-surface shadow-modal">
               {TYPE_FILTERS.map((f) => (
                 <button
@@ -118,7 +118,7 @@ export function NotificationFilters({ filters, onFiltersChange, projects }: Noti
           </button>
           {showProjectFilter && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowProjectFilter(false)} />
+              <div className="fixed inset-0 z-40 cursor-pointer" onClick={() => setShowProjectFilter(false)} />
               <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-[3px] border border-border-light bg-surface shadow-modal max-h-60 overflow-y-auto">
                 <button
                   onClick={() => { update({ projectFilter: "" }); setShowProjectFilter(false); }}

@@ -122,7 +122,7 @@ export function IssueQuickMenu({ task, sprints = [], projectId, workspaceId, onC
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full z-50 mt-1 w-56 origin-top-right rounded-[3px] border border-[#DFE1E6] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] py-1"
+      className="absolute right-0 top-full z-50 mt-1 w-56 origin-top-right rounded-[3px] border border-[#DFE1E6] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] py-1 cursor-pointer"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="px-3 py-1.5 text-[11px] font-medium text-[#5E6C84] uppercase tracking-wider border-b border-[#EBECF0]">

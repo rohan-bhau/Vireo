@@ -14,7 +14,7 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md cursor-pointer"
           onClick={onClose}
         >
           <motion.div
@@ -22,7 +22,7 @@ function DemoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 30 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative w-full max-w-5xl rounded-2xl overflow-hidden bg-black shadow-[0_24px_80px_rgba(0,0,0,0.5)]"
+            className="relative w-full max-w-5xl rounded-2xl overflow-hidden bg-black shadow-[0_24px_80px_rgba(0,0,0,0.5)] cursor-pointer"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative aspect-video">

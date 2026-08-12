@@ -234,7 +234,7 @@ function SavedFiltersSection({ workspaceId, onNavigate }: { workspaceId?: string
           key={f.id}
           href={`/search?q=${encodeURIComponent(f.query)}`}
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-light hover:text-text transition-colors min-h-[38px]"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-light hover:text-text transition-colors min-h-[38px] cursor-pointer"
         >
           <Filter className="h-4 w-4 shrink-0 text-text-tertiary" />
           <span className="truncate">{f.name}</span>
@@ -575,7 +575,7 @@ name={ws.name}
                   key={db.label}
                   href={db.href}
                   onClick={onNavigate}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-light hover:text-text transition-colors min-h-[38px]"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-light hover:text-text transition-colors min-h-[38px] cursor-pointer"
                 >
                   <LayoutDashboard className="h-4 w-4 shrink-0 text-text-tertiary" />
                   <span className="truncate">{db.label}</span>

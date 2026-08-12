@@ -37,8 +37,8 @@ export function StatusDialog({ open, onClose, onSave, editStatus }: StatusDialog
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 cursor-pointer" onClick={onClose}>
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl cursor-pointer" onClick={(e) => e.stopPropagation()}>
         <h3 className="mb-4 text-lg font-semibold text-[#121C28]">
           {editStatus ? "Edit Status" : "Add Status"}
         </h3>

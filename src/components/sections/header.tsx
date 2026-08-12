@@ -177,7 +177,7 @@ function ProductMenu() {
                   <Link
                     href={`/product/${activeCategory.id}`}
                     onClick={() => setOpen(false)}
-                    className="mt-auto inline-flex items-center gap-1.5 pt-3 text-xs font-semibold text-[#004AC6] transition-colors hover:text-[#003da8]"
+                    className="mt-auto inline-flex items-center gap-1.5 pt-3 text-xs font-semibold text-[#004AC6] transition-colors hover:text-[#003da8] cursor-pointer"
                   >
                     View all {activeCategory.title}
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -330,7 +330,7 @@ function SolutionsMenu() {
                       <Link
                         href="/solutions"
                         onClick={() => setOpen(false)}
-                        className="text-sm font-semibold text-[#737686] transition-colors hover:text-[#004AC6]"
+                        className="text-sm font-semibold text-[#737686] transition-colors hover:text-[#004AC6] cursor-pointer"
                       >
                         View all solutions
                       </Link>

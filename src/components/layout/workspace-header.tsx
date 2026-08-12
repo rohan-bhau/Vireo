@@ -148,7 +148,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
                 <Link
                   href={`/w/${workspaceId}/settings`}
                   onClick={() => setShowMenu(false)}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light"
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-light cursor-pointer"
                 >
                   <Settings className="h-3.5 w-3.5" />
                   Settings

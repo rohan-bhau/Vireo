@@ -189,7 +189,7 @@ export function WorkspaceSettingsFields() {
         {!isLoading && customFields.length === 0 && (
           <div className="px-5 py-4">
             <EmptyState
-              icon={<Plus className="h-8 w-8" />}
+              icon={<Plus className="h-8 w-8 cursor-pointer" />}
               title="No custom fields"
               message="Define bespoke fields to capture workspace-specific data."
               action={

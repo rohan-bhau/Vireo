@@ -52,9 +52,9 @@ export function SaveFilterDialog({ open, onClose, workspaceId, jql, sortField, s
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 cursor-pointer" onClick={onClose}>
       <div
-        className="w-full max-w-sm rounded-[3px] bg-white p-6 shadow-modal border border-[#DFE1E6]"
+        className="w-full max-w-sm rounded-[3px] bg-white p-6 shadow-modal border border-[#DFE1E6] cursor-pointer"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-sm font-semibold text-[#121C28] mb-4">Save current search as filter</h3>

@@ -151,7 +151,7 @@ export default function TaskDetailPage() {
             </button>
             {showMoreMenu && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
+                <div className="fixed inset-0 z-40 cursor-pointer" onClick={() => setShowMoreMenu(false)} />
                 <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-[3px] border border-border-light bg-surface shadow-modal">
                   <button
                     onClick={() => { setShowMoreMenu(false); setShowLinkDialog(true); }}

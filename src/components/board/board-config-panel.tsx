@@ -268,7 +268,7 @@ function CardLayoutTab({ board }: { board: Board }) {
           </label>
         ))}
       </div>
-      <Button size="sm" className="mt-4" onClick={handleSave}>Save card layout</Button>
+      <Button size="sm" className="mt-4 cursor-pointer" onClick={handleSave}>Save card layout</Button>
     </div>
   );
 }

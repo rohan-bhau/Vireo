@@ -279,7 +279,7 @@ export default function AuditLogPage() {
                       variant={page === pageNum ? "primary" : "outline"}
                       size="sm"
                       onClick={() => setPage(pageNum)}
-                      className="min-w-[32px]"
+                      className="min-w-[32px] cursor-pointer"
                     >
                       {pageNum + 1}
                     </Button>

@@ -69,7 +69,7 @@ export function WorkspaceSettingsAutomation() {
       {!isLoading && rules.length === 0 && (
         <div className="rounded-xl border border-border-light bg-surface">
           <EmptyState
-            icon={<Zap className="h-8 w-8" />}
+            icon={<Zap className="h-8 w-8 cursor-pointer" />}
             title="No automation rules"
             message="Automate repetitive work — create your first rule."
             action={<Button onClick={() => { setEditingRule(null); setShowBuilder(true); }}><Plus className="mr-1.5 h-4 w-4" /> Create rule</Button>}

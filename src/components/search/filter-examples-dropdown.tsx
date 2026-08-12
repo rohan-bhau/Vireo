@@ -40,7 +40,7 @@ export function FilterExamplesDropdown({ onSelect }: FilterExamplesDropdownProps
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-40 cursor-pointer" onClick={() => setOpen(false)} />
           <div className="absolute top-full left-0 z-50 mt-1 w-56 rounded-[3px] border border-[#DFE1E6] bg-white shadow-modal py-1">
             <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#737686]">
               Show me:

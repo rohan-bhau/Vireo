@@ -155,7 +155,7 @@ export function WorkspaceSettingsNotifications() {
           {!scheme ? (
             <div className="p-6">
               <EmptyState
-                icon={<Bell className="h-8 w-8" />}
+                icon={<Bell className="h-8 w-8 cursor-pointer" />}
                 title="No notification scheme yet"
                 message="Enable notifications to configure what members get notified about."
                 action={

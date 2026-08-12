@@ -98,8 +98,8 @@ export function EpicPanel({ projectId, workspaceId, allTasks, selectedEpicKey, o
               ))}
             </div>
             <div className="flex gap-1">
-              <Button size="sm" onClick={handleCreate} className="flex-1 text-xs py-1 h-auto min-h-0">Add</Button>
-              <Button size="sm" variant="outline" onClick={() => setShowCreate(false)} className="text-xs py-1 h-auto min-h-0">
+              <Button size="sm" onClick={handleCreate} className="flex-1 text-xs py-1 h-auto min-h-0 cursor-pointer">Add</Button>
+              <Button size="sm" variant="outline" onClick={() => setShowCreate(false)} className="text-xs py-1 h-auto min-h-0 cursor-pointer">
                 <X className="h-3 w-3" />
               </Button>
             </div>

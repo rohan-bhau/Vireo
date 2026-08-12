@@ -199,7 +199,7 @@ export function SearchResultsList({
                 )}
                 data-task-index={idx}
               >
-                <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                <td className="px-3 py-2.5 cursor-pointer" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={selectedIds.includes(task._id)}

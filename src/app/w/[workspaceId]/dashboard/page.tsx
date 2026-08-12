@@ -131,7 +131,7 @@ export default function WorkspaceDashboardPage() {
           <Button
             variant="primary"
             size="sm"
-            className="mt-4"
+            className="mt-4 cursor-pointer"
             onClick={() => setShowCreateInput(true)}
           >
             <Plus className="h-4 w-4 mr-1" />

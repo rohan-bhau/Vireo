@@ -215,7 +215,7 @@ function CardAssignee({
         <div
           ref={popupRef}
           onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 top-full z-50 mt-1 w-48 rounded-[3px] border border-[#C3C6D7]/30 bg-white py-1 shadow-modal max-h-56 overflow-y-auto"
+          className="absolute right-0 top-full z-50 mt-1 w-48 rounded-[3px] border border-[#C3C6D7]/30 bg-white py-1 shadow-modal max-h-56 overflow-y-auto cursor-pointer"
         >
           <button
             type="button"

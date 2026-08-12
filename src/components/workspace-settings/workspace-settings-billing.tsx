@@ -336,7 +336,7 @@ export function WorkspaceSettingsBilling() {
                   ))}
                 </ul>
                 <Button
-                  className="mt-5 w-full"
+                  className="mt-5 w-full cursor-pointer"
                   variant={p.id === "pro" ? "primary" : "outline"}
                   disabled={!canUpgrade || checkoutLoading}
                   onClick={() => setConfirmPlan(p.id as "pro" | "enterprise")}

@@ -103,7 +103,7 @@ export default function AdminPermissionSchemesPage() {
       ) : schemes.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl bg-white py-16 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <p className="text-sm text-[#737686]">No permission schemes yet</p>
-          <Button className="mt-4" size="sm" onClick={() => setShowCreate(true)}>
+          <Button className="mt-4 cursor-pointer" size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="mr-1.5 h-3.5 w-3.5" /> Create first scheme
           </Button>
         </div>

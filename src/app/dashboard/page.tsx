@@ -126,7 +126,7 @@ function WorkspaceRow({
                 <Link
                   href={`/w/${ws.id}/settings`}
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary transition-colors hover:bg-bg-light"
+                  className="flex items-center gap-2 px-3 py-2 text-xs text-text-secondary transition-colors hover:bg-bg-light cursor-pointer"
                 >
                   <Settings2 className="h-3.5 w-3.5" />
                   Workspace settings
@@ -253,7 +253,7 @@ export default function DashboardPage() {
               Welcome back! Select a workspace or create a new one.
             </p>
           </div>
-          <Button onClick={openCreate} className="w-full sm:w-auto">
+          <Button onClick={openCreate} className="w-full sm:w-auto cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />
             New Workspace
           </Button>
@@ -271,7 +271,7 @@ export default function DashboardPage() {
               Workspaces are where your team collaborates on projects. Create your first workspace to get started.
             </p>
             <div className="mt-6 md:mt-8 flex items-center justify-center gap-4">
-              <Button onClick={() => setShowOnboarding(true)} size="lg" className="w-full sm:w-auto">
+              <Button onClick={() => setShowOnboarding(true)} size="lg" className="w-full sm:w-auto cursor-pointer">
                 <Plus className="mr-1.5 h-4 w-4" />
                 Create your first workspace
               </Button>

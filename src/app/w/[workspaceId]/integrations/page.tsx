@@ -166,7 +166,7 @@ function SlackConfig({ integration, onSave, onDelete, onToggle, onTest, testing,
                   Enable
                 </Button>
               )}
-              <Button type="button" variant="ghost" size="sm" onClick={onDelete} className="text-red-600 hover:text-red-700">
+              <Button type="button" variant="ghost" size="sm" onClick={onDelete} className="text-red-600 hover:text-red-700 cursor-pointer">
                 <Trash2 className="mr-1.5 h-4 w-4" />
                 Remove
               </Button>
@@ -265,7 +265,7 @@ function GitHubConfig({ integration, onSave, onDelete, onToggle, onTest, testing
                   Enable
                 </Button>
               )}
-              <Button type="button" variant="ghost" size="sm" onClick={onDelete} className="text-red-600 hover:text-red-700">
+              <Button type="button" variant="ghost" size="sm" onClick={onDelete} className="text-red-600 hover:text-red-700 cursor-pointer">
                 <Trash2 className="mr-1.5 h-4 w-4" />
                 Remove
               </Button>

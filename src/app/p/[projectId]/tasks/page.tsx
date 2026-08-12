@@ -205,8 +205,8 @@ export default function TasksPage() {
         </div>
 
         {showSaveDialog && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowSaveDialog(false)}>
-            <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 cursor-pointer" onClick={() => setShowSaveDialog(false)}>
+            <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl cursor-pointer" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-semibold text-[#121C28] mb-2">Save current filter</h3>
               <input
                 autoFocus

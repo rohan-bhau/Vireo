@@ -93,7 +93,7 @@ export default function AdminIssueSecurityPage() {
         <div className="flex flex-col items-center justify-center rounded-xl bg-white py-16 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <Lock className="mb-3 h-10 w-10 text-[#C3C6D7]" />
           <p className="text-sm text-[#737686]">No issue security schemes yet</p>
-          <Button className="mt-4" size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-3.5 w-3.5" /> Create</Button>
+          <Button className="mt-4 cursor-pointer" size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-3.5 w-3.5" /> Create</Button>
         </div>
       ) : (
         <div className="space-y-3">

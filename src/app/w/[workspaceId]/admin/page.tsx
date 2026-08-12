@@ -226,7 +226,7 @@ export default function AdminSettingsPage() {
               </p>
               <Button
                 variant="danger"
-                className="mt-4"
+                className="mt-4 cursor-pointer"
                 onClick={() => setShowDelete(true)}
               >
                 <Trash2 className="mr-1.5 h-4 w-4" />

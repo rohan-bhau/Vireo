@@ -219,7 +219,7 @@ export function WorkspaceSettingsDetails() {
             <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
               <Upload className="h-3.5 w-3.5" /> Upload image
             </p>
-            <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => fileInputRef.current?.click()}>
+            <Button variant="outline" size="sm" className="w-full gap-2 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               <ImagePlus className="h-4 w-4" />
               Choose a file
             </Button>

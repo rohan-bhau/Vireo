@@ -142,7 +142,7 @@ export function NotificationBell({ limit = 10 }: { limit?: number }) {
               <Link
                 href="/notifications"
                 onClick={() => setOpen(false)}
-                className="block text-center text-xs font-medium text-[#2563EB] hover:text-[#1d4ed8] transition-colors"
+                className="block text-center text-xs font-medium text-[#2563EB] hover:text-[#1d4ed8] transition-colors cursor-pointer"
               >
                 View all notifications
               </Link>
