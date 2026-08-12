@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -23,8 +23,6 @@ import {
   Trash2,
   RefreshCw,
   ExternalLink,
-  CheckCircle,
-  AlertCircle,
 } from "lucide-react";
 
 type AdminTab = "general" | "security" | "members";
@@ -61,12 +59,12 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDelete, setShowDelete] = useState(false);
 
-  useEffect(() => {
-    if (workspace) {
-      setName(workspace.name);
-      setDescription(workspace.description || "");
-    }
-  }, [workspace]);
+  const [prevWorkspace, setPrevWorkspace] = useState(workspace);
+  if (workspace !== prevWorkspace) {
+    setPrevWorkspace(workspace);
+    setName(workspace?.name ?? "");
+    setDescription(workspace?.description ?? "");
+  }
 
   const currentMember = members.find((m) => m.userId === user?.id);
   const isAdmin = currentMember?.role === "ADMIN";
@@ -83,8 +81,9 @@ export default function AdminSettingsPage() {
       await updateWorkspace({ workspaceId, name: name.trim(), description: description.trim() || undefined }).unwrap();
       setSuccess("Settings saved successfully");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err?.data?.message || "Failed to update workspace");
+    } catch (err: unknown) {
+      const errData = err as { data?: { message?: string } } | undefined;
+      setError(errData?.data?.message || "Failed to update workspace");
     }
   }
 
@@ -92,8 +91,9 @@ export default function AdminSettingsPage() {
     try {
       await deleteWorkspace(workspaceId).unwrap();
       router.replace("/dashboard");
-    } catch (err: any) {
-      setError(err?.data?.message || "Failed to delete workspace");
+    } catch (err: unknown) {
+      const errData = err as { data?: { message?: string } } | undefined;
+      setError(errData?.data?.message || "Failed to delete workspace");
       setShowDelete(false);
     }
   }

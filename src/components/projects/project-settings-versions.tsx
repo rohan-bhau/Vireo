@@ -13,7 +13,7 @@ import {
   type VersionStatus,
 } from "@/store/versionApi";
 import { VersionProgress, VersionStats } from "./version-progress";
-import { Plus, Package, Archive, RotateCcw } from "lucide-react";
+import { Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ProjectSettingsVersions({ project }: { project: Project }) {

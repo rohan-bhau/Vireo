@@ -1,7 +1,6 @@
 "use client";
 
 import { useGetTaskWatchersQuery } from "@/store/watchApi";
-import { useGetTaskByKeyQuery } from "@/store/taskApi";
 
 interface WatcherListProps {
   taskKey: string;

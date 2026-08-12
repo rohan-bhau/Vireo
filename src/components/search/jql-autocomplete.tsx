@@ -1,7 +1,7 @@
 "use client";
 
 import { useLazyGetSuggestionsQuery } from "@/store/searchApi";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { clsx } from "clsx";
 
 interface JqlAutocompleteProps {
@@ -25,11 +25,13 @@ export function JqlAutocomplete({ query, cursorPos, onSelect, onClose }: JqlAuto
     }
   }, [lastWord, suggestType, trigger]);
 
-  const items = data?.suggestions || [];
+  const items = useMemo(() => data?.suggestions || [], [data]);
 
-  useEffect(() => {
+  const [prevLen, setPrevLen] = useState(items.length);
+  if (prevLen !== items.length) {
+    setPrevLen(items.length);
     setSelectedIndex(0);
-  }, [items.length]);
+  }
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -96,7 +98,6 @@ function getSuggestType(query: string, pos: number): string {
   const opMatch = before.match(/([=!><~]+|IN|NOT IN|IS|IS NOT)\s*$/i);
   if (opMatch) return "value";
 
-  const lastToken = before.split(/\s+/).pop() || "";
   const operators = ["=", "!=", ">", ">=", "<", "<=", "~", "!~", "IN", "NOT IN", "IS", "IS NOT"];
   const hasOp = operators.some((op) => before.toUpperCase().endsWith(op));
   if (hasOp) return "value";

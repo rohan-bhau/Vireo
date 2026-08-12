@@ -24,7 +24,7 @@ import {
   horizontalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { useGetProjectQuery, useGetProjectBoardsQuery, useReorderColumnsMutation, useAddColumnMutation } from "@/store/projectApi";
+import { useGetProjectBoardsQuery, useReorderColumnsMutation, useAddColumnMutation } from "@/store/projectApi";
 import { useGetBoardTasksQuery, useMoveTaskMutation, useUpdateTaskMutation } from "@/store/taskApi";
 import { useGetSprintQuery, useGetSprintTasksQuery, useCompleteSprintMutation } from "@/store/sprintApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
@@ -33,7 +33,7 @@ import { BoardSwitcher } from "./board-switcher";
 import { BoardHeader } from "./board-header";
 import { BoardFilterBar } from "./board-filter-bar";
 import { BoardColumn } from "./board-column";
-import { IssueCard, IssueCardOverlay } from "./issue-card";
+import { IssueCardOverlay } from "./issue-card";
 import { SwimlaneRow } from "./swimlane-row";
 import { BoardConfigPanel } from "./board-config-panel";
 import { toastError } from "@/lib/toast";
@@ -71,10 +71,10 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   const dispatch = useDispatch<AppDispatch>();
   const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
 
-  const { data: project } = useGetProjectQuery(projectId);
   const { data: boards = [], refetch: refetchBoards } = useGetProjectBoardsQuery(projectId);
 
   const [activeBoardId, setActiveBoardId] = useState<string | undefined>(initialBoardId);
+  const [prevActiveBoardId, setPrevActiveBoardId] = useState<string | undefined>(initialBoardId);
   const [columnOrderOverride, setColumnOrderOverride] = useState<string[] | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [showAddColumn, setShowAddColumn] = useState(false);
@@ -100,8 +100,9 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
 
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
-  const [jqlQuery, setJqlQuery] = useState("");
+  const [, setJqlQuery] = useState("");
   const [swimlaneType, setSwimlaneType] = useState<string>("none");
+  const [now] = useState(() => Date.now());
 
   const { data: members = [] } = useGetMembersQuery(workspaceId);
   const membersMap = useMemo(() => {
@@ -122,6 +123,11 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
       leaveWorkspaceRoom(workspaceId);
     };
   }, [activeBoardId, workspaceId]);
+
+  if (!activeBoardId && boards.length > 0 && prevActiveBoardId !== boards[0].id) {
+    setPrevActiveBoardId(boards[0].id);
+    setActiveBoardId(boards[0].id);
+  }
 
   useEffect(() => {
     if (!activeBoardId) return;
@@ -149,24 +155,18 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     return () => offs.forEach((off) => off());
   }, [activeBoardId, sprintId, refetchBoardTasks, currentUserId]);
 
-  useEffect(() => {
-    if (!activeBoardId && boards.length > 0) {
-      setActiveBoardId(boards[0].id);
-    }
-  }, [boards, activeBoardId]);
-
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8, delay: 0 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 10 } })
   );
 
-  const boardConfig = activeBoard?.config || {};
+  const boardConfig = activeBoard?.config;
 
   const columns: { id: string; name: string; wipLimit: number | null }[] = useMemo(() => {
     if (activeBoard?.columns && activeBoard.columns.length > 0) {
       const sorted = [...activeBoard.columns]
         .sort((a, b) => a.position - b.position)
-        .map((c: Column) => ({ id: c.id, name: c.name, wipLimit: (c as any).wipLimit ?? null }));
+        .map((c: Column) => ({ id: c.id, name: c.name, wipLimit: c.wipLimit ?? null }));
       if (columnOrderOverride && columnOrderOverride.length === sorted.length) {
         const byId = new Map(sorted.map((c) => [c.id, c]));
         const reordered = columnOrderOverride.map((id) => byId.get(id)).filter(Boolean) as typeof sorted;
@@ -175,7 +175,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
       return sorted;
     }
     return DEFAULT_COLUMNS;
-  }, [activeBoard, sprintId, columnOrderOverride]);
+  }, [activeBoard, columnOrderOverride]);
 
   const collisionDetection = useCallback<CollisionDetection>(
     (args) => {
@@ -216,13 +216,6 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
     }
   }
 
-  function mapColumnIdToStatus(columnId: string): Task["status"] {
-    if (columnId.includes("progress")) return "in_progress";
-    if (columnId.includes("review")) return "in_review";
-    if (columnId.includes("done") || columnId.includes("complete")) return "done";
-    return "todo";
-  }
-
   const filteredTasks = useMemo(() => {
     let result = [...tasks];
     if (activeFilters.includes("my-issues")) {
@@ -232,14 +225,14 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
       result = result.filter((t) => !t.assignee);
     }
     if (activeFilters.includes("recently-updated")) {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
       result = result.filter((t) => new Date(t.updatedAt) >= sevenDaysAgo);
     }
     if (assigneeFilter.length > 0) {
       result = result.filter((t) => t.assignee && assigneeFilter.includes(t.assignee));
     }
     return result;
-  }, [tasks, activeFilters, assigneeFilter]);
+  }, [tasks, activeFilters, assigneeFilter, now]);
 
   function handleToggleFilter(filterId: string) {
     setActiveFilters((prev) =>
@@ -443,7 +436,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                 </span>
               </div>
             )}
-            {(sprint as any).status === "ACTIVE" && (
+            {sprint.status === "ACTIVE" && (
               <Button size="sm" variant="outline" onClick={handleCompleteSprint}>
                 <svg className="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><path d="M22 4L12 14.01l-3-3" />
@@ -461,14 +454,14 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
             <BoardSwitcher boards={boards} activeBoardId={activeBoardId || boards[0]?.id || ""} onSelect={setActiveBoardId} />
           )}
           {activeBoard && (
-            <BoardHeader board={activeBoard as any} boardCount={boards.length} onOpenConfig={() => setShowConfig(true)} />
+            <BoardHeader board={activeBoard} boardCount={boards.length} onOpenConfig={() => setShowConfig(true)} />
           )}
         </div>
       )}
 
       <div className="mb-4">
         <BoardFilterBar
-          quickFilters={(boardConfig as any)?.quickFilters || []}
+          quickFilters={boardConfig?.quickFilters?.map((f) => ({ id: f.id, label: f.name, jql: f.jql })) || []}
           activeFilters={activeFilters}
           onToggleFilter={handleToggleFilter}
           onJqlSearch={setJqlQuery}

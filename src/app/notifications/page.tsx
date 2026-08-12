@@ -21,7 +21,7 @@ export default function NotificationsPage() {
   const workspaceId = useSelector((state: RootState) => state.workspace.activeWorkspaceId);
   const { data: projects } = useGetWorkspaceProjectsQuery(workspaceId || "", { skip: !workspaceId });
 
-  const [offset, setOffset] = useState(0);
+  const [, setOffset] = useState(0);
   const [filters, setFilters] = useState({
     filterTab: "all" as FilterTab,
     typeFilter: "" as NotificationType | "",
@@ -40,7 +40,7 @@ export default function NotificationsPage() {
   const { data, isLoading } = useGetNotificationsQuery(queryParams);
   const [markRead] = useMarkNotificationReadMutation();
   const [markUnread] = useMarkNotificationUnreadMutation();
-  const [markAllRead, { isLoading: isMarkingAll }] = useMarkAllNotificationsReadMutation();
+  const [markAllRead] = useMarkAllNotificationsReadMutation();
 
   const notifications = data?.notifications || [];
   const total = data?.total || 0;

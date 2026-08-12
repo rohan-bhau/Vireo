@@ -1,7 +1,5 @@
 "use client";
 
-import { clsx } from "clsx";
-
 interface BulkActionBarProps {
   selectedCount: number;
   onClear: () => void;

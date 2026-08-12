@@ -15,7 +15,6 @@ import {
   Search,
   ArrowLeft,
   Menu,
-  MessageSquare,
   X,
 } from "lucide-react";
 import { clsx } from "clsx";

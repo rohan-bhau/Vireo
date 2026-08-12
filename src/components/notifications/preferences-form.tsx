@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   useGetNotificationPreferencesQuery,
   useUpdateNotificationPreferencesMutation,
@@ -48,13 +48,12 @@ export function NotificationPreferencesForm() {
   const [projectOverrides, setProjectOverrides] = useState<ProjectNotificationOverride[]>([]);
   const [success, setSuccess] = useState(false);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (data) {
-      setLocal(data.preferences);
-      setProjectOverrides(data.projectOverrides || []);
-    }
-  }, [data]);
+  const [prevData, setPrevData] = useState(data);
+  if (data && prevData !== data) {
+    setPrevData(data);
+    setLocal(data.preferences);
+    setProjectOverrides(data.projectOverrides || []);
+  }
 
   if (loading) {
     return <div className="animate-pulse space-y-4">
@@ -96,7 +95,7 @@ export function NotificationPreferencesForm() {
     }
 
     setProjectOverrides(updated);
-    updateProjectOverride({ projectId, overrides: { [key]: newValue } as any });
+    updateProjectOverride({ projectId, overrides: { [key]: newValue } as Partial<ProjectNotificationOverride> });
   }
 
   function handleRemoveOverride(projectId: string) {

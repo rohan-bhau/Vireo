@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 interface ActivityEntry {
   _id: string;
   actorName: string;
@@ -25,6 +27,8 @@ const actionLabels: Record<string, string> = {
 };
 
 export function ActivityStream({ activity }: ActivityStreamProps) {
+  const [now] = useState(() => Date.now());
+
   if (activity.length === 0) {
     return (
       <div className="flex items-center justify-center h-32 text-xs text-[#737686]">
@@ -33,8 +37,8 @@ export function ActivityStream({ activity }: ActivityStreamProps) {
     );
   }
 
-  function timeAgo(dateStr: string) {
-    const diff = Date.now() - new Date(dateStr).getTime();
+  function timeAgo(dateStr: string, now: number) {
+    const diff = now - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "Just now";
     if (mins < 60) return `${mins}m ago`;
@@ -58,7 +62,7 @@ export function ActivityStream({ activity }: ActivityStreamProps) {
               {entry.entityName && <span className="text-[#737686]">{entry.entityName}</span>}
             </p>
           </div>
-          <span className="text-[10px] text-[#737686] shrink-0">{timeAgo(entry.createdAt)}</span>
+          <span className="text-[10px] text-[#737686] shrink-0">{timeAgo(entry.createdAt, now)}</span>
         </div>
       ))}
     </div>

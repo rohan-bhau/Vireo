@@ -86,8 +86,6 @@ export function BacklogView({ projectId }: { projectId: string }) {
     return tasks;
   }, [backlogTasks, selectedEpicKey, searchQuery]);
 
-  const totalBacklogPoints = filteredBacklog.reduce((sum, t) => sum + (t.storyPoints || 0), 0);
-
   async function handleQuickCreateSprint() {
     if (!quickCreateName.trim()) return;
     try {

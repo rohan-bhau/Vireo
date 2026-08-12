@@ -58,10 +58,6 @@ function startOfWeek(d: Date): Date {
   return nd;
 }
 
-function startOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-
 function startOfQuarter(d: Date): Date {
   const q = Math.floor(d.getMonth() / 3) * 3;
   return new Date(d.getFullYear(), q, 1);
@@ -125,7 +121,6 @@ function buildColumns(zoom: Zoom, now: Date): Column[] {
   }
 
   if (zoom === "month") {
-    const start = startOfMonth(now);
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const cols: Column[] = [];
     for (let i = 1; i <= daysInMonth; i++) {
@@ -334,7 +329,7 @@ export function TimelineTab({ workspaceId }: TimelineTabProps) {
 
             {/* rows */}
             <div className="divide-y divide-[#C3C6D7]/10">
-              {projectRows.map((projectId, rowIdx) => {
+              {projectRows.map((projectId) => {
                 const projectTasks = (tasksByProject[projectId] || []).sort(
                   (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
                 );

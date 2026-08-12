@@ -9,7 +9,6 @@ interface SprintOverlayProps {
   }[];
   timelineStart: Date;
   totalMs: number;
-  pixelsPerMs: number;
 }
 
 const SPRINT_COLORS = [
@@ -22,7 +21,6 @@ export function SprintOverlay({
   sprints,
   timelineStart,
   totalMs,
-  pixelsPerMs,
 }: SprintOverlayProps) {
   if (!sprints.length) return null;
 

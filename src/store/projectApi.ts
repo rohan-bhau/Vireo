@@ -8,6 +8,7 @@ export interface Column {
   name: string;
   position: number;
   boardId: string;
+  wipLimit?: number | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useWatchTaskMutation, useUnwatchTaskMutation, useGetIsWatchingQuery } from "@/store/watchApi";
 import { Eye, EyeOff } from "lucide-react";
 

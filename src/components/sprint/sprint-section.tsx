@@ -37,7 +37,6 @@ export function SprintSection({ sprint, tasks, projectId, workspaceId, epics, al
   const totalPoints = tasks.reduce((sum, t) => sum + (t.storyPoints || 0), 0);
   const donePoints = tasks.filter((t) => t.status === "done").reduce((sum, t) => sum + (t.storyPoints || 0), 0);
   const progress = totalPoints > 0 ? Math.round((donePoints / totalPoints) * 100) : 0;
-  const doneTasks = tasks.filter((t) => t.status === "done").length;
 
   function findParentEpic(task: Task): Epic | undefined {
     if (!task.parentTask) return undefined;

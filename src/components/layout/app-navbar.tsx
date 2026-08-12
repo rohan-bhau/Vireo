@@ -50,7 +50,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
   useHotkey("c", () => setCreateDialogOpen(true));
 
   useEffect(() => {
-    function handle(event: CustomEvent) { setCreateDialogOpen(true); }
+    function handle() { setCreateDialogOpen(true); }
     window.addEventListener("vireo:create-issue", handle as EventListener);
     return () => window.removeEventListener("vireo:create-issue", handle as EventListener);
   }, []);
@@ -141,7 +141,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
                 <div className="max-h-80 overflow-y-auto py-1">
                   {myWorkspaces.length === 0 ? (
                     <p className="px-4 py-3 text-xs text-text-tertiary">
-                      You haven't created any workspaces yet.
+                      You haven&apos;t created any workspaces yet.
                     </p>
                   ) : (
                     myWorkspaces.map((ws) => (
@@ -222,7 +222,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
                 <div className="max-h-80 overflow-y-auto py-1">
                   {myWorkspaces.length === 0 ? (
                     <p className="px-4 py-3 text-xs text-text-tertiary">
-                      You haven't created any workspaces yet.
+                      You haven&apos;t created any workspaces yet.
                     </p>
                   ) : (
                     myWorkspaces.map((ws) => (

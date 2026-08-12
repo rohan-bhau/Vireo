@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useParams, notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Shield, Users, Sparkles, Bug, Columns, IterationCcw, Route, BarChart3, MessageSquareMore, RefreshCw, GitBranch, Workflow, Lock, ChevronDown, Code, Building2, Server, LineChart, Rocket, GraduationCap } from "lucide-react";
-import { solutionCategories, getSolutionCategoryById, getSolutionItemBySlug, getSolutionCategoryForSlug } from "@/lib/solutions-data";
+import { ArrowLeft, ArrowRight, Check, Users, Bug, Columns, IterationCcw, Route, BarChart3, MessageSquareMore, RefreshCw, GitBranch, Workflow, ChevronDown, Code, LineChart, Rocket } from "lucide-react";
+import { getSolutionCategoryById, getSolutionItemBySlug, getSolutionCategoryForSlug } from "@/lib/solutions-data";
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -170,7 +170,6 @@ export default function SolutionsArticlePage() {
   }
 
   const relatedItems = item ? getSolutionCategoryForSlug(item.slug)?.items.filter((i) => i.slug !== item.slug) : [];
-  const allItems = solutionCategories.flatMap((c) => c.items);
 
   if (category) {
     return (

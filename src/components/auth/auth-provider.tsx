@@ -4,13 +4,13 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store";
 import { setCredentials, setLoading, logout } from "@/store/authSlice";
-import { authApi } from "@/store/authApi";
+import { authApi, type AuthData } from "@/store/authApi";
 import { getAccessToken, clearTokens } from "@/lib/auth";
 import { connectSocket, disconnectSocket } from "@/lib/socket";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated, isLoading } = useSelector(
+  const { isLoading } = useSelector(
     (state: RootState) => state.auth
   );
 
@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     dispatch(authApi.endpoints.getProfile.initiate(undefined))
       .unwrap()
-      .then((data: any) => {
+      .then((data: { user: AuthData["user"] }) => {
         const accessToken = getAccessToken();
         dispatch(
           setCredentials({

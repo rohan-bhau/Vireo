@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useGetProjectEpicsQuery, useCreateEpicMutation, type Epic } from "@/store/epicApi";
 import { clsx } from "clsx";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EpicSidebarProps {

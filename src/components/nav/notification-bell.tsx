@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useGetUnreadCountQuery, useGetNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation, type Notification, type NotificationType } from "@/store/notificationApi";
-import { connectSocket } from "@/lib/socket";
+import { useGetUnreadCountQuery, useGetNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation, type NotificationType } from "@/store/notificationApi";
 import { Bell, UserPlus, AtSign, ArrowRightLeft, MessageSquare, Plus, RefreshCw, Trash2, Play, CheckSquare, UserPlus2, CalendarClock, PartyPopper } from "lucide-react";
 import { clsx } from "clsx";
 

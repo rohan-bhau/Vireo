@@ -49,11 +49,11 @@ function FilterSection({ label, children }: { label: string; children: React.Rea
   );
 }
 
-export function BasicFiltersSidebar({ filters, onChange, onApply }: BasicFiltersProps) {
+export function BasicFiltersSidebar({ filters, onChange }: BasicFiltersProps) {
   const [showMore, setShowMore] = useState(false);
 
   function toggleValue(field: string, value: string) {
-    const current = (filters as any)[field] || [];
+    const current = filters[field as keyof typeof filters] || [];
     const next = current.includes(value)
       ? current.filter((v: string) => v !== value)
       : [...current, value];

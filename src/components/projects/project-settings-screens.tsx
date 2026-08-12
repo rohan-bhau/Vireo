@@ -55,7 +55,7 @@ const defaultScreens: Screen[] = [
   },
 ];
 
-export function ProjectSettingsScreens({ project }: { project: Project }) {
+export function ProjectSettingsScreens({}: { project: Project }) {
   const [screens, setScreens] = useState<Screen[]>(defaultScreens);
   const [addingTo, setAddingTo] = useState<string | null>(null);
 

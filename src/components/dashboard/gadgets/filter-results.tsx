@@ -7,7 +7,7 @@ interface FilterResultsProps {
   config: GadgetConfig;
 }
 
-export function FilterResults({ data, config }: FilterResultsProps) {
+export function FilterResults({ data }: FilterResultsProps) {
   const totalTasks = Object.values(data.statistics.byStatus).reduce((s, v) => s + v, 0);
 
   return (

@@ -31,7 +31,7 @@ interface BoardColumnProps {
   onAssigneeChange?: (taskKey: string, userId: string | null) => void;
 }
 
-export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, isOver, workspaceId, projectId, boardId, membersMap = {}, members = [], quickCreating, onAssigneeChange }: BoardColumnProps) {
+export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, workspaceId, projectId, boardId, membersMap = {}, members = [], quickCreating, onAssigneeChange }: BoardColumnProps) {
   const {
     setNodeRef,
     attributes,

@@ -67,6 +67,19 @@ interface UnreadCountResponse {
   data: { count: number };
 }
 
+interface NotificationPreferencesResponse {
+  status: string;
+  data: {
+    preferences: NotificationPreferences;
+    projectOverrides: ProjectNotificationOverride[];
+  };
+}
+
+interface ProjectOverridesResponse {
+  status: string;
+  data: { projectOverrides: ProjectNotificationOverride[] };
+}
+
 export const notificationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getNotifications: builder.query<
@@ -119,7 +132,7 @@ export const notificationApi = api.injectEndpoints({
       projectOverrides: ProjectNotificationOverride[];
     }, void>({
       query: () => "/notification-preferences",
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: NotificationPreferencesResponse) => response.data,
       providesTags: ["NotificationPreferences"],
     }),
     updateNotificationPreferences: builder.mutation<
@@ -131,7 +144,7 @@ export const notificationApi = api.injectEndpoints({
         method: "PUT",
         body,
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: NotificationPreferencesResponse) => response.data,
       invalidatesTags: ["NotificationPreferences"],
     }),
     updateProjectNotificationOverride: builder.mutation<
@@ -143,7 +156,7 @@ export const notificationApi = api.injectEndpoints({
         method: "PUT",
         body: overrides,
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: ProjectOverridesResponse) => response.data,
       invalidatesTags: ["NotificationPreferences"],
     }),
     removeProjectNotificationOverride: builder.mutation<
@@ -154,7 +167,7 @@ export const notificationApi = api.injectEndpoints({
         url: `/notification-preferences/project/${projectId}`,
         method: "DELETE",
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: ProjectOverridesResponse) => response.data,
       invalidatesTags: ["NotificationPreferences"],
     }),
     getWorkspaceNotificationPreference: builder.query<{ events: string[] }, string>({

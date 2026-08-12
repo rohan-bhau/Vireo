@@ -30,7 +30,9 @@ export function CreateSprintDialog({ open, onClose, projectId, editSprint }: Cre
   const [endDate, setEndDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
+  const [prevEdit, setPrevEdit] = useState(editSprint);
+  if (editSprint !== prevEdit) {
+    setPrevEdit(editSprint);
     if (editSprint) {
       setName(editSprint.name);
       setGoal(editSprint.goal || "");
@@ -42,7 +44,7 @@ export function CreateSprintDialog({ open, onClose, projectId, editSprint }: Cre
       setStartDate("");
       setEndDate("");
     }
-  }, [editSprint, open]);
+  }
 
   useEffect(() => {
     if (open) {

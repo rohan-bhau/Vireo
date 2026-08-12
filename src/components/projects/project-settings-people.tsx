@@ -6,7 +6,6 @@ import { useGetMembersQuery } from "@/store/workspaceApi";
 import { useGetProjectRolesQuery, useAddMemberToProjectRoleMutation, useRemoveMemberFromProjectRoleMutation } from "@/store/permissionApi";
 import { Search, X, UserPlus, MoreHorizontal, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
 
 export function ProjectSettingsPeople({ project }: { project: Project }) {

@@ -10,12 +10,9 @@ import { NotificationListener } from "@/components/notifications/notification-li
 import { WorkspaceListener } from "@/components/notifications/workspace-listener";
 import { AIChatPanel } from "@/components/ai/ai-chat-panel";
 import { ErrorBoundary } from "./error-boundary";
-import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, type PanInfo } from "framer-motion";
 import { X } from "lucide-react";
 import { useHotkey, useHotkeySequence } from "@/hooks/use-hotkeys";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "@/store";
-import { toggleSidebar } from "@/store/sidebarSlice";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -50,7 +47,7 @@ function MobileSidebarDrawer({
     };
   }, [open]);
 
-  function handleDragEnd(_: any, info: any) {
+  function handleDragEnd(_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
     if (info.offset.x < -80) {
       onClose();
     }
@@ -109,7 +106,6 @@ export function AppLayout({ children, hideSidebar = false, sidebarProps }: AppLa
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
 
   const handleMobileMenuToggle = useCallback(() => {
     setMobileSidebarOpen((prev) => !prev);

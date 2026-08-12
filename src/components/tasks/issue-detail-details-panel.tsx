@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDropdown, DropdownPanel } from "@/components/ui/dropdown";
-import type { Task, TaskStatus, TaskPriority } from "@/store/taskApi";
+import type { Task, TaskStatus, TaskPriority, UpdateTaskInput } from "@/store/taskApi";
 import { useUpdateTaskMutation } from "@/store/taskApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
 import { useGetWorkspaceCustomFieldsQuery } from "@/store/customFieldApi";
@@ -36,53 +36,25 @@ const PRIORITIES: { value: TaskPriority; label: string }[] = [
   { value: "lowest", label: "Lowest" },
 ];
 
-export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetailsPanelProps) {
-  const router = useRouter();
-  const [updateTask] = useUpdateTaskMutation();
-  const { data: members } = useGetMembersQuery(workspaceId);
-  const { data: workspaceCustomFields = [] } = useGetWorkspaceCustomFieldsQuery(workspaceId);
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [fieldValue, setFieldValue] = useState<any>(null);
+type FieldValue = string | string[] | number | null;
 
-  function getUserName(userId: string): string {
-    const member = members?.find((m) => m.userId === userId);
-    return member?.user?.name || userId;
-  }
+interface DetailRowProps {
+  label: string;
+  field?: string;
+  children: React.ReactNode;
+  onEdit?: () => void;
+  isEmpty?: boolean;
+  active?: boolean;
+  "data-shortcut"?: string;
+}
 
-  async function handleSave(field: string, value: any) {
-    try {
-      await updateTask({ taskKey: task.taskKey, data: { [field]: value }, workspaceId }).unwrap();
-      setEditingField(null);
-    } catch (e) {
-      toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||
-        (e as { message?: string })?.message ||
-        "Update failed");
-    }
-  }
-
-  function startEdit(field: string, currentValue: any) {
-    setEditingField(field);
-    setFieldValue(currentValue);
-  }
-
-  const DetailRow = ({
-    label,
-    field,
-    children,
-    onEdit,
-    isEmpty,
-  }: {
-    label: string;
-    field: string;
-    children: React.ReactNode;
-    onEdit?: () => void;
-    isEmpty?: boolean;
-  }) => (
+function DetailRow({ label, children, onEdit, isEmpty, active }: DetailRowProps) {
+  return (
     <div className="flex flex-col gap-0.5">
       <span className="text-[11px] font-medium text-text-placeholder">{label}</span>
       <div
         className={`rounded-[3px] -ml-1 px-1 py-0.5 min-h-[24px] cursor-pointer hover:bg-bg-light transition-colors ${
-          editingField === field ? "bg-bg-light" : ""
+          active ? "bg-bg-light" : ""
         }`}
         onClick={() => onEdit?.()}
       >
@@ -93,53 +65,87 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
       )}
     </div>
   );
+}
 
-  function StatusEditor() {
-    const { open, setOpen, triggerRef } = useDropdown();
-    return (
-      <div className="relative">
-        <button ref={triggerRef} type="button" onClick={() => setOpen(!open)} className="w-full text-left">
-          <StatusBadge status={task.status} size="md" />
-        </button>
-        <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)}>
-          {STATUSES.map((s) => (
-            <button
-              key={s.value}
-              type="button"
-              onClick={() => { handleSave("status", s.value); setOpen(false); }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${s.value === task.status ? "bg-bg-light font-medium" : ""}`}
-            >
-              <StatusBadge status={s.value} />
-            </button>
-          ))}
-        </DropdownPanel>
-      </div>
-    );
+function StatusEditor({ status, onChange }: { status: TaskStatus; onChange: (value: TaskStatus) => void }) {
+  const { open, setOpen, triggerRef } = useDropdown();
+  return (
+    <div className="relative">
+      <button ref={triggerRef} type="button" onClick={() => setOpen(!open)} className="w-full text-left">
+        <StatusBadge status={status} size="md" />
+      </button>
+      <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)}>
+        {STATUSES.map((s) => (
+          <button
+            key={s.value}
+            type="button"
+            onClick={() => { onChange(s.value); setOpen(false); }}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${s.value === status ? "bg-bg-light font-medium" : ""}`}
+          >
+            <StatusBadge status={s.value} />
+          </button>
+        ))}
+      </DropdownPanel>
+    </div>
+  );
+}
+
+function PriorityEditor({ priority, onChange }: { priority: TaskPriority; onChange: (value: TaskPriority) => void }) {
+  const { open, setOpen, triggerRef } = useDropdown();
+  return (
+    <div className="relative">
+      <button ref={triggerRef} type="button" onClick={() => setOpen(!open)} className="w-full text-left flex items-center gap-1.5">
+        <PriorityIcon priority={priority} />
+        <span className="text-xs text-text capitalize">{priority}</span>
+      </button>
+      <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)}>
+        {PRIORITIES.map((p) => (
+          <button
+            key={p.value}
+            type="button"
+            onClick={() => { onChange(p.value); setOpen(false); }}
+            className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${p.value === priority ? "bg-bg-light font-medium" : ""}`}
+          >
+            <PriorityIcon priority={p.value} />
+            <span>{p.label}</span>
+          </button>
+        ))}
+      </DropdownPanel>
+    </div>
+  );
+}
+
+export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetailsPanelProps) {
+  const router = useRouter();
+  const [updateTask] = useUpdateTaskMutation();
+  const { data: members } = useGetMembersQuery(workspaceId);
+  const { data: workspaceCustomFields = [] } = useGetWorkspaceCustomFieldsQuery(workspaceId);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [fieldValue, setFieldValue] = useState<FieldValue>(null);
+
+  function getUserName(userId: string): string {
+    const member = members?.find((m) => m.userId === userId);
+    return member?.user?.name || userId;
   }
 
-  function PriorityEditor() {
-    const { open, setOpen, triggerRef } = useDropdown();
-    return (
-      <div className="relative">
-        <button ref={triggerRef} type="button" onClick={() => setOpen(!open)} className="w-full text-left flex items-center gap-1.5">
-          <PriorityIcon priority={task.priority} />
-          <span className="text-xs text-text capitalize">{task.priority}</span>
-        </button>
-        <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)}>
-          {PRIORITIES.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              onClick={() => { handleSave("priority", p.value); setOpen(false); }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-bg-light ${p.value === task.priority ? "bg-bg-light font-medium" : ""}`}
-            >
-              <PriorityIcon priority={p.value} />
-              <span>{p.label}</span>
-            </button>
-          ))}
-        </DropdownPanel>
-      </div>
-    );
+  async function handleSave(field: string, value: FieldValue) {
+    try {
+      await updateTask({
+        taskKey: task.taskKey,
+        data: { [field]: value } as Partial<UpdateTaskInput>,
+        workspaceId,
+      }).unwrap();
+      setEditingField(null);
+    } catch (e) {
+      toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||
+        (e as { message?: string })?.message ||
+        "Update failed");
+    }
+  }
+
+  function startEdit(field: string, currentValue: FieldValue) {
+    setEditingField(field);
+    setFieldValue(currentValue);
   }
 
   return (
@@ -149,31 +155,32 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           Details
         </h3>
 
-        <DetailRow label="Status" field="status">
-          <div data-shortcut="status"><StatusEditor /></div>
+        <DetailRow label="Status" field="status" active={editingField === "status"}>
+          <div data-shortcut="status"><StatusEditor status={task.status} onChange={(value) => handleSave("status", value)} /></div>
         </DetailRow>
 
-        <DetailRow label="Issue type" field="type">
+        <DetailRow label="Issue type" field="type" active={editingField === "type"}>
           <div className="flex items-center gap-1.5">
             <IssueTypeIcon type={task.type} />
             <span className="text-xs text-text capitalize">{task.type}</span>
           </div>
         </DetailRow>
 
-        <DetailRow label="Priority" field="priority">
-          <div data-shortcut="priority"><PriorityEditor /></div>
+        <DetailRow label="Priority" field="priority" active={editingField === "priority"}>
+          <div data-shortcut="priority"><PriorityEditor priority={task.priority} onChange={(value) => handleSave("priority", value)} /></div>
         </DetailRow>
 
         <DetailRow
           label="Assignee"
           field="assignee"
           onEdit={() => startEdit("assignee", task.assignee)}
+          active={editingField === "assignee"}
           data-shortcut="assignee"
         >
           {editingField === "assignee" ? (
             <AssigneePicker
               workspaceId={workspaceId}
-              value={fieldValue}
+              value={fieldValue as string | null}
               onChange={(v) => { handleSave("assignee", v); }}
             />
           ) : (
@@ -181,7 +188,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           )}
         </DetailRow>
 
-        <DetailRow label="Reporter" field="reporter">
+        <DetailRow label="Reporter" field="reporter" active={editingField === "reporter"}>
           <span className="text-xs text-text">{getUserName(task.reporter)}</span>
         </DetailRow>
 
@@ -189,12 +196,13 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           label="Labels"
           field="labels"
           onEdit={() => startEdit("labels", task.labels)}
+          active={editingField === "labels"}
           data-shortcut="labels"
         >
           {editingField === "labels" ? (
             <LabelEditor
               workspaceId={workspaceId}
-              value={fieldValue || []}
+              value={(fieldValue as string[]) || []}
               onChange={(v) => { handleSave("labels", v); }}
               projectId={task.projectId}
             />
@@ -215,11 +223,12 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           label="Components"
           field="components"
           onEdit={() => startEdit("components", task.components)}
+          active={editingField === "components"}
         >
           {editingField === "components" ? (
             <MultiComponentSelector
               projectId={task.projectId}
-              value={fieldValue || []}
+              value={(fieldValue as string[]) || []}
               onChange={(v) => { handleSave("components", v); }}
             />
           ) : task.components && task.components.length > 0 ? (
@@ -239,11 +248,12 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           label="Fix Version"
           field="fixVersion"
           onEdit={() => startEdit("fixVersion", task.fixVersion || "")}
+          active={editingField === "fixVersion"}
         >
           {editingField === "fixVersion" ? (
             <VersionSelector
               projectId={task.projectId}
-              value={fieldValue || ""}
+              value={(fieldValue as string) || ""}
               onChange={(v) => { handleSave("fixVersion", v || null); }}
             />
           ) : (
@@ -251,7 +261,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           )}
         </DetailRow>
 
-        <DetailRow label="Sprint" field="sprint">
+        <DetailRow label="Sprint" field="sprint" active={editingField === "sprint"}>
           <span className="text-xs text-text">{task.sprintId || "None"}</span>
         </DetailRow>
 
@@ -259,16 +269,17 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           label="Story points"
           field="storyPoints"
           onEdit={() => startEdit("storyPoints", task.storyPoints?.toString() || "")}
+          active={editingField === "storyPoints"}
         >
           {editingField === "storyPoints" ? (
             <input
               type="number"
               min="0"
-              value={fieldValue}
+              value={fieldValue as string | number}
               onChange={(e) => setFieldValue(e.target.value)}
-              onBlur={() => handleSave("storyPoints", fieldValue ? parseInt(fieldValue, 10) : null)}
+              onBlur={() => handleSave("storyPoints", fieldValue ? parseInt(fieldValue as string, 10) : null)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleSave("storyPoints", fieldValue ? parseInt(fieldValue, 10) : null);
+                if (e.key === "Enter") handleSave("storyPoints", fieldValue ? parseInt(fieldValue as string, 10) : null);
                 if (e.key === "Escape") setEditingField(null);
               }}
               className="w-full rounded border border-primary bg-surface px-2 py-0.5 text-xs text-text focus:outline-none"
@@ -285,13 +296,14 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
           label="Due date"
           field="dueDate"
           onEdit={() => startEdit("dueDate", task.dueDate?.split("T")[0] || "")}
+          active={editingField === "dueDate"}
         >
           {editingField === "dueDate" ? (
             <input
               type="date"
-              value={fieldValue}
+              value={fieldValue as string}
               onChange={(e) => setFieldValue(e.target.value)}
-              onBlur={() => handleSave("dueDate", fieldValue || null)}
+              onBlur={() => handleSave("dueDate", (fieldValue as string) || null)}
               className="w-full rounded border border-primary bg-surface px-2 py-0.5 text-xs text-text focus:outline-none"
               autoFocus
             />
@@ -303,7 +315,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         </DetailRow>
 
         {task.parentTask && (
-          <DetailRow label="Parent" field="parent">
+          <DetailRow label="Parent" field="parent" active={editingField === "parent"}>
             <button
               onClick={() => router.push(`/task/${task.parentTask}`)}
               className="text-xs font-medium text-primary hover:text-primary-dark transition-colors"
@@ -314,7 +326,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         )}
 
         {task.linkedTasks.length > 0 && (
-          <DetailRow label="Linked issues" field="linked">
+          <DetailRow label="Linked issues" field="linked" active={editingField === "linked"}>
             <div className="flex flex-col gap-1">
               {task.linkedTasks.map((link) => (
                 <button
@@ -341,7 +353,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
               const display =
                 raw === null || raw === undefined || raw === "" ? "None" : String(raw).replace(/,/g, ", ");
               return (
-                <DetailRow key={field._id} label={field.name} field={field._id}>
+                <DetailRow key={field._id} label={field.name} field={field._id} active={editingField === field._id}>
                   <span className="text-xs text-text">{display}</span>
                 </DetailRow>
               );

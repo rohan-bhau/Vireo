@@ -16,6 +16,10 @@ interface BoardConfigPanelProps {
 
 type ConfigTab = "columns" | "swimlanes" | "card-layout" | "quick-filters";
 
+type SwimlaneType = "none" | "assignee" | "epic" | "priority" | "custom";
+
+type ColumnWithWip = Column & { wipLimit?: number | null };
+
 export function BoardConfigPanel({ open, onClose, board, projectId }: BoardConfigPanelProps) {
   const [activeTab, setActiveTab] = useState<ConfigTab>("columns");
 
@@ -112,7 +116,7 @@ function ColumnsTab({ board, projectId }: { board: Board; projectId: string }) {
               <div className="flex items-center gap-1">
                 <input
                   type="number" min={0}
-                  defaultValue={(col as any).wipLimit ?? ""}
+                  defaultValue={(col as ColumnWithWip).wipLimit ?? ""}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       const val = (e.target as HTMLInputElement).value;
@@ -129,7 +133,7 @@ function ColumnsTab({ board, projectId }: { board: Board; projectId: string }) {
               </div>
             ) : (
               <button onClick={() => setEditingWip(col.id)} className="text-xs text-[#737686] hover:text-[#2563EB] transition-colors">
-                {(col as any).wipLimit != null ? `WIP: ${(col as any).wipLimit}` : "Set WIP"}
+                {(col as ColumnWithWip).wipLimit != null ? `WIP: ${(col as ColumnWithWip).wipLimit}` : "Set WIP"}
               </button>
             )}
             <button onClick={() => removeColumn({ boardId: board.id, columnId: col.id })} className="text-[#737686] hover:text-[#DC2626] p-0.5">
@@ -158,7 +162,7 @@ function SwimlanesTab({ board }: { board: Board }) {
   const swimConfig = config.swimlanes || { enabled: false, type: "none" as const };
 
   const [enabled, setEnabled] = useState(swimConfig.enabled);
-  const [swimType, setSwimType] = useState(swimConfig.type);
+  const [swimType, setSwimType] = useState<SwimlaneType>(swimConfig.type);
   const [customJql, setCustomJql] = useState(swimConfig.customJql || "");
 
   async function handleSave() {
@@ -190,7 +194,7 @@ function SwimlanesTab({ board }: { board: Board }) {
             <label className="text-xs text-[#737686] block mb-1.5">Swimlane type</label>
             <select
               value={swimType}
-              onChange={(e) => setSwimType(e.target.value as any)}
+              onChange={(e) => setSwimType(e.target.value as SwimlaneType)}
               className="w-full rounded-[3px] border border-[#DFE1E6] px-3 py-1.5 text-sm text-[#172B4D] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
             >
               <option value="assignee">By assignee</option>

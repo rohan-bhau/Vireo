@@ -87,6 +87,16 @@ interface WorkflowSchemesResponse {
   data: { schemes: WorkflowScheme[] };
 }
 
+interface WorkflowUsageResponse {
+  status: string;
+  data: { usedBySchemes: number; schemes: { id: string; name: string }[]; issueTypes: string[] };
+}
+
+interface ValidateTransitionResponse {
+  status: string;
+  data: { valid: boolean; errors: string[] };
+}
+
 export const workflowApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getProjectWorkflows: builder.query<Workflow[], string>({
@@ -108,7 +118,7 @@ export const workflowApi = api.injectEndpoints({
     }),
     getWorkflowUsage: builder.query<{ usedBySchemes: number; schemes: { id: string; name: string }[]; issueTypes: string[] }, string>({
       query: (id) => `/workflows/${id}/usage`,
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: WorkflowUsageResponse) => response.data,
     }),
     createWorkflow: builder.mutation<Workflow, { projectId: string; workspaceId: string; name: string; statuses: WorkflowStatus[]; transitions?: WorkflowTransition[]; defaultStatus: string }>({
       query: (body) => ({
@@ -165,9 +175,9 @@ export const workflowApi = api.injectEndpoints({
         method: "POST",
         body,
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: ValidateTransitionResponse) => response.data,
     }),
-    executeTransition: builder.mutation<any, { workflowId: string; transitionName: string; taskKey: string }>({
+    executeTransition: builder.mutation<unknown, { workflowId: string; transitionName: string; taskKey: string }>({
       query: ({ workflowId, ...body }) => ({
         url: `/workflows/${workflowId}/execute`,
         method: "POST",

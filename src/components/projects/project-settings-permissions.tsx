@@ -3,9 +3,7 @@
 import { useState } from "react";
 import type { Project } from "@/store/projectApi";
 import { useGetPermissionSchemesQuery, useAssignPermissionSchemeToProjectMutation, PERMISSIONS } from "@/store/permissionApi";
-import type { PermissionScheme } from "@/store/permissionApi";
 import { Check, ChevronDown, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const PERMISSION_LABELS: Record<string, string> = {
   BROWSE_PROJECTS: "Browse projects",

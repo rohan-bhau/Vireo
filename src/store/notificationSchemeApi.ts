@@ -37,16 +37,26 @@ export interface NotificationScheme {
   updatedAt: string;
 }
 
+interface NotificationSchemesResponse {
+  status: string;
+  data: { schemes: NotificationScheme[] };
+}
+
+interface NotificationSchemeResponse {
+  status: string;
+  data: { scheme: NotificationScheme };
+}
+
 export const notificationSchemeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getWorkspaceNotificationSchemes: builder.query<NotificationScheme[], string>({
       query: (workspaceId) => `/notification-schemes/workspace/${workspaceId}`,
-      transformResponse: (response: any) => response.data.schemes,
+      transformResponse: (response: NotificationSchemesResponse) => response.data.schemes,
       providesTags: (result, error, workspaceId) => [{ type: "NotificationScheme", id: `workspace-${workspaceId}` }],
     }),
     getNotificationScheme: builder.query<NotificationScheme, string>({
       query: (id) => `/notification-schemes/${id}`,
-      transformResponse: (response: any) => response.data.scheme,
+      transformResponse: (response: NotificationSchemeResponse) => response.data.scheme,
       providesTags: (result, error, id) => [{ type: "NotificationScheme", id }],
     }),
     createNotificationScheme: builder.mutation<NotificationScheme, {
@@ -60,7 +70,7 @@ export const notificationSchemeApi = api.injectEndpoints({
         method: "POST",
         body,
       }),
-      transformResponse: (response: any) => response.data.scheme,
+      transformResponse: (response: NotificationSchemeResponse) => response.data.scheme,
       invalidatesTags: (result, error, { workspaceId }) => [
         { type: "NotificationScheme", id: `workspace-${workspaceId}` },
       ],
@@ -71,7 +81,7 @@ export const notificationSchemeApi = api.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      transformResponse: (response: any) => response.data.scheme,
+      transformResponse: (response: NotificationSchemeResponse) => response.data.scheme,
       invalidatesTags: (result, error, { id }) => [{ type: "NotificationScheme", id }],
     }),
     deleteNotificationScheme: builder.mutation<void, string>({

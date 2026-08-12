@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Task } from "@/store/taskApi";
 
 interface RecentlyCreatedProps {
@@ -7,6 +8,8 @@ interface RecentlyCreatedProps {
 }
 
 export function RecentlyCreated({ tasks }: RecentlyCreatedProps) {
+  const [now] = useState(() => Date.now());
+
   if (tasks.length === 0) {
     return (
       <div className="flex items-center justify-center h-32 text-xs text-[#737686]">
@@ -15,8 +18,8 @@ export function RecentlyCreated({ tasks }: RecentlyCreatedProps) {
     );
   }
 
-  function timeAgo(dateStr: string) {
-    const diff = Date.now() - new Date(dateStr).getTime();
+  function timeAgo(dateStr: string, now: number) {
+    const diff = now - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "Just now";
     if (mins < 60) return `${mins}m ago`;
@@ -42,7 +45,7 @@ export function RecentlyCreated({ tasks }: RecentlyCreatedProps) {
             {task.type}
           </span>
           <span className="text-xs text-[#434655] truncate flex-1">{task.title}</span>
-          <span className="text-[10px] text-[#737686] shrink-0">{timeAgo(task.createdAt)}</span>
+          <span className="text-[10px] text-[#737686] shrink-0">{timeAgo(task.createdAt, now)}</span>
         </div>
       ))}
     </div>

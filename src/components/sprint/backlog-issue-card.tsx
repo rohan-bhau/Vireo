@@ -7,7 +7,6 @@ import type { Epic } from "@/store/epicApi";
 import type { Sprint } from "@/store/sprintApi";
 import { IssueTypeIcon } from "@/components/tasks/issue-type-icon";
 import { PriorityIcon } from "@/components/tasks/priority-icon";
-import { EpicColorBar } from "./epic-color-bar";
 import { IssueQuickMenu } from "./issue-quick-menu";
 import { clsx } from "clsx";
 import { GripVertical, MoreHorizontal } from "lucide-react";

@@ -41,7 +41,7 @@ export default function WorkspaceDashboardPage() {
     await updateDashboard({
       workspaceId,
       dashboardId: activeDashboard._id,
-      data: { gadgets } as any,
+      data: { gadgets },
     });
   };
 

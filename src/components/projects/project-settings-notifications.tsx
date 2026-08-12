@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Project } from "@/store/projectApi";
 import { useGetWorkspaceNotificationSchemesQuery, useCreateNotificationSchemeMutation, useUpdateNotificationSchemeMutation, useDeleteNotificationSchemeMutation } from "@/store/notificationSchemeApi";
-import type { NotificationEvent, RecipientType } from "@/store/notificationSchemeApi";
+import type { NotificationEvent, RecipientType, NotificationScheme, NotificationSchemeEvent } from "@/store/notificationSchemeApi";
 import { useGetNotificationPreferencesQuery, useUpdateProjectNotificationOverrideMutation } from "@/store/notificationApi";
 import { Plus, Trash2, Save, Eye, EyeOff, Bell, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export function ProjectSettingsNotifications({ project }: { project: Project }) 
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [editingScheme, setEditingScheme] = useState<string | null>(null);
-  const [editingEvents, setEditingEvents] = useState<any[]>([]);
+  const [editingEvents, setEditingEvents] = useState<NotificationSchemeEvent[]>([]);
 
   const projectOverride = prefsData?.projectOverrides?.find((o) => o.projectId === project.id);
   const activeOverrideFields = [
@@ -60,13 +60,13 @@ export function ProjectSettingsNotifications({ project }: { project: Project }) 
     setShowCreate(false);
   }
 
-  function startEdit(scheme: any) {
+  function startEdit(scheme: NotificationScheme) {
     setEditingScheme(scheme._id);
-    setEditingEvents(scheme.events.map((e: any) => ({ ...e })));
+    setEditingEvents(scheme.events.map((e) => ({ ...e })));
   }
 
   async function handleSaveEvents(schemeId: string) {
-    await updateScheme({ id: schemeId, data: { events: editingEvents } as any });
+    await updateScheme({ id: schemeId, data: { events: editingEvents } });
     setEditingScheme(null);
   }
 
@@ -109,7 +109,7 @@ export function ProjectSettingsNotifications({ project }: { project: Project }) 
                     key={field.key}
                     onClick={() => updateProjectOverride({
                       projectId: project.id,
-                      overrides: { [field.key]: !isActive } as any,
+                      overrides: { [field.key]: !isActive },
                     })}
                     className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${
                       isActive

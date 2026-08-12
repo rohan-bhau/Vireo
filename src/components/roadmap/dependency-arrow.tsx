@@ -23,7 +23,6 @@ export function DependencyArrow({ from, to, type }: DependencyArrowProps) {
   const path = `M ${fromX} ${fromY} C ${fromX} ${midY}, ${toX} ${midY}, ${toX} ${toY}`;
 
   const color = type === "blocks" ? "#DC2626" : "#2563EB";
-  const label = type === "blocks" ? "blocks" : "depends on";
 
   return (
     <svg

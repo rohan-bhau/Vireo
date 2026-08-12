@@ -9,6 +9,17 @@ import {
   type LinkedTask,
 } from "@/store/taskApi";
 
+type LinkType =
+  | "blocks"
+  | "blocked_by"
+  | "relates_to"
+  | "duplicates"
+  | "is_duplicated_by"
+  | "clones"
+  | "is_cloned_by";
+
+type ApiLinkType = "blocks" | "blocked_by" | "relates_to";
+
 interface LinkIssueDialogProps {
   open: boolean;
   onClose: () => void;
@@ -16,7 +27,7 @@ interface LinkIssueDialogProps {
   existingLinks: LinkedTask[];
 }
 
-const LINK_TYPES = [
+const LINK_TYPES: { value: LinkType; label: string }[] = [
   { value: "blocks", label: "Blocks" },
   { value: "blocked_by", label: "Blocked by" },
   { value: "relates_to", label: "Relates to" },
@@ -29,7 +40,7 @@ const LINK_TYPES = [
 export function LinkIssueDialog({ open, onClose, taskKey, existingLinks }: LinkIssueDialogProps) {
   const [linkTasks] = useLinkTasksMutation();
   const [unlinkTasks] = useUnlinkTasksMutation();
-  const [linkType, setLinkType] = useState("relates_to");
+  const [linkType, setLinkType] = useState<LinkType>("relates_to");
   const [targetKey, setTargetKey] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,11 +50,12 @@ export function LinkIssueDialog({ open, onClose, taskKey, existingLinks }: LinkI
     setSubmitting(true);
     setError("");
     try {
-      await linkTasks({ taskKey, linkedTaskKey: targetKey.trim(), linkType: linkType as any }).unwrap();
+      await linkTasks({ taskKey, linkedTaskKey: targetKey.trim(), linkType: linkType as ApiLinkType }).unwrap();
       setTargetKey("");
       onClose();
-    } catch (e: any) {
-      setError(e?.data?.message || "Failed to link issues");
+    } catch (e: unknown) {
+      const err = e as { data?: { message?: string }; message?: string };
+      setError(err?.data?.message || err?.message || "Failed to link issues");
     } finally {
       setSubmitting(false);
     }
@@ -62,7 +74,7 @@ export function LinkIssueDialog({ open, onClose, taskKey, existingLinks }: LinkI
           <label className="text-xs font-semibold text-text-secondary">Link type</label>
           <select
             value={linkType}
-            onChange={(e) => setLinkType(e.target.value)}
+            onChange={(e) => setLinkType(e.target.value as LinkType)}
             className="rounded-[3px] border border-border-input bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {LINK_TYPES.map((t) => (

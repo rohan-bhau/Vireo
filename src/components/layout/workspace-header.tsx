@@ -10,7 +10,7 @@ import { toggleStarredWorkspace } from "@/store/workspaceSlice";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Star, MoreHorizontal, Settings, Trash2, UserPlus, Plus } from "lucide-react";
+import { Star, MoreHorizontal, Settings, Trash2, UserPlus } from "lucide-react";
 import { clsx } from "clsx";
 
 interface WorkspaceHeaderProps {

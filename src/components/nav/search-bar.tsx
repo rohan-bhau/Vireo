@@ -10,6 +10,17 @@ interface SuggestionGroup {
   items: { id: string; label: string; sublabel?: string; href: string; icon?: string }[];
 }
 
+interface SearchProjectSuggestion {
+  id: string;
+  name: string;
+  key: string;
+}
+
+interface SearchWorkspaceSuggestion {
+  id: string;
+  name: string;
+}
+
 export function SearchBar() {
   const router = useRouter();
   const [focused, setFocused] = useState(false);
@@ -65,7 +76,7 @@ export function SearchBar() {
     if (data.tasks.length > 0) {
       suggestionGroups.push({
         label: "Recent Issues",
-        items: data.tasks.slice(0, 5).map((t: any) => ({
+        items: data.tasks.slice(0, 5).map((t) => ({
           id: t._id,
           label: t.title,
           sublabel: t.taskKey,
@@ -77,7 +88,7 @@ export function SearchBar() {
     if (data.projects.length > 0) {
       suggestionGroups.push({
         label: "Projects",
-        items: data.projects.map((p: any) => ({
+        items: data.projects.map((p: SearchProjectSuggestion) => ({
           id: p.id,
           label: p.name,
           sublabel: p.key,
@@ -88,7 +99,7 @@ export function SearchBar() {
     if (data.workspaces.length > 0) {
       suggestionGroups.push({
         label: "Workspaces",
-        items: data.workspaces.map((w: any) => ({
+        items: data.workspaces.map((w: SearchWorkspaceSuggestion) => ({
           id: w.id,
           label: w.name,
           href: `/w/${w.id}`,
@@ -136,11 +147,12 @@ export function SearchBar() {
     }
   }
 
-  useEffect(() => {
+  const [prevSearchData, setPrevSearchData] = useState(data);
+  if (prevSearchData !== data) {
+    setPrevSearchData(data);
     setSelectedIndex(0);
-  }, [data]);
+  }
 
-  let currentGroupIndex = 0;
   let itemOffset = 0;
 
   const isIssueKey = /^[A-Z]+-\d+$/i.test(value.trim());

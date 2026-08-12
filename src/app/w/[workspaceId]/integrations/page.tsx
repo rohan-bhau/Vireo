@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
 import { WebhookConfig } from "@/components/integrations/webhook-config";
 import {
-  ExternalLink,
   MessageSquare,
   GitBranch,
   Link2,
@@ -23,11 +22,9 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-  Plug,
   TestTube,
   Webhook,
   Puzzle,
-  Globe,
   Frame,
   GitBranch as GitlabIcon,
   Cloud,

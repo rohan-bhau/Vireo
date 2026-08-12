@@ -96,6 +96,7 @@ export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
               className="flex items-center gap-3 rounded-lg border border-[#C3C6D7]/20 bg-white px-3 py-2"
             >
               {isImage(att.url) ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={att.url} alt={att.filename} className="h-9 w-9 flex-shrink-0 rounded object-cover" />
               ) : (
                 <span className="text-base">{getFileIcon(att.filename)}</span>

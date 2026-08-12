@@ -64,8 +64,6 @@ export function BoardFilterBar({
     }
   }
 
-  const visibleMembers = members.filter((m) => !assigneeFilter.includes(m.id));
-
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {allFilters.map((f) => (

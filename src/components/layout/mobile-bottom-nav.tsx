@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { usePathname, useParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
@@ -58,7 +58,7 @@ const TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   reports: BarChart3,
 };
 
-function getTabIcon(tabId: string, _label: string) {
+function getTabIcon(tabId: string) {
   const Icon = TAB_ICONS[tabId];
   if (Icon) return Icon;
   return FileText;
@@ -108,8 +108,9 @@ export function MobileBottomNav() {
   const allTabIds = useMemo(() => tabs.map((t) => t.id), [tabs]);
 
   const [visibleTabIds, setVisibleTabIds] = useState<string[]>(() => []);
-
-  useEffect(() => {
+  const [prevAllTabIds, setPrevAllTabIds] = useState<string[] | null>(null);
+  if (prevAllTabIds !== allTabIds) {
+    setPrevAllTabIds(allTabIds);
     setVisibleTabIds((prev) => {
       if (allTabIds.length === 0) {
         if (prev.length === 0) return prev;
@@ -128,7 +129,7 @@ export function MobileBottomNav() {
       }
       return next;
     });
-  }, [allTabIds]);
+  }
 
   const hiddenTabs = useMemo(
     () => tabs.filter((t) => !visibleTabIds.includes(t.id)),
@@ -177,8 +178,9 @@ export function MobileBottomNav() {
       setName("");
       setDescription("");
       window.location.href = `/w/${ws.id}`;
-    } catch (err: any) {
-      setError(err?.data?.message || "Failed to create workspace");
+    } catch (err: unknown) {
+      const message = (err as { data?: { message?: string } })?.data?.message;
+      setError(message || "Failed to create workspace");
     }
   }
 
@@ -330,7 +332,7 @@ export function MobileBottomNav() {
             )}
           >
             {maxVisible.map((tab) => {
-              const Icon = getTabIcon(tab.id, tab.label);
+              const Icon = getTabIcon(tab.id);
               const isActive = activeTab === tab.id;
               return (
                 <button
@@ -398,7 +400,7 @@ export function MobileBottomNav() {
                 </div>
                 <div className="max-h-80 overflow-y-auto px-2">
                   {hiddenTabs.map((tab, i) => {
-                    const Icon = getTabIcon(tab.id, tab.label);
+                    const Icon = getTabIcon(tab.id);
                     const isActive = activeTab === tab.id;
                     return (
                       <motion.button

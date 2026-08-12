@@ -35,7 +35,7 @@ export function NotificationListener() {
       toastInfo(`${prefix}${data.message}`, { href });
     });
 
-    const cleanup2 = onNotificationCount((data) => {
+    const cleanup2 = onNotificationCount(() => {
       dispatch(api.util.invalidateTags(["Notifications"]));
     });
 

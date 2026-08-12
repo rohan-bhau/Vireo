@@ -13,7 +13,6 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
-  Search,
   Lock,
 } from "lucide-react";
 

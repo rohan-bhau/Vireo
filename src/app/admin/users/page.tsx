@@ -5,7 +5,7 @@ import { useGetAdminUsersQuery, useUpdateUserRoleMutation } from "@/store/adminA
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
-import { Search, Shield, ShieldOff, ChevronLeft, ChevronRight, Plus, UserPlus } from "lucide-react";
+import { Search, Shield, ShieldOff, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState(1);

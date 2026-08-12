@@ -123,7 +123,22 @@ export function onTaskReordered(callback: (data: TaskSocketData) => void): () =>
   return () => { s.off("task-reordered", callback); };
 }
 
-export function onNewNotification(callback: (data: any) => void): () => void {
+export interface NotificationSocketData {
+  _id?: string;
+  userId?: string;
+  type?: string;
+  taskId?: string;
+  taskTitle?: string;
+  actorId?: string;
+  actorName?: string;
+  message?: string;
+  read?: boolean;
+  projectId?: string;
+  workspaceId?: string;
+  createdAt?: string;
+}
+
+export function onNewNotification(callback: (data: NotificationSocketData) => void): () => void {
   const s = connectSocket();
   s.on("new-notification", callback);
   return () => { s.off("new-notification", callback); };

@@ -59,7 +59,7 @@ export function BoardQuickCreate({ workspaceId, projectId, boardId, columnId, on
     setTypeOpen(false);
     setAssigneeOpen(false);
     setDueOpen(false);
-  }, []);
+  }, [setTypeOpen, setAssigneeOpen, setDueOpen]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {

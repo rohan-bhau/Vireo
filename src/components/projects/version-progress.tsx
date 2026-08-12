@@ -8,7 +8,7 @@ interface VersionProgressProps {
   percentDone: number;
 }
 
-export function VersionProgress({ total, done, inProgress, todo, percentDone }: VersionProgressProps) {
+export function VersionProgress({ total, done, inProgress, percentDone }: VersionProgressProps) {
   if (total === 0) {
     return (
       <div className="flex items-center gap-2">
@@ -32,7 +32,7 @@ export function VersionProgress({ total, done, inProgress, todo, percentDone }: 
   );
 }
 
-export function VersionStats({ total, done, inProgress, todo }: VersionProgressProps) {
+export function VersionStats({ done, inProgress, todo }: VersionProgressProps) {
   return (
     <div className="flex items-center gap-3 text-[11px] text-text-placeholder">
       <span className="flex items-center gap-1">

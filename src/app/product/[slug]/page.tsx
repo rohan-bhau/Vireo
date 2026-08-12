@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useParams, notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Shield, Users, Sparkles, Bug, Columns, IterationCcw, Route, BarChart3, MessageSquareMore, RefreshCw, GitBranch, Workflow, Lock } from "lucide-react";
-import { productCategories, getCategoryById, getItemBySlug, getCategoryForSlug } from "@/lib/product-data";
+import { getCategoryById, getItemBySlug, getCategoryForSlug } from "@/lib/product-data";
 import { FaqSection, type FaqItem } from "@/components/sections/marketing/faq-section";
 
 const categoryColors: Record<string, string> = {
@@ -282,7 +282,6 @@ export default function ProductArticlePage() {
   }
 
   const relatedItems = item ? getCategoryForSlug(item.slug)?.items.filter((i) => i.slug !== item.slug) : [];
-  const allItems = productCategories.flatMap((c) => c.items);
 
   if (category) {
     return (

@@ -26,7 +26,6 @@ export default function TaskDetailPage() {
   const { data: task, isLoading, error } = useGetTaskByKeyQuery(taskKey);
   const [deleteTask] = useDeleteTaskMutation();
 
-  const currentUser = useSelector((state: RootState) => state.auth.user);
   const workspaceId = useSelector((state: RootState) => state.workspace.activeWorkspaceId);
 
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -79,7 +78,7 @@ export default function TaskDetailPage() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
         <p className="text-lg font-semibold text-text">Task not found</p>
-        <p className="text-sm text-text-placeholder">Task {taskKey} does not exist or you don't have access.</p>
+        <p className="text-sm text-text-placeholder">Task {taskKey} does not exist or you don&apos;t have access.</p>
         <Button variant="outline" onClick={() => router.back()}>Go back</Button>
       </div>
     );

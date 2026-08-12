@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Project } from "@/store/projectApi";
-import { ChevronUp, ChevronDown, GripVertical, Tag } from "lucide-react";
+import { ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 
 interface IssueType {
   id: string;
@@ -21,7 +21,7 @@ const defaultTypes: IssueType[] = [
   { id: "subtask", name: "Subtask", icon: "●", color: "#00B8D9", enabled: true, issueCount: 23 },
 ];
 
-export function ProjectSettingsIssueTypes({ project }: { project: Project }) {
+export function ProjectSettingsIssueTypes({}: { project: Project }) {
   const [types, setTypes] = useState<IssueType[]>(defaultTypes);
 
   function toggleEnabled(id: string) {

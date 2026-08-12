@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useLazyJqlSearchQuery, useValidateJqlMutation } from "@/store/searchApi";
-import { useGetWorkspaceFiltersQuery, useCreateSavedFilterMutation, useDeleteSavedFilterMutation } from "@/store/savedFilterApi";
+import { useGetWorkspaceFiltersQuery, useDeleteSavedFilterMutation } from "@/store/savedFilterApi";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import type { Task } from "@/store/taskApi";
@@ -66,19 +66,6 @@ export default function SearchPage() {
   }, [activeWorkspaceId, page, trigger, validateJql]);
 
   useEffect(() => {
-    if (jqlQuery && activeWorkspaceId) {
-      executeSearch(jqlQuery);
-    }
-  }, [jqlQuery, activeWorkspaceId, page, executeSearch]);
-
-  useEffect(() => {
-    if (initialQ && !jqlQuery) {
-      setJqlQuery(initialQ);
-      setJqlInput(initialQ);
-    }
-  }, [initialQ, jqlQuery]);
-
-  useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName;
       const isInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
@@ -131,6 +118,7 @@ export default function SearchPage() {
     setSelectedIds([]);
     setSelectedTask(null);
     setFocusedIndex(-1);
+    executeSearch(jql);
     router.replace(`/search?q=${encodeURIComponent(jql)}`, { scroll: false });
   }
 
@@ -201,12 +189,12 @@ export default function SearchPage() {
       if (!filters[field]) filters[field] = [];
       if (!filters[field].includes(value)) filters[field].push(value);
     }
-    const re: any = {};
-    if (filters.type) re.type = filters.type;
-    if (filters.status) re.status = filters.status;
-    if (filters.priority) re.priority = filters.priority;
-    if (filters.assignee) re.assignee = filters.assignee;
-    setBasicFilters(re);
+    const updated = { ...basicFilters };
+    if (filters.type) updated.type = filters.type;
+    if (filters.status) updated.status = filters.status;
+    if (filters.priority) updated.priority = filters.priority;
+    if (filters.assignee) updated.assignee = filters.assignee;
+    setBasicFilters(updated);
   }
 
   function handleTaskClick(task: Task) {

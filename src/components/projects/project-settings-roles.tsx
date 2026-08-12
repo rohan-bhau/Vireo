@@ -4,10 +4,9 @@ import { useState } from "react";
 import type { Project } from "@/store/projectApi";
 import { useGetProjectRolesQuery, useCreateProjectRoleMutation, useDeleteProjectRoleMutation, useAddMemberToProjectRoleMutation, useRemoveMemberFromProjectRoleMutation } from "@/store/permissionApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
-import { Plus, Trash2, Shield, ChevronRight, X, Users } from "lucide-react";
+import { Plus, Trash2, Shield, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog } from "@/components/ui/dialog";
 
 export function ProjectSettingsRoles({ project }: { project: Project }) {
   const { data: roles, isLoading } = useGetProjectRolesQuery(project.id);

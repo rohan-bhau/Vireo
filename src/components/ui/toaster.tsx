@@ -71,7 +71,6 @@ function ToastItem({ toast }: { toast: Toast }) {
       transition={{ type: "spring", damping: 22, stiffness: 320 }}
       className="w-full"
     >
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Element type={toast.onClick ? "button" : undefined} onClick={toast.onClick} className={className}>
         {body}
       </Element>

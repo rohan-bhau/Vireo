@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
 import { PERMISSIONS, type PermissionMapping } from "@/store/permissionApi";
 import { Plus, Trash2, Check, X } from "lucide-react";

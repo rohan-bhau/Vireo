@@ -63,9 +63,11 @@ export function NotificationList({
     return () => observer.disconnect();
   }, [hasMore, isLoading, onLoadMore]);
 
-  useEffect(() => {
+  const [prevFilterKey, setPrevFilterKey] = useState(filterTab + typeFilter);
+  if (prevFilterKey !== filterTab + typeFilter) {
+    setPrevFilterKey(filterTab + typeFilter);
     setSelected(new Set());
-  }, [filterTab, typeFilter]);
+  }
 
   function handleSelect(id: string, checked: boolean) {
     setSelected((prev) => {

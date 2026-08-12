@@ -110,7 +110,7 @@ interface CreateTaskInput {
   customFields?: Record<string, string | number | null>;
 }
 
-interface UpdateTaskInput {
+export interface UpdateTaskInput {
   title?: string;
   description?: string;
   type?: TaskType;
@@ -284,7 +284,7 @@ export const taskApi = api.injectEndpoints({
         body,
       }),
       transformResponse: (response: TaskResponse) => response.data.task,
-      invalidatesTags: (_result, _error, { taskKey, linkedTaskKey }) => [
+      invalidatesTags: (_result, _error, { taskKey }) => [
         { type: "Task", id: taskKey },
       ],
     }),

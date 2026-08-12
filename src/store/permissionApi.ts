@@ -214,7 +214,7 @@ export const permissionApi = api.injectEndpoints({
         response.data.scheme,
       invalidatesTags: (_result, _error, { id }) => ["IssueSecurity", { type: "IssueSecurity", id }],
     }),
-    assignPermissionSchemeToProject: builder.mutation<any, { projectId: string; permissionSchemeId: string }>({
+    assignPermissionSchemeToProject: builder.mutation<void, { projectId: string; permissionSchemeId: string }>({
       query: ({ projectId, ...body }) => ({
         url: `/admin/projects/${projectId}/permission-scheme`,
         method: "PUT",

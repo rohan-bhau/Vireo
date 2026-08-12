@@ -86,8 +86,9 @@ export function ReportsTab({ workspaceId }: ReportsTabProps) {
 
   const openTaskCount = visibleTasks.filter((t) => ["in_progress", "in_review"].includes(t.status)).length;
 
+  const [now] = useState(() => Date.now());
+
   const createdVsResolved = useMemo(() => {
-    const now = Date.now();
     const buckets: { date: string; created: number; resolved: number }[] = [];
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now);
@@ -107,7 +108,7 @@ export function ReportsTab({ workspaceId }: ReportsTabProps) {
       }
     }
     return buckets;
-  }, [visibleTasks]);
+  }, [visibleTasks, now]);
 
   const [hoverWeek, setHoverWeek] = useState<number | null>(null);
 

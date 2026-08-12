@@ -244,6 +244,34 @@ function SavedFiltersSection({ workspaceId, onNavigate }: { workspaceId?: string
   );
 }
 
+interface SidebarNavItemProps {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  active?: boolean;
+  onNavigate?: () => void;
+  collapsed: boolean;
+}
+
+function SidebarNavItem({ href, icon: Icon, label, active, onNavigate, collapsed }: SidebarNavItemProps) {
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className={clsx(
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
+        active
+          ? "bg-surface-active text-primary"
+          : "text-text-secondary hover:bg-bg-light hover:text-text"
+      )}
+      title={collapsed ? label : undefined}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {!collapsed && <span>{label}</span>}
+    </Link>
+  );
+}
+
 export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
   const pathname = usePathname();
   const dispatch = useDispatch<AppDispatch>();
@@ -349,35 +377,6 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
         "Failed to create workspace";
       setCreateError(message);
     }
-  }
-
-  function SidebarNavItem({
-    href,
-    icon: Icon,
-    label,
-    active,
-  }: {
-    href: string;
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    active?: boolean;
-  }) {
-    return (
-      <Link
-        href={href}
-        onClick={onNavigate}
-        className={clsx(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[44px] cursor-pointer",
-          active
-            ? "bg-surface-active text-primary"
-            : "text-text-secondary hover:bg-bg-light hover:text-text"
-        )}
-        title={collapsed ? label : undefined}
-      >
-        <Icon className="h-4 w-4 shrink-0" />
-        {!collapsed && <span>{label}</span>}
-      </Link>
-    );
   }
 
   return (
@@ -551,6 +550,8 @@ name={ws.name}
             icon={LayoutDashboard}
             label="Dashboard"
             active={isDashboardActive()}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
           />
 
           {/* AI Assistant */}
@@ -559,6 +560,8 @@ name={ws.name}
             icon={Sparkles}
             label="AI Assistant"
             active={pathname.startsWith("/ai-assistant")}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
           />
 
           {/* Dashboards */}

@@ -64,7 +64,7 @@ export function StartSprintDialog({ sprint, tasks, projectId, onClose }: StartSp
               <p className="font-medium">Unestimated issues</p>
               <p className="text-xs text-[#5E6C84] mt-0.5">
                 {tasks.filter((t) => !t.storyPoints).length} issue{tasks.filter((t) => !t.storyPoints).length !== 1 ? "s" : ""} {" "}
-                without story points won't count toward velocity.
+                without story points won&apos;t count toward velocity.
               </p>
             </div>
           </div>

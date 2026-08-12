@@ -50,8 +50,7 @@ export function SprintReport({ data, isLoading }: SprintReportProps) {
     );
   }
 
-  const { sprintName, planned, added, completed, pushed, removed, totalPlanned, completion, issues } = data;
-  const totalPoints = totalPlanned.points;
+  const { sprintName, planned, added, completed, pushed, removed, completion, issues } = data;
 
   const segments = [
     { label: "Planned", value: planned.points, color: "#2563EB" },

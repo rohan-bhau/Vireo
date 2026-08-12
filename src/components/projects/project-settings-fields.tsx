@@ -33,7 +33,7 @@ const defaultFields: Field[] = [
   { id: "customer_impact", name: "Customer Impact", type: "Text", required: false, enabled: false, visible: false, category: "custom" },
 ];
 
-export function ProjectSettingsFields({ project }: { project: Project }) {
+export function ProjectSettingsFields({}: { project: Project }) {
   const [fields, setFields] = useState<Field[]>(defaultFields);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState<"all" | "system" | "custom">("all");

@@ -33,7 +33,7 @@ export const watchApi = api.injectEndpoints({
       transformResponse: (response: WatcherResponse) => response.data,
       invalidatesTags: (_result, _error, taskKey) => [{ type: "Task", id: taskKey }],
     }),
-    getTaskWatchers: builder.query<{ watchers: string[]; users: any[] }, string>({
+    getTaskWatchers: builder.query<{ watchers: string[]; users: { _id: string; name: string; email: string; avatar?: string }[] }, string>({
       query: (taskKey) => `/tasks/${taskKey}/watchers`,
       transformResponse: (response: WatchersResponse) => response.data,
     }),

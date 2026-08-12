@@ -93,7 +93,7 @@ export default function MembersPage() {
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const [removeLoading, setRemoveLoading] = useState(false);
-  const [roleLoading, setRoleLoading] = useState<string | null>(null);
+  const [, setRoleLoading] = useState<string | null>(null);
   const [roleModalMember, setRoleModalMember] = useState<WorkspaceMember | null>(null);
   const [roleModalValue, setRoleModalValue] = useState<Role>("VIEW");
   const [roleModalSaving, setRoleModalSaving] = useState(false);

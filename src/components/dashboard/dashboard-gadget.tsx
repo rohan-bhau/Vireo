@@ -147,7 +147,6 @@ function VelocityMini({ stats }: { stats: GadgetData["statistics"] }) {
     <div className="p-4">
       <div className="space-y-2">
         {Object.entries(stats.byStatus).map(([key, val]) => {
-          const labels: Record<string, string> = { todo: "To Do", inProgress: "In Progress", inReview: "In Review", done: "Done" };
           const colors: Record<string, string> = { todo: "#9CA3AF", inProgress: "#2563EB", inReview: "#D97706", done: "#059669" };
           const pct = Math.round((val / total) * 100);
           return (

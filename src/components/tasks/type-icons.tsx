@@ -1,5 +1,3 @@
-import type { TaskType } from "@/store/taskApi";
-
 export const TYPE_COLORS: Record<string, string> = {
   epic: "#8777D9",
   story: "#36B37E",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { useGetWorkspacesQuery } from "@/store/workspaceApi";
@@ -20,7 +20,6 @@ import { useGetProjectEpicsQuery } from "@/store/epicApi";
 import { useGetWorkspaceCustomFieldsQuery, type CustomField as WorkspaceCustomField } from "@/store/customFieldApi";
 import { RichTextEditor } from "./rich-text-editor";
 import { IssueTypeIcon } from "./issue-type-icon";
-import { PriorityIcon } from "./priority-icon";
 import { AssigneePicker } from "./assignee-picker";
 import { LabelEditor } from "./label-editor";
 import { MultiComponentSelector } from "./component-selector";
@@ -165,7 +164,11 @@ export function CreateTaskDialog({
     setCustomError(null);
   }, [workspaceId, workspaces, currentUser]);
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(false);
+  const [prevEdit, setPrevEdit] = useState(editTask);
+  if (open !== prevOpen || editTask !== prevEdit) {
+    setPrevOpen(open);
+    setPrevEdit(editTask);
     if (open) {
       if (editTask) {
         setTitle(editTask.title);
@@ -200,7 +203,7 @@ export function CreateTaskDialog({
         }
       }
     }
-  }, [editTask, open, resetFields, resolveDefaultProject, prefill]);
+  }
 
   async function handleSubmit() {
     if (!title.trim() || submitting) return;

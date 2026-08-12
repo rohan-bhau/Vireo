@@ -16,7 +16,7 @@ import { useSettings } from "@/lib/settings-context";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { SkeletonSettingsPage } from "@/components/ui/skeleton";
-import { toastError, toastSuccess } from "@/lib/toast";
+import { toastError } from "@/lib/toast";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
   trialing: {

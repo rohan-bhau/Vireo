@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useRef } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import { clsx } from "clsx";
 import { EpicBar } from "./epic-bar";
 import { SprintOverlay } from "./sprint-overlay";
@@ -58,10 +58,9 @@ export function RoadmapTimeline({
   dependencies = [],
 }: RoadmapTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
 
-  const epicItems = useMemo(() => items.filter((i) => i.type === "epic"), [items]);
-  const taskItems = useMemo(() => items.filter((i) => i.type === "task"), [items]);
+  const taskItems = items.filter((i) => i.type === "task");
 
   const timelineStart = useMemo(() => {
     if (!items.length) {
@@ -75,7 +74,7 @@ export function RoadmapTimeline({
     min.setMonth(min.getMonth() - 1);
     min.setDate(1);
     return min;
-  }, [items]);
+  }, [items, now]);
 
   const timelineEnd = useMemo(() => {
     if (!items.length) {
@@ -87,7 +86,7 @@ export function RoadmapTimeline({
     const max = new Date(Math.max(...dates.map((d) => d.getTime()), now.getTime()));
     max.setMonth(max.getMonth() + 3);
     return max;
-  }, [items]);
+  }, [items, now]);
 
   const totalMs = timelineEnd.getTime() - timelineStart.getTime();
   const TIMELINE_WIDTH = 1200;
@@ -122,17 +121,17 @@ export function RoadmapTimeline({
     return labels;
   }, [timelineStart, timelineEnd, zoom]);
 
-  function getLeft(date: Date | string | null): number {
+  const getLeft = useCallback((date: Date | string | null): number => {
     if (!date) return 0;
     const d = new Date(date);
     return ((d.getTime() - timelineStart.getTime()) / totalMs) * TIMELINE_WIDTH;
-  }
+  }, [timelineStart, totalMs]);
 
-  function getWidth(start: Date, end: Date): number {
+  const getWidth = useCallback((start: Date, end: Date): number => {
     const s = start.getTime();
     const e = end.getTime();
     return Math.max(20, ((e - s) / totalMs) * TIMELINE_WIDTH);
-  }
+  }, [totalMs]);
 
   const getEpicProgress = useCallback(
     (epicKey: string): number => {
@@ -162,7 +161,7 @@ export function RoadmapTimeline({
       pos[item.id] = { x: left, y: top, width };
     });
     return pos;
-  }, [displayedItems, timelineStart, totalMs, ROW_HEIGHT]);
+  }, [displayedItems, ROW_HEIGHT, getLeft, getWidth]);
 
   return (
     <div className="flex flex-col">
@@ -259,7 +258,6 @@ export function RoadmapTimeline({
                   sprints={sprints}
                   timelineStart={timelineStart}
                   totalMs={totalMs}
-                  pixelsPerMs={TIMELINE_WIDTH / totalMs}
                 />
 
                 <svg

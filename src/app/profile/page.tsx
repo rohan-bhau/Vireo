@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { AppDispatch, RootState } from "@/store";
-import { useUpdateProfileMutation, useLogoutMutation } from "@/store/authApi";
-import { setUser, logout } from "@/store/authSlice";
-import { clearTokens } from "@/lib/auth";
+import { useUpdateProfileMutation } from "@/store/authApi";
+import { setUser } from "@/store/authSlice";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -16,14 +14,12 @@ import { Bell, User } from "lucide-react";
 export default function ProfilePage() {
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
 
   const [name, setName] = useState(user?.name || "");
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
-  const [doLogout] = useLogoutMutation();
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
@@ -34,20 +30,10 @@ export default function ProfilePage() {
       const result = await updateProfile({ name }).unwrap();
       dispatch(setUser(result.data.user));
       setSuccess("Profile updated successfully");
-    } catch (err: any) {
-      setError(err?.data?.message || "Failed to update profile");
+    } catch (err: unknown) {
+      const errData = err as { data?: { message?: string } } | undefined;
+      setError(errData?.data?.message || "Failed to update profile");
     }
-  }
-
-  async function handleLogout() {
-    try {
-      await doLogout();
-    } catch {
-      // proceed regardless
-    }
-    clearTokens();
-    dispatch(logout());
-    router.replace("/login");
   }
 
   if (!user) return null;

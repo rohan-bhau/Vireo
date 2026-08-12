@@ -19,9 +19,9 @@ interface SearchResult {
 
 interface GlobalSearchResult {
   tasks: Task[];
-  epics: any[];
-  workspaces: any[];
-  projects: any[];
+  epics: Task[];
+  workspaces: { id: string; name: string }[];
+  projects: { id: string; name: string; key: string }[];
   total: number;
 }
 
@@ -39,6 +39,11 @@ interface JqlValidateResult {
   error: { message: string; position: number } | null;
 }
 
+interface SearchDataResponse<T> {
+  status: string;
+  data: T;
+}
+
 export const searchApi = api.injectEndpoints({
   endpoints: (builder) => ({
     searchTasks: builder.query<SearchResult, { workspaceId?: string; projectId?: string; q?: string; status?: string; priority?: string; type?: string; assignee?: string; labels?: string; sortField?: string; sortOrder?: string; page?: number; limit?: number }>({
@@ -46,7 +51,7 @@ export const searchApi = api.injectEndpoints({
         url: "/search",
         params,
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: SearchDataResponse<SearchResult>) => response.data,
     }),
     advancedFilter: builder.mutation<SearchResult, { workspaceId: string; conditions: FilterCondition[]; sortField?: string; sortOrder?: string; page?: number; limit?: number }>({
       query: (body) => ({
@@ -54,18 +59,18 @@ export const searchApi = api.injectEndpoints({
         method: "POST",
         body,
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: SearchDataResponse<SearchResult>) => response.data,
     }),
     globalSearch: builder.query<GlobalSearchResult, string>({
       query: (q) => `/search/global?q=${encodeURIComponent(q)}`,
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: SearchDataResponse<GlobalSearchResult>) => response.data,
     }),
     jqlSearch: builder.query<SearchResult, { query: string; workspaceId?: string; page?: number; limit?: number }>({
       query: (params) => ({
         url: "/search/jql",
         params,
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: SearchDataResponse<SearchResult>) => response.data,
     }),
     validateJql: builder.mutation<JqlValidateResult, { query: string }>({
       query: (body) => ({
@@ -73,14 +78,14 @@ export const searchApi = api.injectEndpoints({
         method: "POST",
         body,
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: SearchDataResponse<JqlValidateResult>) => response.data,
     }),
     getSuggestions: builder.query<SuggestResult, { q: string; type: string; workspaceId?: string; field?: string }>({
       query: (params) => ({
         url: "/search/suggest",
         params,
       }),
-      transformResponse: (response: any) => response.data,
+      transformResponse: (response: SearchDataResponse<SuggestResult>) => response.data,
     }),
   }),
 });

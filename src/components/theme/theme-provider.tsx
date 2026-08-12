@@ -63,10 +63,6 @@ function getStoredTheme(): Theme {
   return "system";
 }
 
-function resolveTheme(theme: Theme): "light" | "dark" {
-  return theme === "system" ? getSystemTheme() : theme;
-}
-
 /**
  * Applies the theme to the document root and returns the effective
  * (actually visible) theme, which is always "light" on public pages.
@@ -87,21 +83,24 @@ function applyTheme(resolved: "light" | "dark", appRoute: boolean): "light" | "d
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [theme, setThemeState] = useState<Theme>(() => getStoredTheme());
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+  const [systemTheme, setSystemTheme] = useState<"light" | "dark">(() => getSystemTheme());
+
+  const appRoute = isAppRoute(pathname);
+  const resolved = theme === "system" ? systemTheme : theme;
+  const resolvedTheme: "light" | "dark" = appRoute ? resolved : "light";
 
   useEffect(() => {
-    setResolvedTheme(applyTheme(resolveTheme(theme), isAppRoute(pathname)));
-  }, [theme, pathname]);
-
-  useEffect(() => {
-    if (theme !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => {
-      setResolvedTheme(applyTheme(getSystemTheme(), isAppRoute(pathname)));
+    const handler = (e: MediaQueryListEvent) => {
+      setSystemTheme(e.matches ? "dark" : "light");
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, [theme, pathname]);
+  }, []);
+
+  useEffect(() => {
+    applyTheme(resolved, appRoute);
+  }, [resolved, appRoute]);
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
