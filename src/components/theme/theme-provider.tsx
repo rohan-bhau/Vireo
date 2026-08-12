@@ -42,8 +42,6 @@ function isAppRoute(pathname: string | null): boolean {
     p.startsWith("/ai-assistant") ||
     p === "/admin" ||
     p.startsWith("/admin/") ||
-    p === "/dm" ||
-    p.startsWith("/dm/") ||
     p === "/notifications" ||
     p.startsWith("/notifications/")
   );
