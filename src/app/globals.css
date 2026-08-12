@@ -129,15 +129,15 @@
   --color-text-secondary: #B3BAC5;
   --color-text-tertiary: #8C9BAB;
   --color-text-placeholder: #5E6C84;
-  --color-border: #454F5E;
-  --color-border-light: #353F4D;
+  --color-border: #4E5A68;
+  --color-border-light: #3A4552;
   --color-border-input: #353F4D;
-  --color-background: #1D232B;
-  --color-background-light: #222A33;
-  --color-background-input: #1D232B;
-  --color-background-neutral: #2D3744;
-  --color-surface: #222A33;
-  --color-surface-hover: #2D3744;
+  --color-background: #181C22;
+  --color-background-light: #1E242B;
+  --color-background-input: #202731;
+  --color-background-neutral: #2B3542;
+  --color-surface: #252C35;
+  --color-surface-hover: #2F3946;
   --color-surface-active: #082145;
 
   --color-success-bg: #1F3A2F;
@@ -151,6 +151,455 @@
   --shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.4);
   --shadow-dropdown: 0 12px 48px rgba(0, 0, 0, 0.5);
   --shadow-tooltip: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/*
+  ---- Dark Mode: hardcoded color overrides ----
+
+  A large part of the codebase uses hardcoded hex utilities
+  (bg-white, bg-[#F8F9FF], text-[#121C28], border-[#C3C6D7], ...) that would
+  otherwise stay light in dark mode. These un-layered rules win over Tailwind's
+  layered utilities (cascade layers) and remap them to the theme tokens so the
+  UI adapts to the active theme. Only surfaces/text/borders are remapped;
+  solid brand buttons and dark sections deliberately keep their colors.
+*/
+
+[data-theme="dark"] {
+  /* --- Backgrounds: white & neutral surfaces --- */
+  .bg-white {
+    background-color: var(--color-surface);
+  }
+  .bg-\[\#FFFFFF\] {
+    background-color: var(--color-surface);
+  }
+  .bg-\[\#F8F9FF\] {
+    background-color: var(--color-background);
+  }
+  .bg-\[\#FAFBFC\] {
+    background-color: var(--color-background);
+  }
+  .bg-\[\#F1F2F6\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#F4F5F7\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#F0F0F5\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#F3F4F6\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#F4F6FB\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#F1F4FB\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#EBECF0\] {
+    background-color: var(--color-surface-hover);
+  }
+  .bg-\[\#E5E7EB\] {
+    background-color: var(--color-surface-hover);
+  }
+  .bg-\[\#E8EAF0\] {
+    background-color: var(--color-surface-hover);
+  }
+  .bg-\[\#C3C6D7\] {
+    background-color: var(--color-border-light);
+  }
+  .bg-\[\#F6F9FF\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#F0F6FF\] {
+    background-color: var(--color-primary-bg);
+  }
+
+  /* --- Backgrounds: brand tint --- */
+  .bg-\[\#EEF4FF\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#EFF6FF\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#F0F4FF\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#DBEAFE\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#DEEBFF\] {
+    background-color: var(--color-primary-bg);
+  }
+
+  /* --- Backgrounds: semantic tints --- */
+  .bg-\[\#E3FCEF\] {
+    background-color: var(--color-success-bg);
+  }
+  .bg-\[\#ECFDF5\] {
+    background-color: var(--color-success-bg);
+  }
+  .bg-\[\#F0FDF4\] {
+    background-color: var(--color-success-bg);
+  }
+  .bg-\[\#D1FAE5\] {
+    background-color: var(--color-success-bg);
+  }
+  .bg-\[\#FFF0B3\] {
+    background-color: var(--color-warning-bg);
+  }
+  .bg-\[\#FFFBEB\] {
+    background-color: var(--color-warning-bg);
+  }
+  .bg-\[\#FEF3C7\] {
+    background-color: var(--color-warning-bg);
+  }
+  .bg-\[\#FFECEB\] {
+    background-color: var(--color-danger-bg);
+  }
+  .bg-\[\#FFEBE6\] {
+    background-color: var(--color-danger-bg);
+  }
+  .bg-\[\#FEE2E2\] {
+    background-color: var(--color-danger-bg);
+  }
+  .bg-\[\#E6FCFF\] {
+    background-color: var(--color-info-bg);
+  }
+  .bg-\[\#EAE6FF\] {
+    background-color: var(--color-purple-bg);
+  }
+  .bg-\[\#F5F3FF\] {
+    background-color: var(--color-purple-bg);
+  }
+  .bg-\[\#F3EEFF\] {
+    background-color: var(--color-purple-bg);
+  }
+
+  /* --- Text: near-black --- */
+  .text-\[\#121C28\] {
+    color: var(--color-text);
+  }
+  .text-\[\#172B4D\] {
+    color: var(--color-text);
+  }
+  .text-\[\#1F2937\] {
+    color: var(--color-text);
+  }
+  .text-\[\#374151\] {
+    color: var(--color-text);
+  }
+  .text-\[\#414752\] {
+    color: var(--color-text);
+  }
+  .text-\[\#1E293B\] {
+    color: var(--color-text);
+  }
+
+  /* --- Text: mid grays --- */
+  .text-\[\#434655\] {
+    color: var(--color-text-secondary);
+  }
+  .text-\[\#42526E\] {
+    color: var(--color-text-secondary);
+  }
+  .text-\[\#5C6274\] {
+    color: var(--color-text-secondary);
+  }
+  .text-\[\#737686\] {
+    color: var(--color-text-secondary);
+  }
+
+  /* --- Text: muted grays --- */
+  .text-\[\#5E6C84\] {
+    color: var(--color-text-tertiary);
+  }
+  .text-\[\#6B7280\] {
+    color: var(--color-text-tertiary);
+  }
+  .text-\[\#8993A4\] {
+    color: var(--color-text-tertiary);
+  }
+  .text-\[\#8A8FA3\] {
+    color: var(--color-text-tertiary);
+  }
+  .text-\[\#A0A3B1\] {
+    color: var(--color-text-placeholder);
+  }
+  .text-\[\#B3B8C7\] {
+    color: var(--color-text-placeholder);
+  }
+  .text-\[\#C3C6D7\] {
+    color: var(--color-text-placeholder);
+  }
+  .text-\[\#9CA3AF\] {
+    color: var(--color-text-placeholder);
+  }
+
+  /* --- Text: brand blue --- */
+  .text-\[\#004AC6\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#0052CC\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#0065FF\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#2563EB\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#1D4ED8\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#1d4ed8\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#005DA7\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#004A9E\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#003da8\] {
+    color: var(--color-primary-light);
+  }
+  .text-\[\#003DA6\] {
+    color: var(--color-primary-light);
+  }
+
+  /* --- Borders --- */
+  .border-\[\#C3C6D7\] {
+    border-color: var(--color-border-light);
+  }
+  .border-\[\#DFE1E6\] {
+    border-color: var(--color-border-light);
+  }
+  .border-\[\#EBECF0\] {
+    border-color: var(--color-border-light);
+  }
+  .border-\[\#E2E4E9\] {
+    border-color: var(--color-border-light);
+  }
+  .border-\[\#E5E7EB\] {
+    border-color: var(--color-border-light);
+  }
+  .border-\[\#D1D5DB\] {
+    border-color: var(--color-border);
+  }
+  .border-\[\#2563EB\] {
+    border-color: var(--color-primary-light);
+  }
+  .border-\[\#004AC6\] {
+    border-color: var(--color-primary-light);
+  }
+  .border-\[\#0052CC\] {
+    border-color: var(--color-primary-light);
+  }
+  .border-\[\#004A9E\] {
+    border-color: var(--color-primary-light);
+  }
+
+  /* --- Rings --- */
+  .ring-\[\#2563EB\] {
+    --tw-ring-color: var(--color-primary-light);
+  }
+  .ring-\[\#EBECF0\] {
+    --tw-ring-color: var(--color-border-light);
+  }
+  .ring-\[\#C3C6D7\] {
+    --tw-ring-color: var(--color-border-light);
+  }
+  .ring-\[\#1D4ED8\] {
+    --tw-ring-color: var(--color-primary-light);
+  }
+
+  /* --- Translucent borders (kept at their intended strength) --- */
+  .border-\[\#C3C6D7\]\/10,
+  .border-\[\#C3C6D7\]\/20,
+  .border-\[\#C3C6D7\]\/25,
+  .border-\[\#C3C6D7\]\/30 {
+    border-color: var(--color-border-light);
+  }
+  .border-\[\#C3C6D7\]\/40,
+  .border-\[\#C3C6D7\]\/50 {
+    border-color: var(--color-border);
+  }
+  .border-\[\#2563EB\]\/20,
+  .border-\[\#2563EB\]\/30 {
+    border-color: color-mix(in oklab, var(--color-primary-light) 25%, transparent);
+  }
+  .border-\[\#2563EB\]\/10 {
+    border-color: color-mix(in oklab, var(--color-primary-light) 15%, transparent);
+  }
+  .border-\[\#2563EB\]\/40 {
+    border-color: color-mix(in oklab, var(--color-primary-light) 40%, transparent);
+  }
+  .border-\[\#004AC6\]\/20,
+  .border-\[\#004AC6\]\/30 {
+    border-color: color-mix(in oklab, var(--color-primary-light) 25%, transparent);
+  }
+  .border-\[\#004AC6\]\/40 {
+    border-color: color-mix(in oklab, var(--color-primary-light) 40%, transparent);
+  }
+
+  /* --- Translucent backgrounds --- */
+  .bg-\[\#C3C6D7\]\/30 {
+    background-color: var(--color-surface-hover);
+  }
+  .bg-\[\#F8F9FF\]\/80 {
+    background-color: color-mix(in oklab, var(--color-background) 85%, transparent);
+  }
+  .bg-\[\#F8F9FF\]\/60 {
+    background-color: color-mix(in oklab, var(--color-background) 65%, transparent);
+  }
+  .bg-\[\#EEF4FF\]\/60 {
+    background-color: color-mix(in oklab, var(--color-primary-bg) 65%, transparent);
+  }
+  .bg-\[\#004A9E\]\/10 {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#2563EB\]\/10 {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#EFF6FF\]\/50 {
+    background-color: color-mix(in oklab, var(--color-primary-bg) 60%, transparent);
+  }
+
+  /* --- Gradients --- */
+  .from-\[\#EEF4FF\] {
+    --tw-gradient-from: var(--color-primary-bg);
+  }
+  .from-\[\#F8F9FF\] {
+    --tw-gradient-from: var(--color-background);
+  }
+  .to-\[\#F8F9FF\] {
+    --tw-gradient-to: var(--color-background);
+  }
+  .to-white {
+    --tw-gradient-to: var(--color-surface);
+  }
+
+  /* --- Hover states --- */
+  .hover\:bg-white:hover {
+    background-color: var(--color-surface);
+  }
+  .hover\:bg-\[\#F8F9FF\]:hover {
+    background-color: var(--color-background);
+  }
+  .hover\:bg-\[\#F1F2F6\]:hover {
+    background-color: var(--color-background-light);
+  }
+  .hover\:bg-\[\#F4F5F7\]:hover {
+    background-color: var(--color-background-light);
+  }
+  .hover\:bg-\[\#F0F0F5\]:hover {
+    background-color: var(--color-background-light);
+  }
+  .hover\:bg-\[\#EBECF0\]:hover {
+    background-color: var(--color-surface-hover);
+  }
+  .hover\:bg-\[\#EEF4FF\]:hover {
+    background-color: var(--color-primary-bg);
+  }
+  .hover\:text-\[\#121C28\]:hover {
+    color: var(--color-text);
+  }
+  .hover\:text-\[\#434655\]:hover {
+    color: var(--color-text-secondary);
+  }
+  .hover\:text-\[\#737686\]:hover {
+    color: var(--color-text-secondary);
+  }
+  .hover\:text-\[\#004AC6\]:hover {
+    color: var(--color-primary-light);
+  }
+  .hover\:border-\[\#2563EB\]:hover {
+    border-color: var(--color-primary-light);
+  }
+  .hover\:border-\[\#C3C6D7\]:hover {
+    border-color: var(--color-border-light);
+  }
+
+  /* --- Additional light neutrals & tints --- */
+  .bg-\[\#F5F5F5\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#f9f9f9\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#f1f1f3\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#E7E9F2\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#E5E7EF\] {
+    background-color: var(--color-background-light);
+  }
+  .bg-\[\#FCFCFE\] {
+    background-color: var(--color-surface);
+  }
+  .bg-\[\#F0F5FF\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#F0F7FF\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#E8F0FE\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#D3E3FF\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#DBE8FF\] {
+    background-color: var(--color-primary-bg);
+  }
+  .bg-\[\#93B5F5\] {
+    background-color: var(--color-primary-light);
+  }
+  .bg-\[\#FEE8E8\] {
+    background-color: var(--color-danger-bg);
+  }
+  .bg-\[\#FEF2F2\] {
+    background-color: var(--color-danger-bg);
+  }
+  .bg-\[\#E8F8F0\] {
+    background-color: var(--color-success-bg);
+  }
+  .bg-\[\#FEF3E8\] {
+    background-color: var(--color-warning-bg);
+  }
+  .bg-\[\#FFF8E6\] {
+    background-color: var(--color-warning-bg);
+  }
+  .bg-\[\#E24329\]\/10 {
+    background-color: var(--color-danger-bg);
+  }
+  .border-\[\#D0D5DD\] {
+    border-color: var(--color-border-light);
+  }
+  .divide-\[\#C3C6D7\] > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--color-border-light);
+  }
+  .divide-\[\#F1F2F6\] > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--color-border-light);
+  }
+  .border-\[\#E9D5FF\] {
+    border-color: color-mix(in oklab, var(--color-purple) 30%, transparent);
+  }
+  .border-\[\#FFE380\] {
+    border-color: color-mix(in oklab, var(--color-warning) 45%, transparent);
+  }
+  .text-\[\#24292F\] {
+    color: var(--color-text);
+  }
+  .text-\[\#1B1C1B\] {
+    color: var(--color-text);
+  }
+  .text-\[\#33415C\] {
+    color: var(--color-text);
+  }
 }
 
 /* ---- Tailwind v4 Theme Extension ---- */
