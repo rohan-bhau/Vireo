@@ -10,6 +10,7 @@ export interface Toast {
   type: ToastType;
   onClick?: () => void;
   href?: string;
+  duration: number;
 }
 
 export interface ToastOptions {
@@ -40,16 +41,22 @@ function getSnapshot() {
 export function toast(message: string, type: ToastType = "info", options: ToastOptions | number = {}) {
   const opts: ToastOptions = typeof options === "number" ? { duration: options } : options;
   const id = nextId++;
-  toasts = [...toasts, { id, message, type, onClick: opts.onClick, href: opts.href }];
+  const duration = opts.duration ?? 4000;
+  toasts = [...toasts, { id, message, type, onClick: opts.onClick, href: opts.href, duration }];
   emit();
   setTimeout(() => {
     toasts = toasts.filter((t) => t.id !== id);
     emit();
-  }, opts.duration ?? 4000);
+  }, duration);
 }
 
 export function useToasts(): Toast[] {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+export function dismissToast(id: number) {
+  toasts = toasts.filter((t) => t.id !== id);
+  emit();
 }
 
 export const toastError = (message: string, options?: ToastOptions) => toast(message, "error", options);
