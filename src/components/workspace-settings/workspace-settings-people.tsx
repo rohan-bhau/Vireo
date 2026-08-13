@@ -11,6 +11,8 @@ import {
   useUpdateMemberRoleMutation,
   useRemoveMemberMutation,
   useCreateInvitationMutation,
+  useCancelInvitationMutation,
+  useResendInvitationMutation,
   useTransferOwnershipMutation,
   type Role,
   type WorkspaceMember,
@@ -34,6 +36,10 @@ import { SkeletonSettingsPage } from "@/components/ui/skeleton";
 
 const ASSIGNABLE_ROLES: Role[] = ["ADMIN", "EDIT", "VIEW"];
 
+function formatExpiry(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export function WorkspaceSettingsPeople() {
   const params = useParams();
   const workspaceId = params.workspaceId as string;
@@ -45,6 +51,8 @@ export function WorkspaceSettingsPeople() {
   const [updateMemberRole] = useUpdateMemberRoleMutation();
   const [removeMember] = useRemoveMemberMutation();
   const [createInvitation] = useCreateInvitationMutation();
+  const [cancelInvitation] = useCancelInvitationMutation();
+  const [resendInvitation] = useResendInvitationMutation();
   const [transferOwnership] = useTransferOwnershipMutation();
 
   const [showInvite, setShowInvite] = useState(false);
@@ -66,6 +74,9 @@ export function WorkspaceSettingsPeople() {
   }
 
   const currentMember = members.find((m) => m.userId === user?.id);
+  const activeInvitations = invitations.filter(
+    (inv) => inv.status === "PENDING" || inv.status === "EXPIRED"
+  );
   const isOwner = workspace?.ownerId === user?.id;
   const isAdmin = currentMember?.role === "ADMIN";
   const manageCtx = { currentUserId: user?.id, ownerId: workspace?.ownerId, isAdmin, isOwner };
@@ -118,11 +129,28 @@ export function WorkspaceSettingsPeople() {
       toastSuccess(`Invitation sent to ${email}`);
       setInviteEmail("");
       setInviteMessage("");
-      setShowInvite(false);
     } catch (err: unknown) {
       setInviteError((err as { data?: { message?: string } })?.data?.message || "Could not send invitation");
     } finally {
       setInviting(false);
+    }
+  }
+
+  async function handleCancelInvite(invitationId: string) {
+    try {
+      await cancelInvitation({ workspaceId, invitationId }).unwrap();
+      toastSuccess("Invitation cancelled");
+    } catch (err: unknown) {
+      toastError((err as { data?: { message?: string } })?.data?.message || "Could not cancel invitation");
+    }
+  }
+
+  async function handleResendInvite(invitationId: string) {
+    try {
+      await resendInvitation({ workspaceId, invitationId }).unwrap();
+      toastSuccess("Invitation re-sent");
+    } catch (err: unknown) {
+      toastError((err as { data?: { message?: string } })?.data?.message || "Could not re-send invitation");
     }
   }
 
@@ -196,7 +224,7 @@ export function WorkspaceSettingsPeople() {
         </div>
       </div>
 
-      {invitations.length > 0 && (
+      {activeInvitations.length > 0 && (
         <div className="rounded-xl border border-border-light bg-surface">
           <div className="border-b border-border-light px-5 py-3">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-text">
@@ -204,20 +232,45 @@ export function WorkspaceSettingsPeople() {
             </h3>
           </div>
           <ul className="divide-y divide-border-light">
-            {invitations.map((inv) => (
-              <li key={inv.id} className="flex items-center justify-between px-5 py-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Avatar name={inv.inviteeEmail} email={inv.inviteeEmail} size="sm" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-text">{inv.inviteeEmail}</p>
-                    <p className="text-xs text-text-tertiary">Invited as {ROLE_LABELS[inv.role]}</p>
+            {activeInvitations.map((inv) => {
+              const expired = inv.status === "EXPIRED";
+              return (
+                <li key={inv.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar name={inv.inviteeEmail} email={inv.inviteeEmail} size="sm" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-text">{inv.inviteeEmail}</p>
+                      <p className="text-xs text-text-tertiary">
+                        Invited as {ROLE_LABELS[inv.role]} · expires {formatExpiry(inv.expiresAt)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <span className="flex items-center gap-1 rounded-full bg-bg-light px-2.5 py-0.5 text-[11px] font-medium text-text-secondary">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Pending
-                </span>
-              </li>
-            ))}
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${expired ? "bg-danger/10 text-danger" : "bg-bg-light text-text-secondary"}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${expired ? "bg-danger" : "bg-amber-500"}`} />
+                      {expired ? "Expired" : "Pending"}
+                    </span>
+                    {expired ? (
+                      <button
+                        type="button"
+                        onClick={() => handleResendInvite(inv.id)}
+                        className="text-xs font-medium text-primary transition-colors hover:text-primary/80"
+                      >
+                        Re-invite
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleCancelInvite(inv.id)}
+                        className="text-xs font-medium text-text-tertiary transition-colors hover:text-danger"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

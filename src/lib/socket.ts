@@ -161,3 +161,9 @@ export function onWorkspaceMemberRoleChanged(callback: (data: { workspaceId: str
   s.on("workspace-member-role-changed", callback);
   return () => { s.off("workspace-member-role-changed", callback); };
 }
+
+export function onWorkspaceMemberAdded(callback: (data: { workspaceId: string; memberId: string; inviterId: string }) => void): () => void {
+  const s = connectSocket();
+  s.on("member-added", callback);
+  return () => { s.off("member-added", callback); };
+}

@@ -177,6 +177,15 @@ export const workspaceApi = api.injectEndpoints({
         { type: "Invitations", id: workspaceId },
       ],
     }),
+    resendInvitation: builder.mutation<void, { workspaceId: string; invitationId: string }>({
+      query: ({ workspaceId, invitationId }) => ({
+        url: `/workspaces/${workspaceId}/invitations/resend/${invitationId}`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, { workspaceId }) => [
+        { type: "Invitations", id: workspaceId },
+      ],
+    }),
     acceptInvitation: builder.mutation<void, string>({
       query: (token) => ({
         url: `/invitations/${token}/accept`,
@@ -208,6 +217,7 @@ export const {
   useGetInvitationsQuery,
   useCreateInvitationMutation,
   useCancelInvitationMutation,
+  useResendInvitationMutation,
   useAcceptInvitationMutation,
   useDeclineInvitationMutation,
 } = workspaceApi;

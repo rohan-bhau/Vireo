@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/store/api";
-import { onWorkspaceRemoved, onWorkspaceMemberRoleChanged } from "@/lib/socket";
+import { onWorkspaceRemoved, onWorkspaceMemberRoleChanged, onWorkspaceMemberAdded } from "@/lib/socket";
 
 export function WorkspaceListener() {
   const dispatch = useDispatch();
@@ -23,9 +23,14 @@ export function WorkspaceListener() {
       dispatch(api.util.invalidateTags(["Workspace", "Members"]));
     });
 
+    const cleanup3 = onWorkspaceMemberAdded(() => {
+      dispatch(api.util.invalidateTags(["Invitations", "Members", "Dashboard"]));
+    });
+
     return () => {
       cleanup1();
       cleanup2();
+      cleanup3();
     };
   }, [dispatch, router, pathname]);
 

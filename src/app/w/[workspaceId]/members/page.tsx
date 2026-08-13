@@ -12,6 +12,7 @@ import {
   useGetInvitationsQuery,
   useCreateInvitationMutation,
   useCancelInvitationMutation,
+  useResendInvitationMutation,
   type Role,
   type WorkspaceMember,
 } from "@/store/workspaceApi";
@@ -84,6 +85,7 @@ export default function MembersPage() {
   const [updateRole] = useUpdateMemberRoleMutation();
   const [createInvitation, { isLoading: isInviting }] = useCreateInvitationMutation();
   const [cancelInvitation] = useCancelInvitationMutation();
+  const [resendInvitation] = useResendInvitationMutation();
 
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -189,6 +191,17 @@ export default function MembersPage() {
     }
   }
 
+  async function handleResendInvitation(invitationId: string) {
+    try {
+      await resendInvitation({ workspaceId, invitationId }).unwrap();
+      toastSuccess("Invitation re-sent");
+    } catch (err) {
+      toastError(
+        (err as { data?: { message?: string } }).data?.message || "Failed to re-send invitation"
+      );
+    }
+  }
+
   return (
     <>
       <div className="mb-4 flex items-center gap-2 text-sm">
@@ -287,7 +300,7 @@ export default function MembersPage() {
         </div>
       )}
 
-      {invitations.filter((inv) => inv.status === "PENDING").length > 0 && (
+      {invitations.filter((inv) => inv.status === "PENDING" || inv.status === "EXPIRED").length > 0 && (
         <div className="mt-10">
           <h3 className="mb-4 text-base font-semibold text-[#121C28]">Pending Invitations</h3>
           <div className="overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
@@ -297,14 +310,18 @@ export default function MembersPage() {
                 <tr className="border-b border-[#C3C6D7]/20">
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#737686]">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#C3C6D7]/10">
-                {invitations.filter((inv) => inv.status === "PENDING").map((inv) => (
+                {invitations.filter((inv) => inv.status === "PENDING" || inv.status === "EXPIRED").map((inv) => {
+                  const expired = inv.status === "EXPIRED";
+                  return (
                   <tr key={inv.id} className="hover:bg-[#F8F9FF]">
                     <td className="px-6 py-4">
                       <p className="text-sm font-medium text-[#121C28]">{inv.inviteeEmail}</p>
+                      <p className="text-xs text-[#9CA3AF]">expires {new Date(inv.expiresAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</p>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${ROLE_BADGE[inv.role]}`}>
@@ -312,17 +329,33 @@ export default function MembersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${expired ? "text-red-600" : "text-amber-600"}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${expired ? "bg-red-500" : "bg-amber-500"}`} />
+                        {expired ? "Expired" : "Pending"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
                       {isAdmin && (
-                        <button
-                          onClick={() => handleCancelInvitation(inv.id)}
-                          className="rounded-md px-3 py-1.5 text-xs font-medium text-[#737686] transition-colors hover:bg-[#F8F9FF]"
-                        >
-                          Cancel
-                        </button>
+                        expired ? (
+                          <button
+                            onClick={() => handleResendInvitation(inv.id)}
+                            className="rounded-md px-3 py-1.5 text-xs font-medium text-[#2563EB] transition-colors hover:bg-[#EEF4FF]"
+                          >
+                            Re-invite
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleCancelInvitation(inv.id)}
+                            className="rounded-md px-3 py-1.5 text-xs font-medium text-[#737686] transition-colors hover:bg-[#F8F9FF]"
+                          >
+                            Cancel
+                          </button>
+                        )
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
             </div>

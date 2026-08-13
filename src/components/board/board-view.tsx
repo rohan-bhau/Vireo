@@ -339,6 +339,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
       toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||
         (e as { message?: string })?.message ||
         "Could not move task");
+      if (refetchBoardTasks) refetchBoardTasks();
     }
   }
 
