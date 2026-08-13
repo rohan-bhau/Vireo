@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "@/store/authSlice";
+import { setCredentials, setOnboardingNeeded } from "@/store/authSlice";
 import { useLazyGetProfileQuery } from "@/store/authApi";
 import { setTokens } from "@/lib/auth";
 
@@ -34,6 +34,7 @@ export default function OAuthCallbackPage() {
             refreshToken,
           })
         );
+        dispatch(setOnboardingNeeded(true));
         router.replace("/dashboard");
       })
       .catch(() => {

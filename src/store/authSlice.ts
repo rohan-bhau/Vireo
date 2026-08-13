@@ -82,6 +82,7 @@ const authSlice = createSlice({
     },
     completeOnboarding(state) {
       state.onboarding.completed = true;
+      state.onboardingNeeded = false;
     },
     logout(state) {
       state.user = null;

@@ -18,7 +18,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { OnboardingPopup } from "@/components/onboarding/onboarding-popup";
 import { WorkspaceTypePicker } from "@/components/workspace/workspace-type-picker";
 import { useDropdown, DropdownPanel } from "@/components/ui/dropdown";
-import { setOnboardingNeeded } from "@/store/authSlice";
+import { useGetOnboardingQuery } from "@/store/authApi";
 import { toggleStarredWorkspace } from "@/store/workspaceSlice";
 import type { ProjectTemplate } from "@/store/projectApi";
 import { PRESET_AVATARS } from "@/lib/avatar-utils";
@@ -155,6 +155,7 @@ function WorkspaceRow({
 
 export default function DashboardPage() {
   const { data: workspaces = [], isLoading } = useGetWorkspacesQuery();
+  const { data: onboardingDraft } = useGetOnboardingQuery();
   const [createWorkspace, { isLoading: isCreating }] = useCreateWorkspaceMutation();
   const [deleteWorkspace, { isLoading: isDeleting }] = useDeleteWorkspaceMutation();
   const onboardingNeeded = useSelector((state: RootState) => state.auth.onboardingNeeded);
@@ -172,14 +173,21 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkspaceRowData | null>(null);
 
-  if (!isLoading && onboardingNeeded && workspaces.length === 0 && !autoOpened) {
+  const serverNeedsOnboarding =
+    workspaces.length === 0 && !onboardingDraft?.completedAt;
+
+  if (
+    !isLoading &&
+    (onboardingNeeded || serverNeedsOnboarding) &&
+    workspaces.length === 0 &&
+    !autoOpened
+  ) {
     setAutoOpened(true);
     setShowOnboarding(true);
   }
 
   function closeOnboarding() {
     setShowOnboarding(false);
-    dispatch(setOnboardingNeeded(false));
   }
 
   function openCreate() {
