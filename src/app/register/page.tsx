@@ -12,6 +12,7 @@ import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { AuthCard } from "@/components/auth/auth-card";
 import { useRegisterMutation, type AuthData } from "@/store/authApi";
 import { setCredentials, setOnboardingNeeded } from "@/store/authSlice";
+import { clearActiveWorkspace } from "@/store/workspaceSlice";
 import { setTokens } from "@/lib/auth";
 import { GuestGuard } from "@/components/auth/guest-guard";
 import { Eye, EyeOff } from "lucide-react";
@@ -51,6 +52,7 @@ export default function RegisterPage() {
     setTokens(data.accessToken, data.refreshToken);
     dispatch(setCredentials(data));
     dispatch(setOnboardingNeeded(true));
+    dispatch(clearActiveWorkspace());
     router.replace("/dashboard");
   }
 

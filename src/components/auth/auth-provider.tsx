@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store";
 import { setCredentials, setLoading, logout } from "@/store/authSlice";
+import { clearActiveWorkspace } from "@/store/workspaceSlice";
 import { authApi, type AuthData } from "@/store/authApi";
 import { getAccessToken, clearTokens } from "@/lib/auth";
 import { connectSocket, disconnectSocket } from "@/lib/socket";
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {
         clearTokens();
         dispatch(logout());
+        dispatch(clearActiveWorkspace());
       })
       .finally(() => {
         dispatch(setLoading(false));

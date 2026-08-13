@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from "react";
 import { LogOut, ChevronDown, ArrowRight, LayoutDashboard, Code, Route, Server, ChartNoAxesColumn, Rocket, Boxes, Code2, NotebookPen, ShieldCheck, Building2, ServerCog } from "lucide-react";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
+import { clearActiveWorkspace } from "@/store/workspaceSlice";
 import { clearTokens } from "@/lib/auth";
 import { productCategories, type ProductCategory } from "@/lib/product-data";
 import { solutionCategories, type SolutionCategory } from "@/lib/solutions-data";
@@ -371,6 +372,7 @@ export function Header() {
 
   function handleLogout() {
     dispatch(logout());
+    dispatch(clearActiveWorkspace());
     clearTokens();
     setDropdownOpen(false);
     router.push("/");

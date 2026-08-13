@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setCredentials, setOnboardingNeeded } from "@/store/authSlice";
+import { clearActiveWorkspace } from "@/store/workspaceSlice";
 import { useLazyGetProfileQuery } from "@/store/authApi";
 import { setTokens } from "@/lib/auth";
 
@@ -35,6 +36,7 @@ export default function OAuthCallbackPage() {
           })
         );
         dispatch(setOnboardingNeeded(true));
+        dispatch(clearActiveWorkspace());
         router.replace("/dashboard");
       })
       .catch(() => {

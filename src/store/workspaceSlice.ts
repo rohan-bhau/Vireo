@@ -131,6 +131,9 @@ const workspaceSlice = createSlice({
     setActiveWorkspace(state, action: PayloadAction<string>) {
       state.activeWorkspaceId = action.payload;
     },
+    clearActiveWorkspace(state) {
+      state.activeWorkspaceId = null;
+    },
     addRecentWorkspace(state, action: PayloadAction<string>) {
       state.recentWorkspaces = [
         action.payload,
@@ -202,6 +205,7 @@ const workspaceSlice = createSlice({
 
 export const {
   setActiveWorkspace,
+  clearActiveWorkspace,
   addRecentWorkspace,
   toggleStarredWorkspace,
   setVisibleSections,

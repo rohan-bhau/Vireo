@@ -7,6 +7,7 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
 import { useLogoutMutation } from "@/store/authApi";
 import { logout } from "@/store/authSlice";
+import { clearActiveWorkspace } from "@/store/workspaceSlice";
 import { clearTokens } from "@/lib/auth";
 import { User, LogOut, Shield } from "lucide-react";
 import { ThemeMenuItems } from "@/components/theme/theme-toggle";
@@ -37,6 +38,7 @@ export function UserAvatarMenu() {
     } catch {}
     clearTokens();
     dispatch(logout());
+    dispatch(clearActiveWorkspace());
     router.replace("/login");
   }
 
