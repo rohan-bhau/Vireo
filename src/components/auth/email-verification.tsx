@@ -11,16 +11,20 @@ interface EmailVerificationProps {
   email: string;
   onVerified: (data: AuthData) => void;
   onBack: () => void;
+  otpDebug?: string;
 }
 
 const RESEND_COOLDOWN = 60;
 
-export function EmailVerification({ email, onVerified, onBack }: EmailVerificationProps) {
-  const [code, setCode] = useState<string[]>(["", "", "", "", "", ""]);
+export function EmailVerification({ email, onVerified, onBack, otpDebug }: EmailVerificationProps) {
+  const [code, setCode] = useState<string[]>(
+    otpDebug ? otpDebug.slice(0, 6).split("") : ["", "", "", "", "", ""]
+  );
   const [error, setError] = useState<string | null>(null);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [verified, setVerified] = useState(false);
+  const [debugOtp, setDebugOtp] = useState<string | undefined>(otpDebug);
   const [verifyEmail, { isLoading }] = useVerifyEmailMutation();
   const [resendOtp] = useResendOtpMutation();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -82,7 +86,11 @@ export function EmailVerification({ email, onVerified, onBack }: EmailVerificati
     setResendMessage(null);
     setError(null);
     try {
-      await resendOtp({ email }).unwrap();
+      const res = await resendOtp({ email }).unwrap();
+      if (res.otp) {
+        setDebugOtp(res.otp);
+        setCode(res.otp.slice(0, 6).split(""));
+      }
       setResendMessage("New code sent!");
       setCountdown(RESEND_COOLDOWN);
       setCode(["", "", "", "", "", ""]);
@@ -157,6 +165,17 @@ export function EmailVerification({ email, onVerified, onBack }: EmailVerificati
                   We sent a verification code to{" "}
                   <span className="font-medium text-text">{email}</span>
                 </p>
+
+                {debugOtp && (
+                  <div className="rounded-[3px] border border-amber-500/50 bg-amber-50 px-4 py-3 text-center">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                      Dev mode — code not emailed
+                    </p>
+                    <p className="mt-1 font-mono text-2xl font-bold tracking-[0.3em] text-amber-800">
+                      {debugOtp}
+                    </p>
+                  </div>
+                )}
 
                 {error && (
                   <motion.div

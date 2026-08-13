@@ -23,6 +23,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [otpDebug, setOtpDebug] = useState<string | undefined>(undefined);
 
   const [register, { isLoading }] = useRegisterMutation();
   const dispatch = useDispatch();
@@ -36,7 +37,8 @@ export default function RegisterPage() {
       return;
     }
     try {
-      await register({ name, email, password }).unwrap();
+      const result = await register({ name, email, password }).unwrap();
+      setOtpDebug(result.otp);
       setMode("otp");
     } catch (err: unknown) {
       setError(
@@ -59,6 +61,7 @@ export default function RegisterPage() {
           email={email}
           onVerified={handleVerified}
           onBack={() => setMode("form")}
+          otpDebug={otpDebug}
         />
       </GuestGuard>
     );

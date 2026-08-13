@@ -24,6 +24,7 @@ interface RegisterResponse {
   data: {
     message: string;
     email: string;
+    otp?: string;
   };
 }
 
@@ -97,13 +98,16 @@ export const authApi = api.injectEndpoints({
       }),
       transformResponse: (response: AuthResponse) => response.data,
     }),
-    resendOtp: builder.mutation<{ message: string }, { email: string }>({
+    resendOtp: builder.mutation<{ message: string; otp?: string }, { email: string }>({
       query: (body) => ({
         url: "/auth/resend-otp",
         method: "POST",
         body,
       }),
-      transformResponse: (response: { status: string; data: { message: string } }) => response.data,
+      transformResponse: (response: {
+        status: string;
+        data: { message: string; otp?: string };
+      }) => response.data,
     }),
     login: builder.mutation<AuthData, LoginInput>({
       query: (body) => ({
