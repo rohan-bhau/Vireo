@@ -14,7 +14,7 @@ import {
 import { useGetMembersQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { AICommentSuggestion } from "@/components/ai/ai-comment-suggestion";
-import { joinWorkspaceRoom, leaveWorkspaceRoom, onCommentChanged } from "@/lib/socket";
+import { joinWorkspaceRoom, onCommentChanged } from "@/lib/socket";
 
 interface CommentThreadProps {
   taskKey: string;
@@ -59,10 +59,7 @@ export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
     const off = onCommentChanged((data) => {
       if (data.taskKey === taskKey) refetch();
     });
-    return () => {
-      off();
-      leaveWorkspaceRoom(workspaceId);
-    };
+    return () => { off(); };
   }, [workspaceId, taskKey, refetch]);
   const [createComment] = useCreateCommentMutation();
   const [updateComment] = useUpdateCommentMutation();

@@ -119,8 +119,8 @@ export function WorkspaceSettingsBilling() {
   const params = useParams();
   const searchParams = useSearchParams();
   const workspaceId = params.workspaceId as string;
-  const { isAdmin, isOwner } = useSettings();
-  const canManage = isAdmin || isOwner;
+  const { isOwner } = useSettings();
+  const canManage = isOwner;
 
   const { data: subscription, isLoading: subLoading } =
     useGetSubscriptionQuery(workspaceId, { skip: !workspaceId });

@@ -38,6 +38,7 @@ const ADMIN_ONLY_SETTINGS: SettingsSection[] = [
   "components",
   "automation",
 ];
+const OWNER_ONLY_SETTINGS: SettingsSection[] = ["billing"];
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { Dialog } from "@/components/ui/dialog";
@@ -317,7 +318,8 @@ export function Sidebar({ workspaceId, onNavigate, embedded }: SidebarProps) {
     workspaces.find((ws) => ws.id === currentWsId)?.ownerId === currentUserId;
   const visibleSettingsItems = settingsNavItems.filter(
     (item) =>
-      !ADMIN_ONLY_SETTINGS.includes(item.id) || isWorkspaceAdmin || isWorkspaceOwner
+      (!ADMIN_ONLY_SETTINGS.includes(item.id) || isWorkspaceAdmin || isWorkspaceOwner) &&
+      (!OWNER_ONLY_SETTINGS.includes(item.id) || isWorkspaceOwner)
   );
 
   const settingsBase = `/w/${currentWsId}/settings`;

@@ -18,13 +18,14 @@ import { WatchToggle } from "@/components/notifications/watch-toggle";
 import { WatcherList } from "@/components/notifications/watcher-list";
 import { AIContextualLauncher } from "@/components/ai/ai-contextual-launcher";
 import { useCanEdit } from "@/hooks/use-can-edit";
+import { joinWorkspaceRoom, leaveWorkspaceRoom, onTaskUpdated, onTaskMoved } from "@/lib/socket";
 
 export default function TaskDetailPage() {
   const params = useParams();
   const router = useRouter();
   const taskKey = params.taskKey as string;
 
-  const { data: task, isLoading, error } = useGetTaskByKeyQuery(taskKey);
+  const { data: task, isLoading, error, refetch } = useGetTaskByKeyQuery(taskKey);
   const [deleteTask] = useDeleteTaskMutation();
 
   const workspaceId = useSelector((state: RootState) => state.workspace.activeWorkspaceId);
@@ -34,6 +35,23 @@ export default function TaskDetailPage() {
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const wsId = task?.workspaceId;
+    if (!wsId) return;
+    joinWorkspaceRoom(wsId);
+    const offTaskUpdated = onTaskUpdated((data) => {
+      if (data.task?.taskKey === taskKey) refetch();
+    });
+    const offTaskMoved = onTaskMoved((data) => {
+      if (data.task?.taskKey === taskKey) refetch();
+    });
+    return () => {
+      offTaskUpdated();
+      offTaskMoved();
+      leaveWorkspaceRoom(wsId);
+    };
+  }, [task?.workspaceId, taskKey, refetch]);
 
   useEffect(() => {
     if (!task) return;

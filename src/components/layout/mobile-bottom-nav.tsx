@@ -42,6 +42,7 @@ const ADMIN_ONLY_SETTINGS: SettingsSection[] = [
   "components",
   "automation",
 ];
+const OWNER_ONLY_SETTINGS: SettingsSection[] = ["billing"];
 
 const dashboardNav = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -201,7 +202,8 @@ export function MobileBottomNav() {
 
   const visibleSettings = settingsNavItems.filter(
     (item) =>
-      !ADMIN_ONLY_SETTINGS.includes(item.id) || isWorkspaceAdmin || isWorkspaceOwner
+      (!ADMIN_ONLY_SETTINGS.includes(item.id) || isWorkspaceAdmin || isWorkspaceOwner) &&
+      (!OWNER_ONLY_SETTINGS.includes(item.id) || isWorkspaceOwner)
   );
   const visibleSettingsItems = visibleSettings.slice(0, MAX_VISIBLE);
   const hiddenSettingsItems = visibleSettings.slice(MAX_VISIBLE);

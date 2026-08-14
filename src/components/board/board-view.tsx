@@ -148,11 +148,11 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
       if (refetchBoardTasks) refetchBoardTasks();
     };
     const offs = [
-      onTaskCreated((data) => { if (data.actorId !== currentUserId) refresh(); }),
-      onTaskUpdated((data) => { if (data.actorId !== currentUserId) refresh(); }),
-      onTaskMoved((data) => { if (data.actorId !== currentUserId) refresh(); }),
-      onTaskDeleted((data) => { if (data.actorId !== currentUserId) refresh(); }),
-      onTaskReordered((data) => { if ((data as { actorId?: string }).actorId !== currentUserId) refresh(); }),
+      onTaskCreated(() => refresh()),
+      onTaskUpdated(() => refresh()),
+      onTaskMoved(() => refresh()),
+      onTaskDeleted(() => refresh()),
+      onTaskReordered(() => refresh()),
     ];
     return () => offs.forEach((off) => off());
   }, [activeBoardId, sprintId, refetchBoardTasks, currentUserId]);

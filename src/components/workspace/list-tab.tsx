@@ -100,11 +100,11 @@ export function ListTab({ workspaceId }: ListTabProps) {
   useEffect(() => {
     const refresh = () => { if (refetchTasks) refetchTasks(); };
     const offs = [
-      onTaskCreated((data) => { if (data.actorId !== currentUserId) refresh(); }),
-      onTaskUpdated((data) => { if (data.actorId !== currentUserId) refresh(); }),
-      onTaskMoved((data) => { if (data.actorId !== currentUserId) refresh(); }),
-      onTaskDeleted((data) => { if (data.actorId !== currentUserId) refresh(); }),
-      onTaskReordered((data) => { if ((data as { actorId?: string }).actorId !== currentUserId) refresh(); }),
+      onTaskCreated(() => refresh()),
+      onTaskUpdated(() => refresh()),
+      onTaskMoved(() => refresh()),
+      onTaskDeleted(() => refresh()),
+      onTaskReordered(() => refresh()),
     ];
     return () => offs.forEach((off) => off());
   }, [refetchTasks, currentUserId]);
