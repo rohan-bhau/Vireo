@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { DropdownPanel } from "@/components/ui/dropdown";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
@@ -14,6 +14,7 @@ import {
 import { useGetMembersQuery } from "@/store/workspaceApi";
 import { Button } from "@/components/ui/button";
 import { AICommentSuggestion } from "@/components/ai/ai-comment-suggestion";
+import { joinWorkspaceRoom, leaveWorkspaceRoom, onCommentChanged } from "@/lib/socket";
 
 interface CommentThreadProps {
   taskKey: string;
@@ -49,8 +50,20 @@ function renderCommentContent(content: string): React.ReactNode {
 }
 
 export function CommentThread({ taskKey, workspaceId }: CommentThreadProps) {
-  const { data: comments, isLoading } = useGetTaskCommentsQuery(taskKey);
+  const { data: comments, isLoading, refetch } = useGetTaskCommentsQuery(taskKey);
   const { data: members } = useGetMembersQuery(workspaceId || "", { skip: !workspaceId });
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    joinWorkspaceRoom(workspaceId);
+    const off = onCommentChanged((data) => {
+      if (data.taskKey === taskKey) refetch();
+    });
+    return () => {
+      off();
+      leaveWorkspaceRoom(workspaceId);
+    };
+  }, [workspaceId, taskKey, refetch]);
   const [createComment] = useCreateCommentMutation();
   const [updateComment] = useUpdateCommentMutation();
   const [deleteComment] = useDeleteCommentMutation();

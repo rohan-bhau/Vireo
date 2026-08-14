@@ -56,10 +56,12 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6">
+    <div className="flex w-full min-w-0 flex-1 flex-col gap-6 rounded-xl border border-border-light bg-surface p-4 shadow-[0_1px_2px_rgba(0,0,0,0.06)] sm:p-6">
       <div className="flex items-start gap-3">
-        <IssueTypeIcon type={task.type} size="lg" />
-        <div className="flex-1">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-bg">
+          <IssueTypeIcon type={task.type} size="lg" />
+        </div>
+        <div className="min-w-0 flex-1">
           {editingSummary ? (
             <div className="flex flex-col gap-2">
               <input
@@ -77,13 +79,13 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
           ) : canEdit ? (
             <h1
               data-shortcut="edit-summary"
-              className="text-lg font-bold text-text cursor-pointer hover:bg-bg-light rounded-[3px] -ml-2 px-2 py-1 transition-colors"
+              className="-ml-2 rounded-md px-2 py-1 text-lg font-bold text-text transition-colors hover:bg-bg-light cursor-pointer sm:text-xl"
               onClick={() => { setSummaryValue(task.title); setEditingSummary(true); }}
             >
               {task.title}
             </h1>
           ) : (
-            <h1 className="text-lg font-bold text-text">
+            <h1 className="text-lg font-bold text-text sm:text-xl">
               {task.title}
             </h1>
           )}
@@ -96,7 +98,12 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
 
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-text-placeholder">Description</h2>
+          <h2 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-text-placeholder">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+            Description
+          </h2>
           {canEdit && (
             <div className="flex items-center gap-2">
               {!editingDesc && (
@@ -135,7 +142,7 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
             </div>
           </div>
         ) : task.description ? (
-          <div className="rounded-[3px] border border-border-light bg-surface px-4 py-3">
+          <div className="rounded-lg border border-border-light bg-bg-light/50 px-4 py-3">
             <p className="text-sm text-text-secondary whitespace-pre-wrap leading-relaxed">
               {task.description}
             </p>
@@ -143,12 +150,12 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
         ) : canEdit ? (
           <button
             onClick={() => setEditingDesc(true)}
-            className="w-full rounded-[3px] border border-dashed border-border-input px-4 py-6 text-sm text-text-placeholder hover:border-primary hover:text-primary transition-colors text-center"
+            className="w-full rounded-lg border border-dashed border-border-input px-4 py-6 text-sm text-text-placeholder hover:border-primary hover:text-primary transition-colors text-center"
           >
             Add a description...
           </button>
         ) : (
-          <p className="rounded-[3px] border border-dashed border-border-input px-4 py-6 text-sm text-text-placeholder text-center">
+          <p className="rounded-lg border border-dashed border-border-input px-4 py-6 text-sm text-text-placeholder text-center">
             No description
           </p>
         )}
@@ -165,16 +172,16 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
         canEdit={canEdit}
       />
 
-      <div className="border-b border-border-light">
-        <div className="flex gap-0">
+      <div>
+        <div className="inline-flex rounded-lg border border-border-light bg-bg-light/50 p-0.5">
           {(["comments", "history", "worklog"] as DetailTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors capitalize ${
+              className={`rounded-md px-4 py-1.5 text-xs font-medium transition-colors capitalize ${
                 activeTab === tab
-                  ? "border-primary text-primary"
-                  : "border-transparent text-text-placeholder hover:text-text-secondary hover:border-border-light"
+                  ? "bg-surface text-primary shadow-sm"
+                  : "text-text-placeholder hover:text-text-secondary"
               }`}
             >
               {tab === "worklog" ? "Work log" : tab}

@@ -102,26 +102,28 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-6 max-sm:px-4 max-sm:py-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="flex h-8 w-8 items-center justify-center rounded-[3px] text-text-placeholder hover:bg-bg-light hover:text-text transition-colors"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-text-placeholder transition-colors hover:bg-bg-light hover:text-text"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
-          <nav className="flex items-center gap-2 text-xs text-text-placeholder">
+          <nav className="flex min-w-0 items-center gap-2 text-xs text-text-placeholder">
             <button
               onClick={() => router.push(`/w/${task.workspaceId}`)}
-              className="hover:text-primary transition-colors"
+              className="truncate transition-colors hover:text-primary"
             >
               {task.projectId}
             </button>
-            <span>&gt;</span>
-            <span className="font-mono font-medium text-text">{task.taskKey}</span>
+            <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+            <span className="rounded-md bg-bg-light px-1.5 py-0.5 font-mono font-medium text-text">{task.taskKey}</span>
           </nav>
         </div>
 
@@ -130,13 +132,13 @@ export default function TaskDetailPage() {
 
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-1.5 rounded-[3px] border border-border-light px-2.5 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-light transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-border-light px-2.5 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-light"
           >
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
               <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
             </svg>
-            Share
+            <span className="hidden sm:inline">Share</span>
           </button>
 
           {canEdit && (
@@ -192,7 +194,7 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
+      <div className="flex flex-col items-start gap-6 lg:flex-row">
         <IssueDetailMain task={task} workspaceId={workspaceId || task.workspaceId} />
         <IssueDetailDetailsPanel task={task} workspaceId={workspaceId || task.workspaceId} />
       </div>

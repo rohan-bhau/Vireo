@@ -23,14 +23,24 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString();
 }
 
+function statusLabel(value: string): string {
+  const map: Record<string, string> = {
+    todo: "To Do",
+    in_progress: "In Progress",
+    in_review: "In Review",
+    done: "Done",
+  };
+  return map[value] || value;
+}
+
 function actionLabel(item: ActivityItem): string {
   switch (item.action) {
     case "created":
       return "created this task";
     case "status_changed":
-      return `changed status from ${item.oldValue || "none"} to ${item.newValue || "none"}`;
+      return `changed status from ${statusLabel(item.oldValue || "none")} to ${statusLabel(item.newValue || "none")}`;
     case "assigned":
-      return `changed assignee from ${item.oldValue || "unassigned"} to ${item.newValue || "unassigned"}`;
+      return `changed assignee from ${statusLabel(item.oldValue || "unassigned")} to ${statusLabel(item.newValue || "unassigned")}`;
     case "commented":
       return "commented on this task";
     case "attachment_added":
@@ -38,7 +48,7 @@ function actionLabel(item: ActivityItem): string {
     case "attachment_removed":
       return `removed attachment`;
     case "updated":
-      return `updated ${item.field || "task"} from ${item.oldValue || ""} to ${item.newValue || ""}`;
+      return `updated ${item.field || "task"} from ${statusLabel(item.oldValue || "")} to ${statusLabel(item.newValue || "")}`;
     default:
       return item.action;
   }

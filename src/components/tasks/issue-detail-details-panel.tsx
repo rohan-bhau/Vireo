@@ -153,9 +153,12 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
   }
 
   return (
-    <div className="w-72 flex-shrink-0 max-lg:w-full">
-      <div className="flex flex-col gap-3 rounded-[3px] border border-border-light bg-surface p-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-text-placeholder">
+    <div className="w-full flex-shrink-0 max-lg:w-full lg:w-80 lg:sticky lg:top-6">
+      <div className="flex flex-col gap-3 rounded-xl border border-border-light bg-surface p-4 shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-text-placeholder">
+          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" />
+          </svg>
           Details
         </h3>
 

@@ -123,6 +123,22 @@ export function onTaskReordered(callback: (data: TaskSocketData) => void): () =>
   return () => { s.off("task-reordered", callback); };
 }
 
+export interface CommentSocketData {
+  taskKey?: string;
+  comment?: unknown;
+  actorId?: string;
+}
+
+const COMMENT_EVENTS = ["comment-created", "comment-updated", "comment-deleted"] as const;
+
+export function onCommentChanged(callback: (data: CommentSocketData) => void): () => void {
+  const s = connectSocket();
+  COMMENT_EVENTS.forEach((event) => s.on(event, callback));
+  return () => {
+    COMMENT_EVENTS.forEach((event) => s.off(event, callback));
+  };
+}
+
 export interface NotificationSocketData {
   _id?: string;
   userId?: string;
