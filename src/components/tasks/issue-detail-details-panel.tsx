@@ -15,7 +15,7 @@ import { LabelEditor } from "./label-editor";
 import { MultiComponentSelector } from "./component-selector";
 import { VersionSelector } from "./version-selector";
 import { toastError } from "@/lib/toast";
-import { useCanEdit } from "@/hooks/use-can-edit";
+import { useCanEdit, useCurrentMember } from "@/hooks/use-can-edit";
 
 interface IssueDetailDetailsPanelProps {
   task: Task;
@@ -124,6 +124,8 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldValue, setFieldValue] = useState<FieldValue>(null);
   const canEdit = useCanEdit(workspaceId);
+  const currentMember = useCurrentMember(workspaceId);
+  const isViewAssignee = !canEdit && task.assignee === currentMember?.userId;
 
   function getUserName(userId: string): string {
     const member = members?.find((m) => m.userId === userId);
@@ -158,7 +160,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         </h3>
 
         <DetailRow label="Status" field="status" active={editingField === "status"}>
-          {canEdit ? (
+          {canEdit || isViewAssignee ? (
             <div data-shortcut="status"><StatusEditor status={task.status} onChange={(value) => handleSave("status", value)} /></div>
           ) : (
             <StatusBadge status={task.status} size="md" />

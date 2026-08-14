@@ -497,7 +497,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                   tasks={groupTasks}
                   columns={columns}
                   onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
-                  onAssigneeChange={handleAssigneeChange}
+                  onAssigneeChange={canCreate ? handleAssigneeChange : undefined}
                   members={members}
                   membersMap={membersMap}
                 />
@@ -531,7 +531,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                       boardId={activeBoard?.id || ""}
                       membersMap={membersMap}
                       members={members}
-                      onAssigneeChange={handleAssigneeChange}
+                      onAssigneeChange={canCreate ? handleAssigneeChange : undefined}
                       quickCreating={createColumnId === column.id}
                       canCreate={canCreate}
                     />

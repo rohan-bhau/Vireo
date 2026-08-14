@@ -130,12 +130,22 @@ export function IssueCard({ task, onClick, assigneeName, members = [], onAssigne
               displayName={displayName}
               onChange={onAssigneeChange}
             />
-          ) : (
+          ) : task.assignee ? (
             <span
               className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2563EB] text-[9px] font-semibold text-white flex-shrink-0"
               title={displayName}
             >
               {getInitials(displayName)}
+            </span>
+          ) : (
+            <span
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#F4F5F7] text-[#737686] flex-shrink-0"
+              title="Unassigned"
+            >
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
+              </svg>
             </span>
           )}
         </div>
