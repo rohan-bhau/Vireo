@@ -65,6 +65,8 @@ export function ListTab({ workspaceId }: ListTabProps) {
   const { data: tasks = [], isLoading, refetch: refetchTasks } = useGetWorkspaceTasksQuery(workspaceId);
   const { data: projects = [] } = useGetWorkspaceProjectsQuery(workspaceId);
   const { data: members = [] } = useGetMembersQuery(workspaceId);
+  const currentMember = members.find((m) => m.userId === currentUserId);
+  const canCreate = currentMember ? currentMember.role !== "VIEW" : false;
   const firstProject = projects.find((p) => p.boards?.length > 0) || projects[0];
   const boards = useGetProjectBoardsQuery(firstProject?.id || "", { skip: !firstProject });
 
@@ -204,12 +206,14 @@ const filtered = tasks
           <option value="in-review">In Review</option>
           <option value="done">Done</option>
         </select>
-        <Button size="sm" onClick={() => setQuickCreating((v) => !v)}>
-          + Create task
-        </Button>
+        {canCreate && (
+          <Button size="sm" onClick={() => setQuickCreating((v) => !v)}>
+            + Create task
+          </Button>
+        )}
       </div>
 
-      {quickCreating && firstProject && (
+      {canCreate && quickCreating && firstProject && (
         <div className="mb-4 rounded-xl border border-[#C3C6D7]/20 bg-white p-3">
           <BoardQuickCreate
             workspaceId={workspaceId}

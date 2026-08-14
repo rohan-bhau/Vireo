@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
 import { useGetWorkspaceQuery, useGetMembersQuery } from "@/store/workspaceApi";
 import { useGetWorkspaceProjectsQuery, useGetOrSeedDefaultProjectMutation } from "@/store/projectApi";
 import { useGetWorkspaceTasksQuery } from "@/store/taskApi";
@@ -18,10 +20,14 @@ interface SummaryTabProps {
 
 export function SummaryTab({ workspaceId }: SummaryTabProps) {
   useGetWorkspaceQuery(workspaceId);
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
   const { data: members = [], isLoading: membersLoading } = useGetMembersQuery(workspaceId);
   const { data: projects = [], isLoading: projectsLoading } = useGetWorkspaceProjectsQuery(workspaceId);
   const { data: tasks = [], isLoading: tasksLoading } = useGetWorkspaceTasksQuery(workspaceId);
   const [ensureDefault, { isLoading: isEnsuring }] = useGetOrSeedDefaultProjectMutation();
+
+  const currentMember = members.find((m) => m.userId === currentUserId);
+  const canCreate = currentMember ? currentMember.role !== "VIEW" : false;
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [taskPrefill, setTaskPrefill] = useState<TaskPrefill | null>(null);
@@ -99,29 +105,35 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
         <div className="rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
           <h2 className="mb-3 text-sm font-semibold text-[#121C28]">Quick Actions</h2>
           <div className="space-y-2">
-            <button
-              onClick={() => openCreateDialog()}
-              className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Create task
-            </button>
-            <button
-              onClick={() => setTicketWriterOpen(true)}
-              className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
-            >
-              <Sparkles className="h-4 w-4" />
-              AI Write ticket
-            </button>
-            <button
-              onClick={() => setTriageOpen(true)}
-              className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
-            >
-              <Sparkles className="h-4 w-4" />
-              AI Smart triage
-            </button>
+            {canCreate && (
+              <button
+                onClick={() => openCreateDialog()}
+                className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                Create task
+              </button>
+            )}
+            {canCreate && (
+              <button
+                onClick={() => setTicketWriterOpen(true)}
+                className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Write ticket
+              </button>
+            )}
+            {canCreate && (
+              <button
+                onClick={() => setTriageOpen(true)}
+                className="flex w-full items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Smart triage
+              </button>
+            )}
             <Link
               href={`/w/${workspaceId}/members`}
               className="flex items-center gap-3 rounded-lg border border-[#C3C6D7]/20 p-3 text-sm font-medium text-[#434655] transition-colors hover:border-[#2563EB] hover:text-[#2563EB]"
@@ -144,7 +156,7 @@ export function SummaryTab({ workspaceId }: SummaryTabProps) {
         </div>
       </div>
 
-      {projectId && (
+      {canCreate && projectId && (
         <button
           onClick={() => setSprintPlannerOpen(true)}
           className="mt-6 w-full rounded-xl border border-[#2563EB]/20 bg-gradient-to-r from-[#EEF4FF] to-[#F8F9FF] p-5 text-left transition-colors hover:border-[#2563EB]/40"

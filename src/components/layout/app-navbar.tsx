@@ -8,7 +8,7 @@ import type { RootState, AppDispatch } from "@/store";
 import { toggleSidebar } from "@/store/sidebarSlice";
 import { PanelLeftClose, PanelLeft, Menu, Sparkles, HelpCircle, Settings, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useGetWorkspacesQuery } from "@/store/workspaceApi";
+import { useGetWorkspacesQuery, useGetMembersQuery } from "@/store/workspaceApi";
 import { SiteSwitcher } from "@/components/nav/site-switcher";
 import { SearchBar } from "@/components/nav/search-bar";
 import { NotificationBell } from "@/components/nav/notification-bell";
@@ -41,19 +41,23 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
   const workspaceId = pathWorkspaceId || activeWorkspaceId;
   const { user } = useSelector((state: RootState) => state.auth);
 
+  const { data: members = [] } = useGetMembersQuery(workspaceId ?? "", { skip: !workspaceId });
+  const currentMember = workspaceId ? members.find((m) => m.userId === user?.id) : undefined;
+  const canCreate = currentMember ? currentMember.role !== "VIEW" : true;
+
   const { data: workspaces = [] } = useGetWorkspacesQuery(undefined, {
     skip: !settingsOpen && !createMenuOpen,
   });
   const myWorkspaces = workspaces.filter((ws) => ws.ownerId === user?.id);
 
   useHotkey("?", () => setShortcutsOpen(true));
-  useHotkey("c", () => setCreateDialogOpen(true));
+  useHotkey("c", () => { if (canCreate) setCreateDialogOpen(true); });
 
   useEffect(() => {
-    function handle() { setCreateDialogOpen(true); }
+    function handle() { if (canCreate) setCreateDialogOpen(true); }
     window.addEventListener("vireo:create-issue", handle as EventListener);
     return () => window.removeEventListener("vireo:create-issue", handle as EventListener);
-  }, []);
+  }, [canCreate]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -122,6 +126,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
             <SearchBar />
           </div>
           <div ref={createMenuRef} className="relative">
+            {canCreate && (
             <button
               onClick={() => setCreateMenuOpen(!createMenuOpen)}
               className="flex items-center gap-1.5 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark transition-colors shadow-sm whitespace-nowrap cursor-pointer"
@@ -129,6 +134,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
               <span className="text-base leading-none">+</span>
               <span>Create</span>
             </button>
+            )}
 
             {createMenuOpen && (
               <div className="absolute right-0 top-full mt-2 w-72 rounded-[3px] border border-border-light bg-surface shadow-dropdown z-50">
@@ -266,6 +272,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
         <div className="flex-1">
           <SearchBar />
         </div>
+        {canCreate && (
         <button
           onClick={() => setCreateDialogOpen(true)}
           className="flex items-center gap-1 rounded-[3px] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-dark transition-colors shadow-sm cursor-pointer"
@@ -273,6 +280,7 @@ export function AppNavbar({ onMobileMenuToggle, onToggleChat }: AppNavbarProps) 
         >
           <span className="text-base leading-none">+</span>
         </button>
+        )}
       </div>
 
       <KeyboardShortcutsModal
