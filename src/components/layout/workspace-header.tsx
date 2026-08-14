@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/store";
-import { useGetWorkspaceQuery, useDeleteWorkspaceMutation, useCreateInvitationMutation } from "@/store/workspaceApi";
+import { useGetWorkspaceQuery, useDeleteWorkspaceMutation, useCreateInvitationMutation, type Role } from "@/store/workspaceApi";
 import { toggleStarredWorkspace } from "@/store/workspaceSlice";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Star, MoreHorizontal, Settings, Trash2, UserPlus } from "lucide-react";
+import { Star, MoreHorizontal, Settings, Trash2, UserPlus, Check } from "lucide-react";
 import { clsx } from "clsx";
+import { ROLE_LABELS, ROLE_DESCRIPTIONS } from "@/lib/workspace-roles";
+
+const ASSIGNABLE_ROLES: Role[] = ["ADMIN", "EDIT", "VIEW"];
 
 interface WorkspaceHeaderProps {
   workspaceId: string;
@@ -33,6 +36,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
   const [showDelete, setShowDelete] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<Role>("EDIT");
   const [inviteMessage, setInviteMessage] = useState("");
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -69,6 +73,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
       await createInvitation({
         workspaceId,
         inviteeEmail: inviteEmail.trim(),
+        role: inviteRole,
         message: inviteMessage.trim() || undefined,
       }).unwrap();
       setInviteEmail("");
@@ -226,6 +231,32 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
             onChange={(e) => setInviteEmail(e.target.value)}
             required
           />
+          <div>
+            <label className="text-xs font-semibold text-text-secondary">Workspace role</label>
+            <div className="mt-1.5 flex flex-col gap-2">
+              {ASSIGNABLE_ROLES.map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setInviteRole(role)}
+                  className={clsx(
+                    "flex items-start justify-between rounded-lg border px-4 py-2.5 text-left transition-colors",
+                    inviteRole === role ? "border-primary bg-primary-bg" : "border-border-light hover:border-border hover:bg-bg-light"
+                  )}
+                >
+                  <span>
+                    <span className="block text-sm font-semibold text-text">{ROLE_LABELS[role]}</span>
+                    <span className="mt-0.5 block text-xs text-text-tertiary">{ROLE_DESCRIPTIONS[role]}</span>
+                  </span>
+                  {inviteRole === role && (
+                    <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white">
+                      <Check className="h-3 w-3" />
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-text-secondary">Personal message (optional)</label>
             <textarea
