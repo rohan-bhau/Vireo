@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { clsx } from "clsx";
 import type { Task } from "@/store/taskApi";
 import type { WorkspaceMember } from "@/store/workspaceApi";
 import { TypeIcon } from "@/components/tasks/type-icons";
+import { useDropdown, DropdownPanel } from "@/components/ui/dropdown";
 
 const EPIC_COLORS = [
   "#4F46E5", "#7C3AED", "#0052CC", "#059669",
@@ -165,24 +166,7 @@ function CardAssignee({
   displayName: string;
   onChange: (userId: string | null) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const popupRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    function handleOutside(e: MouseEvent) {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(e.target as Node) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    }
-    if (open) document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [open]);
+  const { open, setOpen, triggerRef } = useDropdown();
 
   return (
     <div className="relative flex-shrink-0">
@@ -191,7 +175,7 @@ function CardAssignee({
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((v) => !v);
+          setOpen(!open);
         }}
         title={displayName || "Unassigned"}
         className={clsx(
@@ -211,52 +195,44 @@ function CardAssignee({
         )}
       </button>
 
-      {open && (
-        <div
-          ref={popupRef}
-          onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 top-full z-50 mt-1 w-48 rounded-[3px] border border-[#C3C6D7]/30 bg-white py-1 shadow-modal max-h-56 overflow-y-auto cursor-pointer"
+      <DropdownPanel open={open} triggerRef={triggerRef} onClose={() => setOpen(false)} width={192}>
+        <button
+          type="button"
+          onClick={() => {
+            onChange(null);
+            setOpen(false);
+          }}
+          className={clsx(
+            "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
+            !task.assignee && "bg-[#F0F6FF] font-medium"
+          )}
         >
+          <svg className="h-3.5 w-3.5 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+          </svg>
+          Unassigned
+        </button>
+        {members.map((m) => (
           <button
+            key={m.userId}
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onChange(null);
+            onClick={() => {
+              onChange(m.userId);
               setOpen(false);
             }}
             className={clsx(
               "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
-              !task.assignee && "bg-[#F0F6FF] font-medium"
+              task.assignee === m.userId && "bg-[#F0F6FF] font-medium"
             )}
           >
-            <svg className="h-3.5 w-3.5 text-[#737686]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
-            </svg>
-            Unassigned
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2563EB] text-[8px] font-semibold text-white">
+              {getInitials(m.user?.name || "")}
+            </span>
+            <span className="truncate">{m.user?.name || "Unknown"}</span>
           </button>
-          {members.map((m) => (
-            <button
-              key={m.userId}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onChange(m.userId);
-                setOpen(false);
-              }}
-              className={clsx(
-                "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-[#F6F9FF] text-left",
-                task.assignee === m.userId && "bg-[#F0F6FF] font-medium"
-              )}
-            >
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2563EB] text-[8px] font-semibold text-white">
-                {getInitials(m.user?.name || "")}
-              </span>
-              <span className="truncate">{m.user?.name || "Unknown"}</span>
-            </button>
-          ))}
-        </div>
-      )}
+        ))}
+      </DropdownPanel>
     </div>
   );
 }

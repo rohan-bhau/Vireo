@@ -105,6 +105,8 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   const [now] = useState(() => Date.now());
 
   const { data: members = [] } = useGetMembersQuery(workspaceId);
+  const currentMember = members.find((m) => m.userId === currentUserId);
+  const canCreate = currentMember ? currentMember.role !== "VIEW" : false;
   const membersMap = useMemo(() => {
     const map: Record<string, string> = {};
     for (const m of members) {
@@ -333,7 +335,11 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
       await moveTask({ taskKey: activeIdStr, columnId: targetColumnId, position: 0, boardId: activeBoardId }).unwrap();
       const children = tasks.filter((t) => t.parentTask === activeIdStr);
       for (const child of children) {
-        await moveTask({ taskKey: child.taskKey, columnId: targetColumnId, position: 0, boardId: activeBoardId }).unwrap();
+        try {
+          await moveTask({ taskKey: child.taskKey, columnId: targetColumnId, position: 0, boardId: activeBoardId }).unwrap();
+        } catch {
+          // child may not be movable by this user; skip without reverting the parent move
+        }
       }
     } catch (e) {
       toastError((e as { data?: { message?: string }; message?: string })?.data?.message ||
@@ -524,10 +530,12 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                       members={members}
                       onAssigneeChange={handleAssigneeChange}
                       quickCreating={createColumnId === column.id}
+                      canCreate={canCreate}
                     />
                   ))}
                 </SortableContext>
 
+                {canCreate && (
                 <div className="flex-shrink-0 w-72">
                   {showAddColumn ? (
                     <div className="rounded-lg bg-surface p-3 shadow-card border border-border-light">
@@ -558,6 +566,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                     </button>
                   )}
                 </div>
+                )}
               </div>
 
               <DragOverlay>

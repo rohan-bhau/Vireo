@@ -446,6 +446,7 @@ function ListAssigneeCell({
         type="button"
         onClick={(e) => {
           e.stopPropagation();
+          setOpen(true);
           onToggleEdit();
         }}
         title={displayName || "Unassigned"}

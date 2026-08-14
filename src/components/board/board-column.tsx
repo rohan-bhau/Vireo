@@ -29,9 +29,10 @@ interface BoardColumnProps {
   members?: WorkspaceMember[];
   quickCreating?: boolean;
   onAssigneeChange?: (taskKey: string, userId: string | null) => void;
+  canCreate?: boolean;
 }
 
-export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, workspaceId, projectId, boardId, membersMap = {}, members = [], quickCreating, onAssigneeChange }: BoardColumnProps) {
+export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, workspaceId, projectId, boardId, membersMap = {}, members = [], quickCreating, onAssigneeChange, canCreate = true }: BoardColumnProps) {
   const {
     setNodeRef,
     attributes,
@@ -130,7 +131,7 @@ export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, workspac
       </SortableContext>
 
       <div className="px-2 pb-2">
-        {quickCreating ? (
+        {canCreate && (quickCreating ? (
           <BoardQuickCreate
             workspaceId={workspaceId}
             projectId={projectId}
@@ -148,7 +149,7 @@ export function BoardColumn({ column, tasks, onTaskClick, onCreateTask, workspac
             </svg>
             Create issue
           </button>
-        )}
+        ))}
       </div>
     </div>
   );
