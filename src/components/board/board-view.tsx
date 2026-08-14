@@ -158,7 +158,7 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
   }, [activeBoardId, sprintId, refetchBoardTasks, currentUserId]);
 
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 8, delay: 0 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 10 } })
   );
 
@@ -497,6 +497,9 @@ export function BoardView({ projectId, workspaceId, boardId: initialBoardId, spr
                   tasks={groupTasks}
                   columns={columns}
                   onTaskClick={(taskKey) => router.push(`/task/${taskKey}`)}
+                  onAssigneeChange={handleAssigneeChange}
+                  members={members}
+                  membersMap={membersMap}
                 />
               ))}
               {swimlaneGroups.length === 0 && (

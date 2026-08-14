@@ -12,9 +12,10 @@ import { toastError, toastSuccess } from "@/lib/toast";
 interface AttachmentListProps {
   taskKey: string;
   attachments: Attachment[];
+  canEdit?: boolean;
 }
 
-export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
+export function AttachmentList({ taskKey, attachments, canEdit = true }: AttachmentListProps) {
   const [uploadAttachment, { isLoading: uploading }] = useUploadAttachmentMutation();
   const [removeAttachment] = useRemoveAttachmentMutation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,30 +64,32 @@ export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
         <h3 className="text-sm font-semibold text-[#121C28]">Attachments ({attachments.length})</h3>
       </div>
 
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
-        onClick={() => fileInputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-6 text-center transition-colors ${
-          dragging ? "border-[#2563EB] bg-[#EEF4FF]" : "border-[#C3C6D7] hover:border-[#2563EB] hover:bg-[#F8F9FF]"
-        }`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
-        />
-        <svg className="h-6 w-6 text-[#9CA3AF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-        </svg>
-        <p className="text-xs text-[#737686]">
-          {uploading ? "Uploading..." : "Drop files here or click to upload"}
-        </p>
-        <p className="text-[10px] text-[#C3C6D7]">Max 15 MB per file</p>
-      </div>
+      {canEdit && (
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
+          onClick={() => fileInputRef.current?.click()}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-6 text-center transition-colors ${
+            dragging ? "border-[#2563EB] bg-[#EEF4FF]" : "border-[#C3C6D7] hover:border-[#2563EB] hover:bg-[#F8F9FF]"
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
+          />
+          <svg className="h-6 w-6 text-[#9CA3AF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+          </svg>
+          <p className="text-xs text-[#737686]">
+            {uploading ? "Uploading..." : "Drop files here or click to upload"}
+          </p>
+          <p className="text-[10px] text-[#C3C6D7]">Max 15 MB per file</p>
+        </div>
+      )}
 
       {attachments.length > 0 ? (
         <div className="flex flex-col gap-2">
@@ -102,18 +105,20 @@ export function AttachmentList({ taskKey, attachments }: AttachmentListProps) {
                 <span className="text-base">{getFileIcon(att.filename)}</span>
               )}
               <div className="flex flex-1 flex-col min-w-0">
-                <a
-                  href={att.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-[#2563EB] hover:text-[#1d4ed8] truncate transition-colors"
-                >
-                  {att.filename}
-                </a>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => handleRemove(att.publicId)}>
-                Remove
-              </Button>
+              <a
+                href={att.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-[#2563EB] hover:text-[#1d4ed8] truncate transition-colors"
+              >
+                {att.filename}
+              </a>
+            </div>
+              {canEdit && (
+                <Button size="sm" variant="outline" onClick={() => handleRemove(att.publicId)}>
+                  Remove
+                </Button>
+              )}
             </div>
           ))}
         </div>

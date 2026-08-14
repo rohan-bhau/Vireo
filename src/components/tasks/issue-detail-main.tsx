@@ -12,6 +12,7 @@ import { IssueTypeIcon } from "./issue-type-icon";
 import { Button } from "@/components/ui/button";
 import { AISummaryCard } from "@/components/ai/ai-summary-card";
 import { AIDescriptionGenerator } from "@/components/ai/ai-description-generator";
+import { useCanEdit } from "@/hooks/use-can-edit";
 
 interface IssueDetailMainProps {
   task: Task;
@@ -21,6 +22,7 @@ interface IssueDetailMainProps {
 type DetailTab = "comments" | "history" | "worklog";
 
 export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
+  const canEdit = useCanEdit(workspaceId);
   const [updateTask] = useUpdateTaskMutation();
   const [editingSummary, setEditingSummary] = useState(false);
   const [summaryValue, setSummaryValue] = useState("");
@@ -72,12 +74,16 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
                 onBlur={handleSaveSummary}
               />
             </div>
-          ) : (
+          ) : canEdit ? (
             <h1
               data-shortcut="edit-summary"
               className="text-lg font-bold text-text cursor-pointer hover:bg-bg-light rounded-[3px] -ml-2 px-2 py-1 transition-colors"
               onClick={() => { setSummaryValue(task.title); setEditingSummary(true); }}
             >
+              {task.title}
+            </h1>
+          ) : (
+            <h1 className="text-lg font-bold text-text">
               {task.title}
             </h1>
           )}
@@ -91,27 +97,29 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-text-placeholder">Description</h2>
-          <div className="flex items-center gap-2">
-            {!editingDesc && (
-              <AIDescriptionGenerator
-                title={task.title}
-                taskType={task.type}
-                projectId={task.projectId}
-                onApply={(desc) => {
-                  setDescValue(desc);
-                  setEditingDesc(true);
-                }}
-              />
-            )}
-            {!editingDesc && (
-              <button
-                onClick={() => { setDescValue(task.description || ""); setEditingDesc(true); }}
-                className="text-xs font-medium text-text-placeholder hover:text-primary transition-colors"
-              >
-                {task.description ? "Edit" : "Add"}
-              </button>
-            )}
-          </div>
+          {canEdit && (
+            <div className="flex items-center gap-2">
+              {!editingDesc && (
+                <AIDescriptionGenerator
+                  title={task.title}
+                  taskType={task.type}
+                  projectId={task.projectId}
+                  onApply={(desc) => {
+                    setDescValue(desc);
+                    setEditingDesc(true);
+                  }}
+                />
+              )}
+              {!editingDesc && (
+                <button
+                  onClick={() => { setDescValue(task.description || ""); setEditingDesc(true); }}
+                  className="text-xs font-medium text-text-placeholder hover:text-primary transition-colors"
+                >
+                  {task.description ? "Edit" : "Add"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
         {editingDesc ? (
           <div className="flex flex-col gap-2">
@@ -132,17 +140,21 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
               {task.description}
             </p>
           </div>
-        ) : (
+        ) : canEdit ? (
           <button
             onClick={() => setEditingDesc(true)}
             className="w-full rounded-[3px] border border-dashed border-border-input px-4 py-6 text-sm text-text-placeholder hover:border-primary hover:text-primary transition-colors text-center"
           >
             Add a description...
           </button>
+        ) : (
+          <p className="rounded-[3px] border border-dashed border-border-input px-4 py-6 text-sm text-text-placeholder text-center">
+            No description
+          </p>
         )}
       </div>
 
-      <AttachmentList taskKey={task.taskKey} attachments={task.attachments} />
+      <AttachmentList taskKey={task.taskKey} attachments={task.attachments} canEdit={canEdit} />
 
       <SubtaskList
         taskKey={task.taskKey}
@@ -150,6 +162,7 @@ export function IssueDetailMain({ task, workspaceId }: IssueDetailMainProps) {
         projectId={task.projectId}
         boardId={task.boardId}
         columnId={task.columnId}
+        canEdit={canEdit}
       />
 
       <div className="border-b border-border-light">

@@ -177,6 +177,9 @@ function CardAssignee({
           e.stopPropagation();
           setOpen(!open);
         }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
         title={displayName || "Unassigned"}
         className={clsx(
           "flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-semibold transition-opacity",

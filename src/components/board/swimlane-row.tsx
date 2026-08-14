@@ -5,16 +5,20 @@ import { clsx } from "clsx";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { IssueCard } from "./issue-card";
 import type { Task } from "@/store/taskApi";
+import type { WorkspaceMember } from "@/store/workspaceApi";
 
 interface SwimlaneRowProps {
   name: string;
   tasks: Task[];
   columns: { id: string; name: string }[];
   onTaskClick: (taskKey: string) => void;
+  onAssigneeChange?: (taskKey: string, userId: string | null) => void;
+  members?: WorkspaceMember[];
+  membersMap?: Record<string, string>;
   defaultOpen?: boolean;
 }
 
-export function SwimlaneRow({ name, tasks, columns, onTaskClick, defaultOpen = true }: SwimlaneRowProps) {
+export function SwimlaneRow({ name, tasks, columns, onTaskClick, onAssigneeChange, members = [], membersMap = {}, defaultOpen = true }: SwimlaneRowProps) {
   const [collapsed, setCollapsed] = useState(!defaultOpen);
 
   if (tasks.length === 0 && collapsed) return null;
@@ -52,6 +56,9 @@ export function SwimlaneRow({ name, tasks, columns, onTaskClick, defaultOpen = t
                         key={task.taskKey}
                         task={task}
                         onClick={() => onTaskClick(task.taskKey)}
+                        assigneeName={membersMap[task.assignee || ""]}
+                        members={members}
+                        onAssigneeChange={onAssigneeChange?.bind(null, task.taskKey)}
                       />
                     ))}
                     {colTasks.length === 0 && (

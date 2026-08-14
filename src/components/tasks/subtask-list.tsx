@@ -18,9 +18,10 @@ interface SubtaskListProps {
   projectId: string;
   boardId?: string | null;
   columnId?: string | null;
+  canEdit?: boolean;
 }
 
-export function SubtaskList({ taskKey, workspaceId, projectId, boardId, columnId }: SubtaskListProps) {
+export function SubtaskList({ taskKey, workspaceId, projectId, boardId, columnId, canEdit = true }: SubtaskListProps) {
   const router = useRouter();
   const { data: subtleSubtasks = [], refetch } = useGetSubtasksByParentQuery(taskKey);
   const [createTask] = useCreateTaskMutation();
@@ -79,19 +80,33 @@ export function SubtaskList({ taskKey, workspaceId, projectId, boardId, columnId
               key={sk.taskKey}
               className="flex items-center gap-2 rounded-[3px] px-2 py-1.5 hover:bg-bg-light transition-colors group"
             >
-              <button
-                onClick={() => handleToggleDone(sk.taskKey, sk.status)}
-                title={sk.status === "done" ? "Mark as not done" : "Mark as done"}
-                className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border transition-colors ${
-                  sk.status === "done"
-                    ? "border-transparent bg-[#36B37E] text-white"
-                    : "border-text-placeholder text-transparent hover:border-primary hover:text-primary/50"
-                }`}
-              >
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </button>
+              {canEdit ? (
+                <button
+                  onClick={() => handleToggleDone(sk.taskKey, sk.status)}
+                  title={sk.status === "done" ? "Mark as not done" : "Mark as done"}
+                  className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    sk.status === "done"
+                      ? "border-transparent bg-[#36B37E] text-white"
+                      : "border-text-placeholder text-transparent hover:border-primary hover:text-primary/50"
+                  }`}
+                >
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </button>
+              ) : (
+                <span
+                  className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border ${
+                    sk.status === "done"
+                      ? "border-transparent bg-[#36B37E] text-white"
+                      : "border-border-light text-transparent"
+                  }`}
+                >
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </span>
+              )}
               <IssueTypeIcon type="subtask" />
               <span className="text-xs text-text-secondary font-mono">{sk.taskKey}</span>
               <button
@@ -108,7 +123,7 @@ export function SubtaskList({ taskKey, workspaceId, projectId, boardId, columnId
         </div>
       )}
 
-            {subtasksEnabled && (
+            {subtasksEnabled && canEdit && (
         <>
           {adding ? (
             <div className="flex gap-2">

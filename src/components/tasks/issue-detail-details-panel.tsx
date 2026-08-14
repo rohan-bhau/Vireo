@@ -15,6 +15,7 @@ import { LabelEditor } from "./label-editor";
 import { MultiComponentSelector } from "./component-selector";
 import { VersionSelector } from "./version-selector";
 import { toastError } from "@/lib/toast";
+import { useCanEdit } from "@/hooks/use-can-edit";
 
 interface IssueDetailDetailsPanelProps {
   task: Task;
@@ -53,9 +54,9 @@ function DetailRow({ label, children, onEdit, isEmpty, active }: DetailRowProps)
     <div className="flex flex-col gap-0.5">
       <span className="text-[11px] font-medium text-text-placeholder">{label}</span>
       <div
-        className={`rounded-[3px] -ml-1 px-1 py-0.5 min-h-[24px] cursor-pointer hover:bg-bg-light transition-colors ${
-          active ? "bg-bg-light" : ""
-        }`}
+        className={`rounded-[3px] -ml-1 px-1 py-0.5 min-h-[24px] ${
+          onEdit ? "cursor-pointer hover:bg-bg-light transition-colors" : ""
+        } ${active ? "bg-bg-light" : ""}`}
         onClick={() => onEdit?.()}
       >
         {children}
@@ -122,6 +123,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
   const { data: workspaceCustomFields = [] } = useGetWorkspaceCustomFieldsQuery(workspaceId);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldValue, setFieldValue] = useState<FieldValue>(null);
+  const canEdit = useCanEdit(workspaceId);
 
   function getUserName(userId: string): string {
     const member = members?.find((m) => m.userId === userId);
@@ -156,7 +158,11 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         </h3>
 
         <DetailRow label="Status" field="status" active={editingField === "status"}>
-          <div data-shortcut="status"><StatusEditor status={task.status} onChange={(value) => handleSave("status", value)} /></div>
+          {canEdit ? (
+            <div data-shortcut="status"><StatusEditor status={task.status} onChange={(value) => handleSave("status", value)} /></div>
+          ) : (
+            <StatusBadge status={task.status} size="md" />
+          )}
         </DetailRow>
 
         <DetailRow label="Issue type" field="type" active={editingField === "type"}>
@@ -167,13 +173,20 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         </DetailRow>
 
         <DetailRow label="Priority" field="priority" active={editingField === "priority"}>
-          <div data-shortcut="priority"><PriorityEditor priority={task.priority} onChange={(value) => handleSave("priority", value)} /></div>
+          {canEdit ? (
+            <div data-shortcut="priority"><PriorityEditor priority={task.priority} onChange={(value) => handleSave("priority", value)} /></div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <PriorityIcon priority={task.priority} />
+              <span className="text-xs text-text capitalize">{task.priority}</span>
+            </div>
+          )}
         </DetailRow>
 
         <DetailRow
           label="Assignee"
           field="assignee"
-          onEdit={() => startEdit("assignee", task.assignee)}
+          onEdit={canEdit ? () => startEdit("assignee", task.assignee) : undefined}
           active={editingField === "assignee"}
           data-shortcut="assignee"
         >
@@ -195,7 +208,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         <DetailRow
           label="Labels"
           field="labels"
-          onEdit={() => startEdit("labels", task.labels)}
+          onEdit={canEdit ? () => startEdit("labels", task.labels) : undefined}
           active={editingField === "labels"}
           data-shortcut="labels"
         >
@@ -222,7 +235,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         <DetailRow
           label="Components"
           field="components"
-          onEdit={() => startEdit("components", task.components)}
+          onEdit={canEdit ? () => startEdit("components", task.components) : undefined}
           active={editingField === "components"}
         >
           {editingField === "components" ? (
@@ -247,7 +260,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         <DetailRow
           label="Fix Version"
           field="fixVersion"
-          onEdit={() => startEdit("fixVersion", task.fixVersion || "")}
+          onEdit={canEdit ? () => startEdit("fixVersion", task.fixVersion || "") : undefined}
           active={editingField === "fixVersion"}
         >
           {editingField === "fixVersion" ? (
@@ -268,7 +281,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         <DetailRow
           label="Story points"
           field="storyPoints"
-          onEdit={() => startEdit("storyPoints", task.storyPoints?.toString() || "")}
+          onEdit={canEdit ? () => startEdit("storyPoints", task.storyPoints?.toString() || "") : undefined}
           active={editingField === "storyPoints"}
         >
           {editingField === "storyPoints" ? (
@@ -295,7 +308,7 @@ export function IssueDetailDetailsPanel({ task, workspaceId }: IssueDetailDetail
         <DetailRow
           label="Due date"
           field="dueDate"
-          onEdit={() => startEdit("dueDate", task.dueDate?.split("T")[0] || "")}
+          onEdit={canEdit ? () => startEdit("dueDate", task.dueDate?.split("T")[0] || "") : undefined}
           active={editingField === "dueDate"}
         >
           {editingField === "dueDate" ? (

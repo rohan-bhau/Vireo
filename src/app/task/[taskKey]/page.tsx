@@ -17,6 +17,7 @@ import { LinkIssueDialog } from "@/components/tasks/link-issue-dialog";
 import { WatchToggle } from "@/components/notifications/watch-toggle";
 import { WatcherList } from "@/components/notifications/watcher-list";
 import { AIContextualLauncher } from "@/components/ai/ai-contextual-launcher";
+import { useCanEdit } from "@/hooks/use-can-edit";
 
 export default function TaskDetailPage() {
   const params = useParams();
@@ -27,6 +28,7 @@ export default function TaskDetailPage() {
   const [deleteTask] = useDeleteTaskMutation();
 
   const workspaceId = useSelector((state: RootState) => state.workspace.activeWorkspaceId);
+  const canEdit = useCanEdit(workspaceId || task?.workspaceId || "");
 
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
@@ -137,18 +139,19 @@ export default function TaskDetailPage() {
             Share
           </button>
 
-          <div className="relative">
-            <button
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="flex h-8 w-8 items-center justify-center rounded-[3px] text-text-placeholder hover:bg-bg-light hover:text-text transition-colors"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="5" r="2" />
-                <circle cx="12" cy="12" r="2" />
-                <circle cx="12" cy="19" r="2" />
-              </svg>
-            </button>
-            {showMoreMenu && (
+          {canEdit && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="flex h-8 w-8 items-center justify-center rounded-[3px] text-text-placeholder hover:bg-bg-light hover:text-text transition-colors"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="12" cy="19" r="2" />
+                </svg>
+              </button>
+              {showMoreMenu && (
               <>
                 <div className="fixed inset-0 z-40 cursor-pointer" onClick={() => setShowMoreMenu(false)} />
                 <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-[3px] border border-border-light bg-surface shadow-modal">
@@ -183,8 +186,9 @@ export default function TaskDetailPage() {
                   </button>
                 </div>
               </>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
