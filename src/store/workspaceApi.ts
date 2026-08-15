@@ -11,6 +11,7 @@ interface Workspace {
   createdAt: string;
   updatedAt: string;
   members?: WorkspaceMember[];
+  owner?: { name: string; email: string; avatar?: string } | null;
 }
 
 export type Role = "ADMIN" | "EDIT" | "VIEW";

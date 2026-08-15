@@ -41,6 +41,7 @@ interface WorkspaceRowData {
   ownerId: string;
   template: ProjectTemplate;
   members?: WorkspaceMember[];
+  owner?: { name: string; email: string; avatar?: string } | null;
 }
 
 function workspaceKey(ws: WorkspaceRowData): string {
@@ -210,8 +211,7 @@ export default function DashboardPage() {
 
   function leadName(ws: WorkspaceRowData): string {
     if (ws.ownerId === user?.id) return user?.name || "You";
-    const owner = ws.members?.find((m) => m.userId === ws.ownerId);
-    return owner?.user?.name || ws.members?.[0]?.user?.name || "—";
+    return ws.owner?.name || "—";
   }
 
   async function handleCreate(e: React.FormEvent) {
