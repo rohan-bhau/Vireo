@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Check, CreditCard, ExternalLink, Sparkles, X } from "lucide-react";
@@ -10,6 +10,7 @@ import {
   useGetUsageStatsQuery,
   useGetPlansQuery,
   useCreateCheckoutSessionMutation,
+  useConfirmCheckoutMutation,
   type PlanId,
 } from "@/store/billingApi";
 import { useSettings } from "@/lib/settings-context";
@@ -39,7 +40,7 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
 
 const PLAN_NAMES: Record<PlanId, string> = {
   free: "Free",
-  pro: "Standard",
+  pro: "Pro",
   enterprise: "Enterprise",
 };
 
@@ -87,7 +88,7 @@ function UsageBar({ label, used, limit, limitLabel }: UsageBarProps) {
           : "bg-[#2563EB]";
 
   return (
-    <div className="rounded-xl border border-[#C3C6D7]/30 bg-surface p-5">
+    <div className="rounded-2xl border border-[#C3C6D7]/30 bg-surface p-5 shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-text-secondary">{label}</p>
         <p className="text-sm font-semibold text-text">
@@ -129,9 +130,29 @@ export function WorkspaceSettingsBilling() {
   });
   const { data: plans = [], isLoading: plansLoading } = useGetPlansQuery();
   const [createCheckout, { isLoading: checkoutLoading }] = useCreateCheckoutSessionMutation();
+  const [confirmCheckout] = useConfirmCheckoutMutation();
 
   const [confirmPlan, setConfirmPlan] = useState<PlanId | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
   const upgradeSucceeded = searchParams.get("upgrade") === "success";
+  const sessionId =
+    searchParams.get("session_id") ||
+    (typeof window !== "undefined"
+      ? sessionStorage.getItem("vireo_checkout_session")
+      : null);
+
+  useEffect(() => {
+    if (!upgradeSucceeded || !sessionId || !workspaceId) return;
+    let active = true;
+    confirmCheckout({ workspaceId, sessionId })
+      .unwrap()
+      .then(() => { if (active) setConfirmed(true); })
+      .catch(() => {})
+      .finally(() => {
+        if (active) sessionStorage.removeItem("vireo_checkout_session");
+      });
+    return () => { active = false; };
+  }, [upgradeSucceeded, sessionId, workspaceId, confirmCheckout]);
 
   if (subLoading || usageLoading || plansLoading) {
     return <SkeletonSettingsPage />;
@@ -146,12 +167,13 @@ export function WorkspaceSettingsBilling() {
     if (!workspaceId) return;
     const origin = window.location.origin;
     try {
-      const { url } = await createCheckout({
+      const { url, sessionId } = await createCheckout({
         workspaceId,
         planId,
         successUrl: `${origin}/w/${workspaceId}/settings/billing?upgrade=success`,
         cancelUrl: `${origin}/w/${workspaceId}/settings/billing`,
       }).unwrap();
+      sessionStorage.setItem("vireo_checkout_session", sessionId);
       window.location.href = url;
     } catch (err: unknown) {
       toastError((err as { data?: { message?: string } })?.data?.message || "Could not start checkout");
@@ -170,12 +192,16 @@ export function WorkspaceSettingsBilling() {
 
       {upgradeSucceeded && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Your workspace is being upgraded. Your new plan will be active within a few moments.
+          {confirmed
+            ? "Your workspace has been upgraded."
+            : "Activating your new plan..."}
         </div>
       )}
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        <div className="rounded-xl border border-[#C3C6D7]/30 bg-surface p-6 lg:w-2/5">
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-[#C3C6D7]/30 bg-surface shadow-[0_1px_3px_rgba(16,24,40,0.04)] lg:w-2/5">
+          <div className="h-1.5 w-full bg-gradient-to-r from-[#2563EB] via-[#7C3AED] to-[#EC4899]" />
+          <div className="flex flex-1 flex-col p-6">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-text-secondary">Current plan</p>
             <span
@@ -188,8 +214,8 @@ export function WorkspaceSettingsBilling() {
             </span>
           </div>
           <div className="mt-3 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#F8F9FF]">
-              <CreditCard className="h-5 w-5 text-[#2563EB]" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#7C3AED] shadow-md">
+              <CreditCard className="h-5 w-5 text-white" />
             </div>
             <div>
               <p className="text-xl font-bold text-text">{PLAN_NAMES[plan]}</p>
@@ -237,6 +263,7 @@ export function WorkspaceSettingsBilling() {
               <ExternalLink className="h-3.5 w-3.5" />
               View public pricing page
             </Link>
+          </div>
           </div>
         </div>
 
@@ -296,53 +323,71 @@ export function WorkspaceSettingsBilling() {
           </div>
         )}
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {plans.map((p) => {
             const isCurrent = p.id === plan;
             const canUpgrade = canManage && !isCurrent && p.id !== "free";
+            const isPro = p.id === "pro";
             return (
               <div
                 key={p.id}
                 className={clsx(
-                  "flex flex-col rounded-xl border bg-surface p-5",
-                  p.id === "pro" && "border-[#2563EB] shadow-[0_4px_24px_rgba(37,99,235,0.08)]",
-                  p.id !== "pro" && "border-[#C3C6D7]/30"
+                  "relative flex flex-col rounded-2xl border bg-surface p-6 transition-all duration-300",
+                  isPro
+                    ? "border-[#2563EB]/60 bg-gradient-to-b from-[#2563EB]/[0.06] to-transparent shadow-[0_8px_32px_rgba(37,99,235,0.12)] ring-1 ring-[#2563EB]/30 hover:shadow-[0_12px_40px_rgba(37,99,235,0.18)]"
+                    : "border-[#C3C6D7]/30 shadow-[0_1px_3px_rgba(16,24,40,0.04)] hover:border-[#2563EB]/40 hover:shadow-[0_8px_24px_rgba(16,24,40,0.08)]"
                 )}
               >
-                {p.id === "pro" && (
-                  <span className="absolute -translate-y-7 rounded-full bg-[#2563EB] px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                {isPro && (
+                  <span className="absolute left-1/2 -top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#2563EB] to-[#7C3AED] px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
                     Most popular
                   </span>
                 )}
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-text">{p.name}</p>
+                  <p className="text-base font-bold text-text">{p.name}</p>
                   {isCurrent && (
-                    <span className="rounded-full bg-[#EEF4FF] px-2.5 py-0.5 text-xs font-semibold text-[#004AC6]">
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600">
                       Current
                     </span>
                   )}
                 </div>
-                <div className="mt-2">
-                  <span className="text-2xl font-bold text-text">{formatPrice(p.price)}</span>
-                  <span className="ml-1 text-sm text-text-secondary">/ user / month</span>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className={clsx("text-3xl font-extrabold", isPro ? "text-[#2563EB]" : "text-text")}>
+                    {formatPrice(p.price)}
+                  </span>
+                  <span className="text-xs text-text-secondary">/ user / month</span>
                 </div>
                 <p className="mt-1.5 text-xs text-text-secondary">{p.description}</p>
-                <ul className="mt-4 flex-1 space-y-2">
+                <ul className="mt-5 flex-1 space-y-2.5">
                   {p.features.slice(0, 5).map((f) => (
-                    <li key={f} className="flex items-start gap-1.5 text-xs text-text-secondary">
-                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#36B37E]" />
+                    <li key={f} className="flex items-start gap-2 text-xs text-text-secondary">
+                      <span
+                        className={clsx(
+                          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
+                          isPro ? "bg-[#2563EB]/10" : "bg-emerald-50"
+                        )}
+                      >
+                        <Check className="h-2.5 w-2.5 text-[#36B37E]" />
+                      </span>
                       {f}
                     </li>
                   ))}
                 </ul>
                 <Button
-                  className="mt-5 w-full cursor-pointer"
-                  variant={p.id === "pro" ? "primary" : "outline"}
+                  className="mt-6 w-full cursor-pointer"
+                  variant={isPro ? "primary" : "outline"}
                   disabled={!canUpgrade || checkoutLoading}
                   onClick={() => setConfirmPlan(p.id as "pro" | "enterprise")}
                 >
-                  {isCurrent ? "Current plan" : p.id === "free" ? "Downgrade" : <Sparkles className="h-4 w-4" />}
-                  {!isCurrent && p.id !== "free" && " Upgrade"}
+                  {isCurrent ? (
+                    "Current plan"
+                  ) : p.id === "free" ? (
+                    "Downgrade"
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" /> Upgrade
+                    </>
+                  )}
                 </Button>
               </div>
             );
@@ -350,14 +395,19 @@ export function WorkspaceSettingsBilling() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#C3C6D7]/30">
+      <div className="overflow-x-auto rounded-2xl border border-[#C3C6D7]/30 bg-surface shadow-[0_1px_3px_rgba(16,24,40,0.04)]">
         <table className="w-full min-w-[640px] border-collapse bg-surface text-sm">
           <thead>
-            <tr className="border-b border-[#C3C6D7]/30">
+            <tr className="border-b border-[#C3C6D7]/30 bg-[#F8F9FF]">
               <th className="px-4 py-3 text-left font-semibold text-text">Feature</th>
               {plans.map((p) => (
                 <th key={p.id} className="px-4 py-3 text-left font-semibold text-text">
                   {p.name}
+                  {p.id === "pro" && (
+                    <span className="ml-1.5 rounded-full bg-[#2563EB]/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#2563EB]">
+                      Popular
+                    </span>
+                  )}
                 </th>
               ))}
             </tr>

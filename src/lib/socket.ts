@@ -167,6 +167,12 @@ export function onNewNotification(callback: (data: NotificationSocketData) => vo
   return () => { s.off("new-notification", callback); };
 }
 
+export function onSubscriptionUpdated(callback: (data: { workspaceId: string }) => void): () => void {
+  const s = connectSocket();
+  s.on("subscription-updated", callback);
+  return () => { s.off("subscription-updated", callback); };
+}
+
 export function onNotificationCount(callback: (data: { count: number }) => void): () => void {
   const s = connectSocket();
   s.on("notification-count", callback);

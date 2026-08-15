@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { api } from "@/store/api";
-import { onNewNotification, onNotificationCount, connectSocket } from "@/lib/socket";
+import { onNewNotification, onNotificationCount, onSubscriptionUpdated, connectSocket } from "@/lib/socket";
 import { toastInfo } from "@/lib/toast";
 
 interface IncomingNotification {
@@ -39,9 +39,14 @@ export function NotificationListener() {
       dispatch(api.util.invalidateTags(["Notifications"]));
     });
 
+    const cleanup3 = onSubscriptionUpdated(() => {
+      dispatch(api.util.invalidateTags([{ type: "Subscription" }]));
+    });
+
     return () => {
       cleanup1();
       cleanup2();
+      cleanup3();
     };
   }, [dispatch]);
 
