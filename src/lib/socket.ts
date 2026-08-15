@@ -4,13 +4,15 @@ import { io, Socket } from "socket.io-client";
 import { getAccessToken } from "./auth";
 
 let socket: Socket | null = null;
+const joinedBoards = new Set<string>();
+const joinedWorkspaces = new Set<string>();
 
 export function getSocket(): Socket | null {
   return socket;
 }
 
 export function connectSocket(): Socket {
-  if (socket?.connected) return socket;
+  if (socket) return socket;
 
   const token = getAccessToken();
   const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
@@ -24,7 +26,8 @@ export function connectSocket(): Socket {
   });
 
   socket.on("connect", () => {
-    console.log("[Socket] Connected");
+    joinedBoards.forEach((id) => socket?.emit("join-board", id));
+    joinedWorkspaces.forEach((id) => socket?.emit("join-workspace", id));
   });
 
   socket.on("disconnect", (reason) => {
@@ -54,11 +57,13 @@ export function reconnectSocket() {
 }
 
 export function joinBoardRoom(boardId: string) {
+  joinedBoards.add(boardId);
   const s = connectSocket();
-  s.emit("join-board", boardId);
+  if (s.connected) s.emit("join-board", boardId);
 }
 
 export function leaveBoardRoom(boardId: string) {
+  joinedBoards.delete(boardId);
   const s = getSocket();
   if (s) s.emit("leave-board", boardId);
 }
@@ -70,11 +75,13 @@ export function onBoardUpdated(callback: () => void): () => void {
 }
 
 export function joinWorkspaceRoom(workspaceId: string) {
+  joinedWorkspaces.add(workspaceId);
   const s = connectSocket();
-  s.emit("join-workspace", workspaceId);
+  if (s.connected) s.emit("join-workspace", workspaceId);
 }
 
 export function leaveWorkspaceRoom(workspaceId: string) {
+  joinedWorkspaces.delete(workspaceId);
   const s = getSocket();
   if (s) s.emit("leave-workspace", workspaceId);
 }
