@@ -5,10 +5,12 @@ import Link from "next/link";
 import { ArrowRight, Zap, GitBranch, MessageSquare, Palette, Shield, Bug, LineChart, Sparkles } from "lucide-react";
 import { PageHero } from "@/components/sections/marketing/page-hero";
 import { FaqSection } from "@/components/sections/marketing/faq-section";
+import { BrandLogo } from "@/components/brand-logo";
 
 interface Integration {
   name: string;
   color: string;
+  brand?: string;
   icon: typeof GitBranch;
   category: string;
   description: string;
@@ -16,18 +18,18 @@ interface Integration {
 }
 
 const integrations: Integration[] = [
-  { name: "GitHub", color: "#24292F", icon: GitBranch, category: "Source control", description: "Link branches, commits, and pull requests to issues.", connected: true },
-  { name: "GitLab", color: "#FC6D26", icon: GitBranch, category: "Source control", description: "Merge request status and pipeline events on tasks.", connected: true },
+  { name: "GitHub", color: "#24292F", brand: "github", icon: GitBranch, category: "Source control", description: "Link branches, commits, and pull requests to issues.", connected: true },
+  { name: "GitLab", color: "#FC6D26", brand: "gitlab", icon: GitBranch, category: "Source control", description: "Merge request status and pipeline events on tasks.", connected: true },
   { name: "Bitbucket", color: "#0052CC", icon: GitBranch, category: "Source control", description: "PR checks and branch creation straight from issues.", connected: false },
-  { name: "Slack", color: "#4A154B", icon: MessageSquare, category: "Notifications", description: "Push issue updates to channels and direct messages.", connected: true },
-  { name: "Discord", color: "#5865F2", icon: MessageSquare, category: "Notifications", description: "Real-time issue and sprint events in your server.", connected: false },
-  { name: "Figma", color: "#A259FF", icon: Palette, category: "Design", description: "Attach files and frames directly to issues.", connected: true },
-  { name: "Sentry", color: "#362D59", icon: Bug, category: "Monitoring", description: "Auto-create issues from production errors.", connected: false },
-  { name: "Datadog", color: "#632CA6", icon: LineChart, category: "Monitoring", description: "Correlate incidents with deployments and boards.", connected: false },
-  { name: "PagerDuty", color: "#06AC38", icon: Zap, category: "Ops & on-call", description: "Escalate high-severity issues to your on-call team.", connected: true },
-  { name: "Okta", color: "#007DC1", icon: Shield, category: "Identity", description: "SSO and SCIM provisioning for enterprise.", connected: true },
+  { name: "Slack", color: "#4A154B", brand: "slack", icon: MessageSquare, category: "Notifications", description: "Push issue updates to channels and direct messages.", connected: true },
+  { name: "Discord", color: "#5865F2", brand: "discord", icon: MessageSquare, category: "Notifications", description: "Real-time issue and sprint events in your server.", connected: false },
+  { name: "Figma", color: "#A259FF", brand: "figma", icon: Palette, category: "Design", description: "Attach files and frames directly to issues.", connected: true },
+  { name: "Sentry", color: "#362D59", brand: "sentry", icon: Bug, category: "Monitoring", description: "Auto-create issues from production errors.", connected: false },
+  { name: "Datadog", color: "#632CA6", brand: "datadog", icon: LineChart, category: "Monitoring", description: "Correlate incidents with deployments and boards.", connected: false },
+  { name: "PagerDuty", color: "#06AC38", brand: "pagerduty", icon: Zap, category: "Ops & on-call", description: "Escalate high-severity issues to your on-call team.", connected: true },
+  { name: "Okta", color: "#007DC1", brand: "okta", icon: Shield, category: "Identity", description: "SSO and SCIM provisioning for enterprise.", connected: true },
   { name: "Azure AD", color: "#0078D4", icon: Shield, category: "Identity", description: "Enterprise SSO with SAML and automated provisioning.", connected: false },
-  { name: "OpenAI", color: "#10A37F", icon: Sparkles, category: "AI", description: "Powers the assistant's estimation and summaries.", connected: true },
+  { name: "OpenAI", color: "#10A37F", brand: "openai", icon: Sparkles, category: "AI", description: "Powers the assistant's estimation and summaries.", connected: true },
 ];
 
 const categories = [
@@ -72,8 +74,11 @@ export default function IntegrationsPage() {
                   className="group rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
                 >
                   <div className="mb-3 flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg text-white" style={{ backgroundColor: integration.color }}>
-                      <Icon className="h-4 w-4" />
+                    <span
+                      className="flex h-11 w-11 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: `${integration.color}14` }}
+                    >
+                      {integration.brand ? <BrandLogo name={integration.brand} className="h-5.5 w-5.5" /> : <Icon className="h-4 w-4" style={{ color: integration.color }} />}
                     </span>
                     <div>
                       <p className="text-sm font-bold text-[#121C28]">{integration.name}</p>

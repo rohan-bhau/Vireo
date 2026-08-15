@@ -483,8 +483,11 @@ export default function GuidePage() {
                 >
                   <div className={reversed ? "lg:order-2" : ""}>
                     <div className="mb-4 flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#004AC6] text-white shadow-[0_4px_12px_rgba(0,74,198,0.25)]">
+                      <span className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#004AC6] to-[#0075FF] text-white shadow-[0_6px_16px_rgba(0,74,198,0.3)]">
                         <Icon className="h-5 w-5" />
+                        <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-[#004AC6] shadow-sm">
+                          {idx + 1}
+                        </span>
                       </span>
                       <span className="text-sm font-bold uppercase tracking-wider text-[#8A8FA3]">
                         Step {idx + 1} of {steps.length}
@@ -517,9 +520,12 @@ export default function GuidePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#004AC6] to-[#002e7c] px-8 py-14 text-center"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#004AC6] via-[#00348f] to-[#001f63] px-8 py-14 text-center shadow-[0_20px_60px_-15px_rgba(0,74,198,0.45)]"
           >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.1)_0%,_transparent_70%)]" />
+            <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#4C9AFF]/30 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-32 -right-20 h-80 w-80 rounded-full bg-[#10B981]/20 blur-3xl" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
             <div className="relative">
               <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
                 Ready to run your first sprint?
@@ -530,13 +536,13 @@ export default function GuidePage() {
               <div className="mt-8 flex items-center justify-center gap-4">
                 <a
                   href="/register"
-                  className="rounded-lg bg-white px-8 py-3.5 text-base font-bold text-[#004AC6] transition-all hover:bg-white/90"
+                  className="rounded-lg bg-white px-8 py-3.5 text-base font-bold text-[#004AC6] shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all hover:-translate-y-0.5 hover:bg-white/90"
                 >
                   Start free trial
                 </a>
                 <a
                   href="/docs"
-                  className="rounded-lg border border-white/20 px-8 py-3.5 text-base font-bold text-white/90 transition-colors hover:bg-white/10"
+                  className="rounded-lg border border-white/20 px-8 py-3.5 text-base font-bold text-white/90 backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10"
                 >
                   Read the docs
                 </a>

@@ -6,6 +6,7 @@ import { useParams, notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Shield, Users, Sparkles, Bug, Columns, IterationCcw, Route, BarChart3, MessageSquareMore, RefreshCw, GitBranch, Workflow, Lock } from "lucide-react";
 import { getCategoryById, getItemBySlug, getCategoryForSlug } from "@/lib/product-data";
 import { FaqSection, type FaqItem } from "@/components/sections/marketing/faq-section";
+import { BrandLogo } from "@/components/brand-logo";
 
 const categoryColors: Record<string, string> = {
   features: "#2563EB",
@@ -288,6 +289,8 @@ export default function ProductArticlePage() {
       <div>
         <section className="relative overflow-hidden pt-20 pb-16 md:pt-28 md:pb-20">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_#D9DFF5_0%,_transparent_60%)]" />
+          <div className="pointer-events-none absolute -right-32 -top-20 h-96 w-96 rounded-full bg-[#004AC6]/[0.04] blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,74,198,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,74,198,0.03)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_top,black_20%,transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-6">
             <Link
               href="/product/features"
@@ -342,16 +345,16 @@ export default function ProductArticlePage() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.4, delay: idx * 0.08 }}
                           whileHover={{ y: -4, scale: 1.02 }}
-                          className="flex h-full flex-col rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
+                          className="group flex h-full flex-col rounded-xl border border-[#C3C6D7]/20 bg-white p-5 transition-all hover:-translate-y-1 hover:border-[#004AC6]/25 hover:shadow-[0_12px_32px_-12px_rgba(0,74,198,0.2)]"
                           style={{ borderColor: `${accent}1F` }}
                         >
                           <div
-                            className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg"
-                            style={{ backgroundColor: `${accent}1A`, color: accent }}
+                            className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md transition-transform group-hover:scale-110"
+                            style={{ backgroundImage: `linear-gradient(135deg, ${accent}, ${accent}BB)` }}
                           >
-                            <Icon className="h-4 w-4" />
+                            <Icon className="h-4.5 w-4.5" />
                           </div>
-                      <h3 className="text-base font-semibold text-[#121C28]">{catItem.title}</h3>
+                          <h3 className="text-base font-semibold text-[#121C28] transition-colors group-hover:text-[#004AC6]">{catItem.title}</h3>
                       <p className="mt-1.5 text-sm leading-relaxed text-[#434655]">
                         {catItem.description}
                       </p>
@@ -400,7 +403,7 @@ export default function ProductArticlePage() {
                       transition={{ delay: idx * 0.15 }}
                       className="relative"
                     >
-                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#004A9E]/10 text-lg font-bold text-[#004AC6]">
+                      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#004AC6] to-[#0075FF] text-lg font-bold text-white shadow-[0_6px_16px_rgba(0,74,198,0.3)]">
                         {step.step}
                       </div>
                       {idx < 3 && <div className="absolute left-6 top-12 hidden h-[calc(100%-3rem)] w-px bg-[#C3C6D7]/40 lg:block" />}
@@ -449,8 +452,9 @@ export default function ProductArticlePage() {
                     <motion.div
                       key={ai.title}
                       variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-                      className="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
+                      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-[#4C9AFF]/40 hover:bg-white/[0.08]"
                     >
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#4C9AFF]/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                       <h3 className="mb-2 font-semibold text-white">{ai.title}</h3>
                       <p className="text-sm leading-relaxed text-white/60">{ai.desc}</p>
                     </motion.div>
@@ -464,9 +468,12 @@ export default function ProductArticlePage() {
                 <p className="mb-8 text-center text-xs font-bold uppercase tracking-[0.12em] text-[#737686]">
                   Trusted by engineering teams at
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-40 grayscale">
+                <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-6 opacity-80 transition-opacity hover:opacity-100">
                   {["Linear", "Vercel", "Railway", "Supabase", "PlanetScale"].map((name) => (
-                    <span key={name} className="text-sm font-bold text-[#121C28]">{name}</span>
+                    <span key={name} className="flex items-center gap-2.5 text-sm font-bold text-[#121C28]">
+                      <BrandLogo name={name} className="h-5 w-5" />
+                      {name}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -482,8 +489,9 @@ export default function ProductArticlePage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: idx * 0.05 }}
-                      className="rounded-lg border border-[#C3C6D7]/20 bg-white px-5 py-3 text-sm font-semibold text-[#434655] shadow-sm"
+                      className="group flex items-center gap-2.5 rounded-lg border border-[#C3C6D7]/20 bg-white px-5 py-3 text-sm font-semibold text-[#434655] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#004AC6]/30 hover:shadow-[0_8px_20px_-8px_rgba(0,74,198,0.25)]"
                     >
+                      <BrandLogo name={tool} className="h-4.5 w-4.5" />
                       {tool}
                     </motion.div>
                   ))}
@@ -599,9 +607,11 @@ export default function ProductArticlePage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-80px" }}
                   transition={{ delay: idx * 0.08 }}
-                  className="flex items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-white p-4"
+                  className="group flex items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[#10B981]/30 hover:shadow-[0_8px_24px_-8px_rgba(16,185,129,0.2)]"
                 >
-                  <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#10B981]" />
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#10B981] to-[#34D399] text-white shadow-sm">
+                    <Check className="h-3.5 w-3.5" />
+                  </span>
                   <span className="text-sm text-[#434655]">{benefit}</span>
                 </motion.div>
               ))}
@@ -627,13 +637,13 @@ export default function ProductArticlePage() {
                       viewport={{ once: true, margin: "-80px" }}
                       transition={{ delay: idx * 0.08 }}
                       whileHover={{ y: -4 }}
-                      className="flex h-full items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
+                      className="group flex h-full items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-white p-5 transition-all hover:-translate-y-1 hover:border-[#004AC6]/30 hover:shadow-[0_12px_32px_-12px_rgba(0,74,198,0.2)]"
                     >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
-                        <Icon className="h-4 w-4" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#004AC6] to-[#0075FF] text-white shadow-[0_4px_12px_rgba(0,74,198,0.25)] transition-transform group-hover:scale-110">
+                        <Icon className="h-4.5 w-4.5" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-semibold text-[#121C28]">{related.title}</h3>
+                        <h3 className="text-sm font-semibold text-[#121C28] transition-colors group-hover:text-[#004AC6]">{related.title}</h3>
                         <p className="mt-1 text-xs leading-relaxed text-[#434655]">{related.description}</p>
                       </div>
                     </motion.div>
@@ -660,9 +670,12 @@ function CTASection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#004AC6] to-[#002e7c] px-8 py-14 text-center md:px-16"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#004AC6] via-[#00348f] to-[#001f63] px-8 py-14 text-center shadow-[0_20px_60px_-15px_rgba(0,74,198,0.45)] md:px-16"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.1)_0%,_transparent_70%)]" />
+          <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#4C9AFF]/30 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 -right-20 h-80 w-80 rounded-full bg-[#10B981]/20 blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
           <div className="relative">
             <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
               Ready to move faster?
@@ -673,13 +686,14 @@ function CTASection() {
             <div className="mt-8 flex items-center justify-center gap-4">
               <Link
                 href="/register"
-                className="rounded-lg bg-white px-8 py-3.5 text-base font-bold text-[#004AC6] transition-all hover:bg-white/90"
+                className="group inline-flex items-center gap-2 rounded-lg bg-white px-8 py-3.5 text-base font-bold text-[#004AC6] shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all hover:-translate-y-0.5 hover:bg-white/90"
               >
                 Start free trial
+                <span className="transition-transform group-hover:translate-x-0.5">→</span>
               </Link>
               <Link
                 href="/login"
-                className="rounded-lg border border-white/20 px-8 py-3.5 text-base font-bold text-white/90 transition-colors hover:bg-white/10"
+                className="rounded-lg border border-white/20 px-8 py-3.5 text-base font-bold text-white/90 backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10"
               >
                 Talk to sales
               </Link>

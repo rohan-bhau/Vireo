@@ -29,13 +29,16 @@ export function SectionHeading({ eyebrow, theme = "light", align = "center", tit
           {eyebrow}
         </div>
       )}
-      <h2
-        className={`text-3xl font-semibold tracking-tight md:text-4xl ${
-          dark ? "text-white" : "text-[#121C28]"
-        } ${align === "left" ? "text-left" : ""}`}
-      >
-        {title}
-      </h2>
+      <div className={align === "center" ? "flex flex-col items-center" : ""}>
+        <h2
+          className={`text-3xl font-semibold tracking-tight md:text-4xl ${
+            dark ? "text-white" : "text-[#121C28]"
+          } ${align === "left" ? "text-left" : ""}`}
+        >
+          {title}
+        </h2>
+        <span className="mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-[#004AC6] to-[#10B981]" />
+      </div>
       {subtitle && (
         <p className={`mt-4 max-w-2xl text-base leading-relaxed ${align === "center" ? "mx-auto" : ""} ${dark ? "text-white/60" : "text-[#434655]"}`}>
           {subtitle}

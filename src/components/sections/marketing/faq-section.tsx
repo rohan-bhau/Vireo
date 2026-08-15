@@ -26,7 +26,7 @@ export function FaqSection({
     <section className="bg-white py-16 md:py-20">
       <div className="mx-auto max-w-7xl px-6">
         <SectionHeading eyebrow={eyebrow} title={title} subtitle={subtitle} />
-        <div className="mx-auto mt-12 max-w-3xl">
+        <div className="mx-auto mt-12 max-w-3xl space-y-3">
           {faqs.map((faq, idx) => (
             <motion.div
               key={faq.q}
@@ -34,14 +34,16 @@ export function FaqSection({
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.08 }}
-              className="border-b border-[#C3C6D7]/20 py-5 last:border-0"
+              className="group rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] transition-all hover:border-[#004AC6]/25 hover:bg-white hover:shadow-[0_8px_24px_-8px_rgba(0,74,198,0.15)]"
             >
-              <details className="group">
-                <summary className="flex cursor-pointer items-center justify-between gap-4 text-base font-semibold text-[#121C28]">
+              <details className="group/faq px-6">
+                <summary className="flex cursor-pointer items-center justify-between gap-4 py-5 text-base font-semibold text-[#121C28]">
                   {faq.q}
-                  <ChevronDown className="h-5 w-5 shrink-0 text-[#737686] transition-transform group-open:rotate-180" />
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#C3C6D7]/30 bg-white text-[#737686] transition-all group-open/faq:rotate-180 group-open/faq:border-[#004AC6]/40 group-open/faq:text-[#004AC6]">
+                    <ChevronDown className="h-4 w-4" />
+                  </span>
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-[#434655]">{faq.a}</p>
+                <p className="border-t border-[#C3C6D7]/15 pb-5 pt-3 text-sm leading-relaxed text-[#434655]">{faq.a}</p>
               </details>
             </motion.div>
           ))}

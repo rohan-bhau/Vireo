@@ -41,9 +41,13 @@ export function ModernEngineerSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
           className="mb-12 text-center"
         >
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white px-4 py-1.5 text-sm font-medium text-[#005DA7] shadow-sm">
+            <Sparkles className="h-3.5 w-3.5" />
+            AI-powered workflows
+          </div>
           <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
             Built for the Modern Engineer
           </h2>
@@ -55,7 +59,7 @@ export function ModernEngineerSection() {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
           variants={containerVariants}
           className="grid gap-8 md:grid-cols-3"
         >
@@ -66,9 +70,9 @@ export function ModernEngineerSection() {
                 key={item.title}
                 variants={itemVariants}
                 whileHover={{ y: -4, scale: 1.02 }}
-                className="rounded-xl bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+                className="group rounded-2xl bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-[0_16px_40px_rgba(16,24,40,0.10)]"
               >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#D3E3FF] text-[#004AC6]">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#004AC6] to-[#0B82EC] text-white shadow-[0_4px_12px_rgba(0,74,198,0.2)] transition-transform duration-300 group-hover:scale-110">
                   <Icon className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-semibold text-[#1B1C1B]">

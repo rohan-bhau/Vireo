@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Users, Bug, Columns, IterationCcw, Route, BarChart3, MessageSquareMore, RefreshCw, GitBranch, Workflow, ChevronDown, Code, LineChart, Rocket } from "lucide-react";
 import { getSolutionCategoryById, getSolutionItemBySlug, getSolutionCategoryForSlug } from "@/lib/solutions-data";
+import { BrandLogo } from "@/components/brand-logo";
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -176,6 +177,8 @@ export default function SolutionsArticlePage() {
       <div>
         <section className="relative overflow-hidden pt-20 pb-16 md:pt-28 md:pb-20">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_#D9DFF5_0%,_transparent_60%)]" />
+          <div className="pointer-events-none absolute -right-32 -top-20 h-96 w-96 rounded-full bg-[#004AC6]/[0.04] blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,74,198,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,74,198,0.03)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_top,black_20%,transparent_70%)]" />
           <div className="relative mx-auto max-w-7xl px-6">
             <Link
               href="/solutions"
@@ -229,12 +232,12 @@ export default function SolutionsArticlePage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: idx * 0.08 }}
                       whileHover={{ y: -4, scale: 1.02 }}
-                      className="flex h-full flex-col rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
+                      className="group flex h-full flex-col rounded-xl border border-[#C3C6D7]/20 bg-white p-5 transition-all hover:-translate-y-1 hover:border-[#004AC6]/30 hover:shadow-[0_12px_32px_-12px_rgba(0,74,198,0.2)]"
                     >
-                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
-                        <Icon className="h-4 w-4" />
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#004AC6] to-[#0075FF] text-white shadow-[0_4px_12px_rgba(0,74,198,0.25)] transition-transform group-hover:scale-110">
+                        <Icon className="h-4.5 w-4.5" />
                       </div>
-                      <h3 className="text-base font-semibold text-[#121C28]">{catItem.title}</h3>
+                      <h3 className="text-base font-semibold text-[#121C28] transition-colors group-hover:text-[#004AC6]">{catItem.title}</h3>
                       <p className="mt-1.5 text-sm leading-relaxed text-[#434655]">
                         {catItem.description}
                       </p>
@@ -281,8 +284,11 @@ export default function SolutionsArticlePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-80px" }}
                   transition={{ delay: idx * 0.08 }}
-                  className="rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-6"
+                  className="group relative overflow-hidden rounded-xl border border-[#C3C6D7]/20 bg-white p-6 transition-all hover:-translate-y-1 hover:border-[#004AC6]/25 hover:shadow-[0_12px_32px_-12px_rgba(0,74,198,0.2)]"
                 >
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#004AC6] to-[#0075FF] text-white shadow-[0_4px_12px_rgba(0,74,198,0.25)] transition-transform group-hover:scale-110">
+                    <Check className="h-4 w-4" />
+                  </div>
                   <h3 className="mb-2 text-base font-semibold text-[#121C28]">{feature.title}</h3>
                   <p className="text-sm leading-relaxed text-[#434655]">{feature.desc}</p>
                 </motion.div>
@@ -296,9 +302,12 @@ export default function SolutionsArticlePage() {
             <p className="mb-8 text-center text-xs font-bold uppercase tracking-[0.12em] text-[#737686]">
               Trusted by teams at
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-40 grayscale">
+            <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-6 opacity-80 transition-opacity hover:opacity-100">
               {["Linear", "Vercel", "Railway", "Supabase", "PlanetScale"].map((name) => (
-                <span key={name} className="text-sm font-bold text-[#121C28]">{name}</span>
+                <span key={name} className="flex items-center gap-2.5 text-sm font-bold text-[#121C28]">
+                  <BrandLogo name={name} className="h-5 w-5" />
+                  {name}
+                </span>
               ))}
             </div>
           </div>
@@ -314,8 +323,9 @@ export default function SolutionsArticlePage() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.05 }}
-                  className="rounded-lg border border-[#C3C6D7]/20 bg-white px-5 py-3 text-sm font-semibold text-[#434655] shadow-sm"
+                  className="group flex items-center gap-2.5 rounded-lg border border-[#C3C6D7]/20 bg-white px-5 py-3 text-sm font-semibold text-[#434655] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#004AC6]/30 hover:shadow-[0_8px_20px_-8px_rgba(0,74,198,0.25)]"
                 >
+                  <BrandLogo name={tool} className="h-4.5 w-4.5" />
                   {tool}
                 </motion.div>
               ))}
@@ -469,9 +479,11 @@ export default function SolutionsArticlePage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-80px" }}
                   transition={{ delay: idx * 0.08 }}
-                  className="flex items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-white p-4"
+                  className="group flex items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[#10B981]/30 hover:shadow-[0_8px_24px_-8px_rgba(16,185,129,0.2)]"
                 >
-                  <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#10B981]" />
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#10B981] to-[#34D399] text-white shadow-sm">
+                    <Check className="h-3.5 w-3.5" />
+                  </span>
                   <span className="text-sm text-[#434655]">{benefit}</span>
                 </motion.div>
               ))}
@@ -497,13 +509,13 @@ export default function SolutionsArticlePage() {
                       viewport={{ once: true, margin: "-80px" }}
                       transition={{ delay: idx * 0.08 }}
                       whileHover={{ y: -4 }}
-                      className="flex h-full items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-5 transition-all hover:border-[#004AC6]/30 hover:shadow-[0_4px_20px_rgba(0,74,198,0.08)]"
+                      className="group flex h-full items-start gap-3 rounded-xl border border-[#C3C6D7]/20 bg-white p-5 transition-all hover:-translate-y-1 hover:border-[#004AC6]/30 hover:shadow-[0_12px_32px_-12px_rgba(0,74,198,0.2)]"
                     >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
-                        <Icon className="h-4 w-4" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#004AC6] to-[#0075FF] text-white shadow-[0_4px_12px_rgba(0,74,198,0.25)] transition-transform group-hover:scale-110">
+                        <Icon className="h-4.5 w-4.5" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-semibold text-[#121C28]">{related.title}</h3>
+                        <h3 className="text-sm font-semibold text-[#121C28] transition-colors group-hover:text-[#004AC6]">{related.title}</h3>
                         <p className="mt-1 text-xs leading-relaxed text-[#434655]">{related.description}</p>
                       </div>
                     </motion.div>
@@ -528,9 +540,12 @@ function CTASection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#004AC6] to-[#002e7c] px-8 py-14 text-center md:px-16"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#004AC6] via-[#00348f] to-[#001f63] px-8 py-14 text-center shadow-[0_20px_60px_-15px_rgba(0,74,198,0.45)] md:px-16"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.1)_0%,_transparent_70%)]" />
+          <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#4C9AFF]/30 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 -right-20 h-80 w-80 rounded-full bg-[#10B981]/20 blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
           <div className="relative">
             <h2 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
               Ready to move faster?
@@ -541,13 +556,14 @@ function CTASection() {
             <div className="mt-8 flex items-center justify-center gap-4">
               <Link
                 href="/register"
-                className="rounded-lg bg-white px-8 py-3.5 text-base font-bold text-[#004AC6] transition-all hover:bg-white/90"
+                className="group inline-flex items-center gap-2 rounded-lg bg-white px-8 py-3.5 text-base font-bold text-[#004AC6] shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all hover:-translate-y-0.5 hover:bg-white/90"
               >
                 Start free trial
+                <span className="transition-transform group-hover:translate-x-0.5">→</span>
               </Link>
               <Link
                 href="/login"
-                className="rounded-lg border border-white/20 px-8 py-3.5 text-base font-bold text-white/90 transition-colors hover:bg-white/10"
+                className="rounded-lg border border-white/20 px-8 py-3.5 text-base font-bold text-white/90 backdrop-blur-sm transition-all hover:border-white/40 hover:bg-white/10"
               >
                 Talk to sales
               </Link>

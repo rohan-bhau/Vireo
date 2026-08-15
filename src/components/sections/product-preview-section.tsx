@@ -91,7 +91,7 @@ export function ProductPreviewSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
           className="mb-14 text-center"
         >
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white px-4 py-1.5 text-sm font-medium text-[#005DA7] shadow-sm">
@@ -110,7 +110,7 @@ export function ProductPreviewSection() {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
           variants={containerVariants}
           className="overflow-hidden rounded-2xl border border-[#C3C6D7]/20 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]"
         >
@@ -168,7 +168,7 @@ export function ProductPreviewSection() {
                       key={card.id}
                       initial={{ opacity: 0, x: -10 }}
                       whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: false }}
+                      viewport={{ once: true }}
                       transition={{ delay: cardIdx * 0.1 + colIdx * 0.15 }}
                       whileHover={{ y: -2 }}
                       className={`rounded-lg border p-3.5 shadow-sm transition-all ${
@@ -238,7 +238,7 @@ export function ProductPreviewSection() {
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: false }}
+          viewport={{ once: true }}
           transition={{ delay: 0.4 }}
           className="mt-10 text-center"
         >

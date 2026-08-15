@@ -70,8 +70,12 @@ export function IntegrationsSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
         >
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white px-4 py-1.5 text-sm font-medium text-[#005DA7] shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#005DA7]" />
+            Built to connect
+          </div>
           <h2 className="text-2xl font-semibold tracking-tight text-[#121C28] md:text-3xl">
             Works with your stack
           </h2>
@@ -83,7 +87,7 @@ export function IntegrationsSection() {
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
           transition={{ staggerChildren: 0.06 }}
           className="mt-10 flex flex-wrap items-center justify-center gap-8 md:gap-12"
         >
@@ -92,9 +96,9 @@ export function IntegrationsSection() {
               key={integration.name}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false }}
+              viewport={{ once: true }}
               transition={{ delay: i * 0.06 }}
-              className="flex items-center gap-2 rounded-xl border border-[#C3C6D7]/10 bg-[#F8F9FF] px-5 py-3 transition-all hover:border-[#C3C6D7]/30 hover:shadow-sm"
+              className="flex items-center gap-2.5 rounded-xl border border-[#C3C6D7]/15 bg-white px-5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all hover:-translate-y-0.5 hover:border-[#C3C6D7]/35 hover:shadow-[0_8px_20px_rgba(16,24,40,0.08)]"
             >
               {integration.svg}
               <span className="text-sm font-semibold text-[#434655]">

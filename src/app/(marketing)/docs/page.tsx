@@ -177,33 +177,36 @@ export default function DocsPage() {
               <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#737686]">
                 On this page
               </p>
-              <nav className="space-y-1 border-l border-[#C3C6D7]/20">
+              <nav className="space-y-1 rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-2">
                 {sections.map((section) => {
                   const Icon = section.icon;
                   return (
                     <a
                       key={section.id}
                       href={`#${section.id}`}
-                      className="flex cursor-pointer items-center gap-2.5 rounded-r-lg border-l-2 border-transparent px-3 py-2 text-sm font-medium text-[#5C6274] transition-colors hover:border-[#004AC6] hover:bg-[#F8F9FF] hover:text-[#004AC6]"
+                      className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-[#5C6274] transition-all hover:bg-white hover:text-[#004AC6] hover:shadow-sm"
                     >
-                      <Icon className="h-3.5 w-3.5 shrink-0" />
+                      <Icon className="h-3.5 w-3.5 shrink-0 transition-colors group-hover:text-[#004AC6]" />
                       {section.title}
                     </a>
                   );
                 })}
               </nav>
-              <div className="mt-6 rounded-xl border border-[#C3C6D7]/20 bg-[#F8F9FF] p-4">
-                <p className="text-sm font-semibold text-[#121C28]">Need a hand?</p>
-                <p className="mt-1 text-xs leading-relaxed text-[#434655]">
-                  Walk through the whole product hands-on in the interactive guide.
-                </p>
-                <Link
-                  href="/guide"
-                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#004AC6] transition-colors hover:text-[#003da8]"
-                >
-                  Open the guide
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </Link>
+              <div className="relative mt-6 overflow-hidden rounded-xl border border-[#004AC6]/15 bg-gradient-to-br from-[#EEF4FF] to-[#F8F9FF] p-4">
+                <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#004AC6]/10 blur-2xl" />
+                <div className="relative">
+                  <p className="text-sm font-semibold text-[#121C28]">Need a hand?</p>
+                  <p className="mt-1 text-xs leading-relaxed text-[#434655]">
+                    Walk through the whole product hands-on in the interactive guide.
+                  </p>
+                  <Link
+                    href="/guide"
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#004AC6] transition-all hover:gap-2.5 hover:text-[#003da8]"
+                  >
+                    Open the guide
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </div>
             </aside>
 
@@ -221,7 +224,7 @@ export default function DocsPage() {
                     className="scroll-mt-24"
                   >
                     <div className="mb-3 flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#004A9E]/10 text-[#004A9E]">
+                      <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#004AC6] to-[#0075FF] text-white shadow-[0_4px_12px_rgba(0,74,198,0.25)]">
                         <Icon className="h-4 w-4" />
                       </div>
                       <h2 className="text-2xl font-semibold tracking-tight text-[#121C28]">
@@ -232,17 +235,21 @@ export default function DocsPage() {
                     <ul className="space-y-2.5">
                       {section.items.map((item) => (
                         <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-[#434655]">
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#10B981]" />
+                          <span className="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-[#10B981]/10">
+                            <Check className="h-3.5 w-3.5 text-[#10B981]" />
+                          </span>
                           {item}
                         </li>
                       ))}
                     </ul>
                     {section.tips && (
-                      <div className="mt-4 rounded-xl border border-[#004AC6]/15 bg-[#EEF4FF] p-4">
-                        <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#004AC6]">
+                      <div className="relative mt-4 overflow-hidden rounded-xl border border-[#004AC6]/15 bg-gradient-to-r from-[#EEF4FF] to-[#F6FAFF] p-4">
+                        <span className="pointer-events-none absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-[#004AC6] to-[#4C9AFF]" />
+                        <p className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#004AC6]">
+                          <Zap className="h-3.5 w-3.5" />
                           Pro tip
                         </p>
-                        <ul className="space-y-1.5 text-sm leading-relaxed text-[#33415C]">
+                        <ul className="space-y-1.5 pl-0.5 text-sm leading-relaxed text-[#33415C]">
                           {section.tips.map((tip) => (
                             <li key={tip}>• {tip}</li>
                           ))}
@@ -257,8 +264,12 @@ export default function DocsPage() {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                className="rounded-2xl bg-gradient-to-br from-[#004AC6] to-[#002e7c] p-8 text-center"
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#004AC6] via-[#00348f] to-[#001f63] p-8 text-center shadow-[0_20px_60px_-15px_rgba(0,74,198,0.45)]"
               >
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.1)_0%,_transparent_70%)]" />
+                <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-[#4C9AFF]/30 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-28 -right-16 h-72 w-72 rounded-full bg-[#10B981]/20 blur-3xl" />
+                <div className="relative">
                 <h2 className="text-2xl font-semibold tracking-tight text-white">
                   Learn by doing — in under 10 minutes
                 </h2>
@@ -267,10 +278,11 @@ export default function DocsPage() {
                 </p>
                 <Link
                   href="/guide"
-                  className="mt-6 inline-flex rounded-lg bg-white px-6 py-3 text-sm font-bold text-[#004AC6] transition-all hover:bg-white/90"
+                  className="mt-6 inline-flex rounded-lg bg-white px-6 py-3 text-sm font-bold text-[#004AC6] shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all hover:-translate-y-0.5 hover:bg-white/90"
                 >
                   Take the guided tour
                 </Link>
+                </div>
               </motion.div>
             </div>
           </div>

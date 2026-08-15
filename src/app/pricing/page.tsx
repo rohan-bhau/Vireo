@@ -41,14 +41,14 @@ function PlanCard({ plan, isAuthenticated }: { plan: PricingPlan; isAuthenticate
   return (
     <motion.div
       variants={itemVariants}
-      className={`relative flex flex-col rounded-2xl border bg-white p-8 text-left transition-shadow hover:shadow-lg ${
+      className={`relative flex flex-col rounded-2xl p-8 text-left transition-all ${
         plan.highlighted
-          ? "border-[#004AC6] shadow-[0_4px_24px_rgba(0,74,198,0.08)]"
-          : "border-[#C3C6D7]/20"
+          ? "border border-[#004AC6]/40 bg-gradient-to-b from-[#004AC6]/[0.05] to-white shadow-[0_4px_24px_rgba(0,74,198,0.14),0_24px_56px_rgba(0,74,198,0.12)] ring-1 ring-[#004AC6]/30 lg:z-10 lg:scale-[1.05]"
+          : "border border-[#C3C6D7]/20 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-[#C3C6D7]/40 hover:shadow-[0_12px_32px_rgba(16,24,40,0.08)]"
       }`}
     >
       {plan.highlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#004AC6] px-4 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#004AC6] to-[#0B82EC] px-4 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-[0_2px_8px_rgba(0,74,198,0.35)]">
           Most popular
         </div>
       )}
@@ -72,8 +72,8 @@ function PlanCard({ plan, isAuthenticated }: { plan: PricingPlan; isAuthenticate
         href={href}
         className={`mt-8 inline-flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-bold transition-all ${
           plan.highlighted
-            ? "bg-[#004AC6] text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] hover:bg-[#003da8]"
-            : "border border-[#C3C6D7]/40 text-[#121C28] hover:bg-[#F8F9FF]"
+            ? "bg-gradient-to-r from-[#004AC6] to-[#0B82EC] text-white shadow-[0_4px_6px_rgba(0,74,198,0.15),0_10px_20px_rgba(0,74,198,0.18)] hover:from-[#003da8] hover:to-[#006fe0]"
+            : "border border-[#C3C6D7]/40 text-[#121C28] hover:border-[#004AC6]/50 hover:bg-[#F8F9FF]"
         }`}
       >
         {plan.cta}
@@ -175,7 +175,7 @@ export default function PricingPage() {
             initial="hidden"
             animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-            className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3"
+            className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start"
           >
             {PRICING_PLANS.map((plan) => (
               <PlanCard key={plan.id} plan={plan} isAuthenticated={isAuthenticated} />

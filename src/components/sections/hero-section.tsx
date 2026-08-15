@@ -69,14 +69,19 @@ export function HeroSection() {
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#D9DFF5_0%,_transparent_70%)]" />
       <div className="pointer-events-none absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full bg-[#004AC6]/[0.03] blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-64 -left-40 h-[500px] w-[500px] rounded-full bg-[#005DA7]/[0.04] blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,74,198,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,74,198,0.03)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
       <div className="relative mx-auto max-w-7xl px-6 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white px-4 py-1.5 text-sm text-[#5C6274]"
+          className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white/80 px-4 py-1.5 text-sm text-[#5C6274] shadow-sm backdrop-blur-sm"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10B981] opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+          </span>
           New: AI-Sprint Intelligence is live
         </motion.div>
         <motion.h1
@@ -86,7 +91,9 @@ export function HeroSection() {
           className="mx-auto max-w-4xl text-4xl font-semibold leading-tight tracking-tight text-[#121C28] md:text-5xl lg:text-6xl"
         >
           Plan, track, and manage work with{" "}
-          <span className="text-[#004AC6]">Vireo</span>
+          <span className="bg-gradient-to-r from-[#004AC6] via-[#005DA7] to-[#0B82EC] bg-clip-text text-transparent">
+            Vireo
+          </span>
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -105,7 +112,7 @@ export function HeroSection() {
         >
           <Link
             href="/register"
-            className="rounded-lg bg-[#004AC6] px-8 py-3.5 text-base font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.10)] transition-all hover:bg-[#003da8]"
+            className="rounded-lg bg-gradient-to-r from-[#004AC6] to-[#0B82EC] px-8 py-3.5 text-base font-bold text-white shadow-[0_4px_6px_rgba(0,74,198,0.10),0_10px_15px_rgba(0,74,198,0.15)] transition-all hover:from-[#003da8] hover:to-[#006fe0] hover:shadow-[0_6px_10px_rgba(0,74,198,0.18),0_14px_20px_rgba(0,74,198,0.2)]"
           >
             Get started free
           </Link>
@@ -121,10 +128,23 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-10 flex items-center justify-center gap-2 text-xs font-medium text-[#414752]"
+          className="mt-10 flex flex-col items-center justify-center gap-3 text-xs font-medium text-[#414752] sm:flex-row sm:gap-8"
         >
-          <Shield className="h-3 w-3 text-[#10B981]" />
-          Trusted by 2,500+ engineering leaders. Free 14-day trial, no credit card.
+          <div className="flex items-center gap-2">
+            <div className="flex -space-x-1.5">
+              {["#2563EB", "#F472B6", "#10B981", "#F59E0B"].map((c, i) => (
+                <div key={i} className="h-5 w-5 rounded-full border-2 border-white" style={{ backgroundColor: c }} />
+              ))}
+            </div>
+            <span>
+              Trusted by <span className="font-semibold text-[#121C28]">2,500+</span> engineering leaders
+            </span>
+          </div>
+          <div className="hidden h-4 w-px bg-[#C3C6D7]/60 sm:block" />
+          <div className="flex items-center gap-2">
+            <Shield className="h-3 w-3 text-[#10B981]" />
+            Free 14-day trial, no credit card
+          </div>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -134,22 +154,28 @@ export function HeroSection() {
         >
           <button
             onClick={openDemo}
-            className="relative aspect-video w-full rounded-2xl overflow-hidden group cursor-pointer text-left bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] border border-[#334155]/50 shadow-[0_8px_40px_rgba(0,0,0,0.15)]"
+            className="group relative aspect-video w-full cursor-pointer overflow-hidden rounded-2xl border border-[#C3C6D7]/40 bg-[#0F172A] text-left shadow-[0_8px_40px_rgba(0,0,0,0.18)]"
           >
-            <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_30%_50%,_#004AC6_0%,_transparent_50%),_radial-gradient(circle_at_70%_50%,_#005DA7_0%,_transparent_50%)]" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/figma_screens/project_dashboard.png"
+              alt="Vireo dashboard preview"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-black/25" />
 
             <div className="absolute top-6 left-6 right-6 flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-1.5 backdrop-blur-sm">
+              <div className="flex items-center gap-2 rounded-lg bg-black/35 px-3 py-1.5 backdrop-blur-md">
                 <div className="flex h-2 w-2 rounded-full bg-[#10B981]" />
-                <span className="text-[10px] font-semibold tracking-wider text-white/60 uppercase">Sprint 04</span>
+                <span className="text-[10px] font-semibold tracking-wider text-white uppercase">Sprint 04</span>
               </div>
-              <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 backdrop-blur-sm">
+              <div className="flex items-center gap-1.5 rounded-lg bg-black/35 px-3 py-1.5 backdrop-blur-md">
                 <BarChart3 className="h-3 w-3 text-[#60A5FA]" />
-                <span className="text-[10px] font-medium text-white/60">12 issues</span>
+                <span className="text-[10px] font-medium text-white/80">12 issues</span>
               </div>
-              <div className="ml-auto flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 backdrop-blur-sm">
-                <Clock className="h-3 w-3 text-white/40" />
-                <span className="text-[10px] font-medium text-white/60">10:49</span>
+              <div className="ml-auto flex items-center gap-1.5 rounded-lg bg-black/35 px-3 py-1.5 backdrop-blur-md">
+                <Clock className="h-3 w-3 text-white/60" />
+                <span className="text-[10px] font-medium text-white/80">10:49</span>
               </div>
             </div>
 
@@ -158,27 +184,25 @@ export function HeroSection() {
                 <motion.div
                   animate={{ scale: [1, 1.06, 1] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute h-20 w-20 rounded-full bg-[#004AC6]/20 blur-xl"
+                  className="absolute h-20 w-20 rounded-full bg-[#004AC6]/40 blur-xl"
                 />
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[#004AC6] shadow-[0_0_0_8px_rgba(0,74,198,0.15),0_0_40px_rgba(0,74,198,0.3)] transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_12px_rgba(0,74,198,0.2),0_0_60px_rgba(0,74,198,0.4)]">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[#004AC6] shadow-[0_0_0_8px_rgba(255,255,255,0.15),0_0_40px_rgba(0,74,198,0.4)] ring-2 ring-white/30 transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_0_12px_rgba(255,255,255,0.2),0_0_60px_rgba(0,74,198,0.5)]">
                   <Play className="ml-0.5 h-6 w-6 fill-white text-white" />
                 </div>
               </div>
-              <p className="mt-4 text-center text-sm font-medium text-white/70">
+              <p className="mt-4 text-center text-sm font-medium text-white drop-shadow">
                 Watch product demo
               </p>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
-
             <div className="absolute bottom-4 left-6 right-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#004AC6]">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#004AC6] to-[#0B82EC] shadow-[0_2px_8px_rgba(0,74,198,0.4)]">
                   <Columns className="h-4 w-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-white">Vireo Boards</p>
-                  <p className="text-[11px] text-white/50">Drag-and-drop project management</p>
+                  <p className="text-sm font-semibold text-white drop-shadow">Vireo Boards</p>
+                  <p className="text-[11px] text-white/70">Drag-and-drop project management</p>
                 </div>
               </div>
 
@@ -186,11 +210,11 @@ export function HeroSection() {
                 {["#60A5FA", "#F472B6", "#34D399"].map((color, i) => (
                   <div
                     key={i}
-                    className="h-7 w-7 rounded-full border-2 border-[#1E293B]"
+                    className="h-7 w-7 rounded-full border-2 border-white/70"
                     style={{ backgroundColor: color }}
                   />
                 ))}
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#1E293B] bg-[#004AC6] text-[9px] font-bold text-white">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white/70 bg-[#004AC6] text-[9px] font-bold text-white">
                   +3
                 </div>
               </div>

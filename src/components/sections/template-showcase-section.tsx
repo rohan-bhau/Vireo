@@ -61,9 +61,13 @@ export function TemplateShowcaseSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
           className="mb-14 text-center"
         >
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#C3C6D7]/30 bg-white px-4 py-1.5 text-sm font-medium text-[#005DA7] shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#005DA7]" />
+            Battle-tested workflows
+          </div>
           <h2 className="text-3xl font-semibold tracking-tight text-[#121C28] md:text-4xl">
             Start with a template
           </h2>
@@ -75,7 +79,7 @@ export function TemplateShowcaseSection() {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: false, margin: "-80px" }}
+          viewport={{ once: true, margin: "-80px" }}
           variants={containerVariants}
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
         >
@@ -84,10 +88,10 @@ export function TemplateShowcaseSection() {
               key={template.title}
               variants={itemVariants}
               whileHover={{ y: -4 }}
-              className="group relative cursor-pointer rounded-2xl border border-[#C3C6D7]/20 bg-white p-6 transition-all hover:border-[#C3C6D7]/40 hover:shadow-lg"
+              className="group relative cursor-pointer rounded-2xl border border-[#C3C6D7]/20 bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all hover:-translate-y-1 hover:border-[#C3C6D7]/40 hover:shadow-[0_16px_40px_rgba(16,24,40,0.10)]"
             >
               {template.badge && (
-                <span className="absolute -top-2.5 right-4 rounded-full bg-[#004AC6] px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                <span className="absolute -top-2.5 right-4 rounded-full bg-gradient-to-r from-[#004AC6] to-[#0B82EC] px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-[0_2px_8px_rgba(0,74,198,0.35)]">
                   {template.badge}
                 </span>
               )}
@@ -112,7 +116,7 @@ export function TemplateShowcaseSection() {
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: false }}
+          viewport={{ once: true }}
           transition={{ delay: 0.4 }}
           className="mt-10 text-center"
         >
