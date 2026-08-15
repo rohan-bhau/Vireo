@@ -123,7 +123,7 @@ export function WorkspaceSettingsBilling() {
   const { isOwner } = useSettings();
   const canManage = isOwner;
 
-  const { data: subscription, isLoading: subLoading } =
+  const { data: subscription, isLoading: subLoading, refetch: refetchSubscription } =
     useGetSubscriptionQuery(workspaceId, { skip: !workspaceId });
   const { data: usage, isLoading: usageLoading } = useGetUsageStatsQuery(workspaceId, {
     skip: !workspaceId,
@@ -133,26 +133,38 @@ export function WorkspaceSettingsBilling() {
   const [confirmCheckout] = useConfirmCheckoutMutation();
 
   const [confirmPlan, setConfirmPlan] = useState<PlanId | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
   const upgradeSucceeded = searchParams.get("upgrade") === "success";
   const sessionId =
     searchParams.get("session_id") ||
     (typeof window !== "undefined"
       ? sessionStorage.getItem("vireo_checkout_session")
       : null);
+  const activated = upgradeSucceeded && subscription?.plan !== "free";
 
   useEffect(() => {
     if (!upgradeSucceeded || !sessionId || !workspaceId) return;
     let active = true;
     confirmCheckout({ workspaceId, sessionId })
       .unwrap()
-      .then(() => { if (active) setConfirmed(true); })
-      .catch(() => {})
+      .catch((e) => {
+        const msg =
+          (e as { data?: { message?: string } })?.data?.message ||
+          (e as { message?: string })?.message ||
+          "Could not activate your plan yet";
+        if (active) toastError(msg);
+      })
       .finally(() => {
         if (active) sessionStorage.removeItem("vireo_checkout_session");
       });
     return () => { active = false; };
   }, [upgradeSucceeded, sessionId, workspaceId, confirmCheckout]);
+
+  useEffect(() => {
+    if (!upgradeSucceeded || activated || !refetchSubscription) return;
+    const t = setInterval(() => { refetchSubscription(); }, 3000);
+    const stop = setTimeout(() => clearInterval(t), 15000);
+    return () => { clearInterval(t); clearTimeout(stop); };
+  }, [upgradeSucceeded, activated, refetchSubscription]);
 
   if (subLoading || usageLoading || plansLoading) {
     return <SkeletonSettingsPage />;
@@ -192,7 +204,7 @@ export function WorkspaceSettingsBilling() {
 
       {upgradeSucceeded && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          {confirmed
+          {activated
             ? "Your workspace has been upgraded."
             : "Activating your new plan..."}
         </div>
