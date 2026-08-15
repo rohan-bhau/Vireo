@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { useGetTaskActivityQuery, type ActivityItem } from "@/store/taskApi";
 import { useGetMembersQuery } from "@/store/workspaceApi";
+import type { RootState } from "@/store";
 
 interface ActivityLogProps {
   taskKey: string;
@@ -71,8 +73,10 @@ type FilterType = "all" | "field" | "status" | "comment";
 export function ActivityLog({ taskKey, workspaceId }: ActivityLogProps) {
   const { data: activity, isLoading } = useGetTaskActivityQuery(taskKey);
   const { data: members } = useGetMembersQuery(workspaceId || "", { skip: !workspaceId });
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
 
   function getUserName(userId: string): string {
+    if (userId === currentUserId) return "You";
     const member = members?.find((m) => m.userId === userId);
     return member?.user?.name || userId;
   }
