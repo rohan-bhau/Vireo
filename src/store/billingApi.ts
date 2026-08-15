@@ -127,6 +127,17 @@ export const billingApi = api.injectEndpoints({
         { type: "Subscription", id: workspaceId },
       ],
     }),
+    activateSubscription: builder.mutation<Subscription, string>({
+      query: (workspaceId) => ({
+        url: `/billing/${workspaceId}/activate`,
+        method: "POST",
+      }),
+      transformResponse: (response: SubscriptionResponse) =>
+        response.data.subscription,
+      invalidatesTags: (_result, _error, workspaceId) => [
+        { type: "Subscription", id: workspaceId },
+      ],
+    }),
     cancelSubscription: builder.mutation<Subscription, string>({
       query: (workspaceId) => ({
         url: `/billing/${workspaceId}/cancel`,
@@ -188,6 +199,7 @@ export const {
   useGetUsageStatsQuery,
   useCreateCheckoutSessionMutation,
   useConfirmCheckoutMutation,
+  useActivateSubscriptionMutation,
   useCancelSubscriptionMutation,
   useResumeSubscriptionMutation,
   useStartTrialMutation,

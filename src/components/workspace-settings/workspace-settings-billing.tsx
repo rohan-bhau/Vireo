@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check, CreditCard, ExternalLink, Sparkles, X } from "lucide-react";
 import { clsx } from "clsx";
@@ -10,7 +10,7 @@ import {
   useGetUsageStatsQuery,
   useGetPlansQuery,
   useCreateCheckoutSessionMutation,
-  useConfirmCheckoutMutation,
+  useActivateSubscriptionMutation,
   type PlanId,
 } from "@/store/billingApi";
 import { useSettings } from "@/lib/settings-context";
@@ -119,6 +119,7 @@ function UsageBar({ label, used, limit, limitLabel }: UsageBarProps) {
 export function WorkspaceSettingsBilling() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const workspaceId = params.workspaceId as string;
   const { isOwner } = useSettings();
   const canManage = isOwner;
@@ -130,21 +131,16 @@ export function WorkspaceSettingsBilling() {
   });
   const { data: plans = [], isLoading: plansLoading } = useGetPlansQuery();
   const [createCheckout, { isLoading: checkoutLoading }] = useCreateCheckoutSessionMutation();
-  const [confirmCheckout] = useConfirmCheckoutMutation();
+  const [activateSubscription] = useActivateSubscriptionMutation();
 
   const [confirmPlan, setConfirmPlan] = useState<PlanId | null>(null);
   const upgradeSucceeded = searchParams.get("upgrade") === "success";
-  const sessionId =
-    searchParams.get("session_id") ||
-    (typeof window !== "undefined"
-      ? sessionStorage.getItem("vireo_checkout_session")
-      : null);
   const activated = upgradeSucceeded && subscription?.plan !== "free";
 
   useEffect(() => {
-    if (!upgradeSucceeded || !sessionId || !workspaceId) return;
+    if (!upgradeSucceeded || activated || !workspaceId) return;
     let active = true;
-    confirmCheckout({ workspaceId, sessionId })
+    activateSubscription(workspaceId)
       .unwrap()
       .catch((e) => {
         const msg =
@@ -152,19 +148,22 @@ export function WorkspaceSettingsBilling() {
           (e as { message?: string })?.message ||
           "Could not activate your plan yet";
         if (active) toastError(msg);
-      })
-      .finally(() => {
-        if (active) sessionStorage.removeItem("vireo_checkout_session");
       });
     return () => { active = false; };
-  }, [upgradeSucceeded, sessionId, workspaceId, confirmCheckout]);
+  }, [upgradeSucceeded, activated, workspaceId, activateSubscription]);
 
   useEffect(() => {
     if (!upgradeSucceeded || activated || !refetchSubscription) return;
     const t = setInterval(() => { refetchSubscription(); }, 3000);
-    const stop = setTimeout(() => clearInterval(t), 15000);
+    const stop = setTimeout(() => clearInterval(t), 20000);
     return () => { clearInterval(t); clearTimeout(stop); };
   }, [upgradeSucceeded, activated, refetchSubscription]);
+
+  useEffect(() => {
+    if (!activated || !upgradeSucceeded) return;
+    sessionStorage.removeItem("vireo_checkout_session");
+    router.replace(`/w/${workspaceId}/settings/billing`);
+  }, [activated, upgradeSucceeded, workspaceId, router]);
 
   if (subLoading || usageLoading || plansLoading) {
     return <SkeletonSettingsPage />;
